@@ -1,0 +1,49 @@
+html,
+body {
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #2c2c2c;
+}
+
+#cardContainer {
+    position: absolute;
+    width: 200px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#deckContainer {
+    position: absolute;
+    left: 200px;
+    width: calc(100% - 200px);
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#deckInput {
+    width: calc(100% - 2px);
+    background-color: #2c2c2c;
+    color: #ffffff;
+    border: 1px solid #4c4c4c;
+    flex-grow: 1;
+}
+
+.card {
+    width: calc(100% - 8px);
+    margin: 4px;
+    border-radius: 9px;
+}
+
+.card.selected{
+    outline: 3px solid purple;
+}
+
+button {
+    margin: 4px;
+}
