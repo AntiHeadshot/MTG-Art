@@ -1,6 +1,7 @@
 let openedCard;
 let popupWindow;
 let cards = [];
+let lastDeck = localStorage.getItem('deck');
 
 class Card {
     constructor(count, set, nr, name, cardId, oracleId, imageUri) {
@@ -16,20 +17,22 @@ class Card {
     getDescription() { return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`; }
 
     static async parseCardText(cardText) {
-        const regex = /^(\d+)\s+\[(\w+)#(\d+)\]\s+(.+)$/;
-        const match = cardText.match(regex);
+        const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>\w+)\]\s+(?<name>.+)$/;
+        let match = cardText.match(regex);
 
-        if (match) {
-            const count = parseInt(match[1], 10);
-            const set = match[2];
-            const nr = match[3];
-
-            var card = new Card(count);
-            await card.update(set, nr);
-            return card;
-        } else {
+        if (!match) {
+            const regex2 = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>\w+)$/;
+            match = cardText.match(regex2);
+        }
+        if (!match) {
             throw new Error("Invalid card text format");
         }
+
+        const { count, set, nr } = match.groups;
+
+        var card = new Card(parseInt(count, 10));
+        await card.update(set, nr);
+        return card;
     }
 
     async update(setOrCardId, nr) {
@@ -38,9 +41,16 @@ class Card {
         try {
             const response = await fetch(url);
             const data = await response.json();
+            console.log(data);
             this.cardId = data.id;
             this.oracleId = data.oracle_id;
-            this.uri = data.image_uris.normal;
+            if (!data.image_uris) {
+                this.twoFaced = true;
+                this.uris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
+                this.uri = this.uris[0];
+            }
+            else
+                this.uri = data.image_uris.normal;
             this.set = data.set;
             this.nr = data.collector_number;
             this.name = data.name;
@@ -62,7 +72,7 @@ class Card {
     }
 }
 
-function openScryfall(evt,card) {
+function openScryfall(evt, card) {
     var oracleId = card.oracleId;
     var imgsrc = document.getElementById("deckContainer").getBoundingClientRect();
     var src = "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
@@ -70,22 +80,23 @@ function openScryfall(evt,card) {
     var dx = evt.screenX - evt.clientX;
     var dy = evt.screenY - evt.clientY;
 
-    if (popupWindow) {
-        clearInterval(timer);
-        if (!popupWindow.closed)
-            popupWindow.close();
-    }
-
     if (openedCard != null)
         openedCard.elem.classList.remove("selected");
     openedCard = card;
     openedCard.elem.classList.add("selected");
 
-    popupWindow = window.open(src, "_blank", `popup=true,` +
-        `width=${imgsrc.width},` +
-        `height=${imgsrc.height},` +
-        `left=${imgsrc.left + dx},` +
-        `top=${imgsrc.top + dy}`);
+    clearInterval(timer);
+    if (popupWindow && !popupWindow.closed) {
+        popupWindow.location = src;
+        popupWindow.focus();
+    } else {
+        popupWindow = window.open(src, "_blank", `popup=true,` +
+            `width=${imgsrc.width},` +
+            `height=${imgsrc.height},` +
+            `left=${imgsrc.left + dx},` +
+            `top=${imgsrc.top + dy}`);
+    }
+
     var timer = setInterval(function () {
         if (popupWindow.closed) {
             clearInterval(timer);
@@ -96,7 +107,21 @@ function openScryfall(evt,card) {
 }
 
 function updateList() {
-    document.getElementById("deckInput").value = cards.map(c => c.getDescription()).join("\n");
+    var deck = cards.map(c => c.getDescription()).join("\n");
+    document.getElementById("deckInput").value = deck;
+
+    localStorage.setItem('deck', deck);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const lastDeckButton = document.getElementById("lastDeck");
+    if (!lastDeck) {
+        lastDeckButton.disabled = true;
+    }
+});
+
+function loadLastDeck() {
+    document.getElementById("deckInput").value = lastDeck;
 }
 
 async function onDrop(e) {
@@ -125,7 +150,9 @@ async function onDrop(e) {
     popupWindow.focus();
 };
 
-function parseDeck() {
+async function parseDeck() {
+    document.getElementById("lastDeck").disabled = true;
+
     var template = document.getElementById("cardTemplate");
     var parent = document.getElementById("cardContainer");
 
@@ -134,16 +161,19 @@ function parseDeck() {
 
     var deckText = document.getElementById("deckInput").value;
 
-    deckText.split("\n")
-        .map(c => Card.parseCardText(c).then(card => {
-            var clone = template.cloneNode(true);
-            clone.card = card;
-            card.elem = clone;
-            card.updateElem();
-            clone.style.display = "block";
-            parent.appendChild(clone);
-            cards.push(card);
-        }));
+    for (const cardText of deckText.split("\n")) {
+        print(`\nParsing card: ${cardText}`);
+        var card = await Card.parseCardText(cardText);
+        var clone = template.cloneNode(true);
+        clone.card = card;
+        card.elem = clone;
+        card.updateElem();
+        clone.style.display = "block";
+        parent.appendChild(clone);
+        cards.push(card);
+    }
+
+    updateList();
 }
 
 window.addEventListener("error", function (event) {
