@@ -4,16 +4,15 @@
 <head>
     <link rel="stylesheet" type="text/css" href="styles.css?v=1">
     <script src="scripts.js?v=1"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<body>
+<body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
     <div id="cardContainer">
-        <image class="card"
-            id="cardTemplate" 
-            style="display: none;"
-            oracle-id="bc71ebf6-2056-41f7-be35-b2e5c34afa99"
-            draggable="false">
-        </image>
+        <div class="card" id="cardTemplate" style="display: none;"
+         onclick="openScryfall(event, this.card)" draggable="false" >
+            <img src="">
+        </div>
     </div>
     <div id="deckContainer">
         <button onclick="parseDeck()">load</button>
