@@ -178,7 +178,7 @@ function openScryfall(evt, card) {
 }
 
 function updateList() {
-    var deck = cards.map(c => c.getDescription()).join("\n");
+    var deck = cards.map(c => c.getDescription ? c.getDescription() : c).join("\n");
     document.getElementById("deckInput").value = deck;
 
     localStorage.setItem('deck', deck);
@@ -256,11 +256,21 @@ async function parseDeck() {
                 localStorage.setItem('deckstatSets', JSON.stringify(sets));
             }
 
-            deckText = deckData.sections.map(s => s.cards.map(c => {
+            deckText = deckData.sections.map(s => ((s.name && s.name != "Main") ? `\n// ${s.name}\n` : "") + s.cards.map(c => {
                 if (c.set_id)
                     return `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`;
                 return `${c.amount} ${c.name}`;
             }).join('\n')).join('\n');
+
+            if (deckData.tokens) {
+                deckText += '\n\n// Tokens\n';
+                deckText += deckData.tokens.map(c => {
+                    if (c.set_id)
+                        return `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`;
+                    return `${c.amount} ${c.name}`;
+                }).join('\n');
+            }
+
             document.getElementById("deckInput").value = deckText;
         } catch (error) {
             print("Deck could not be loaded; " + JSON.stringify(error.toString()));
@@ -268,8 +278,10 @@ async function parseDeck() {
     }
 
     for (const cardText of deckText.split("\n")) {
-        if (cardText.trim() === "" || cardText.startsWith("//"))
+        if (cardText.trim() === "" || cardText.startsWith("//")) {
+            cards.push(cardText);
             continue;
+        }
 
         print(`\nParsing card: ${cardText}`);
         var card = await Card.parseCardText(cardText);
@@ -298,7 +310,7 @@ function print(text) {
 }
 
 async function copyToClipboard() {
-    var textToCopy = cards.map(c => `${c.count} ${c.scryfall_uri}`).join("\n");
+    var textToCopy = cards.filter(c => c.scryfall_uri).map(c => `${c.count} ${c.scryfall_uri}`).join("\n");
     try {
         await navigator.clipboard.writeText(textToCopy);
         showToast("copied to clipboard");
