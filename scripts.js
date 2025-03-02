@@ -62,34 +62,45 @@ class Card {
         const now = Date.now();
         let url;
 
-        if (nr) {
-            url = `https://api.scryfall.com/cards/${setOrCardId}/${nr}`;
-            const cacheKey = `card_${setOrCardId}_${nr}`;
-            const cachedCard = localStorage.getItem(cacheKey);
+        this.startUpdate();
+        try {
+            if (nr) {
+                url = `https://api.scryfall.com/cards/${setOrCardId}/${nr}`;
+                const cacheKey = `card_${setOrCardId}_${nr}`;
+                const cachedCard = localStorage.getItem(cacheKey);
 
-            if (cachedCard) {
-                const cachedData = JSON.parse(cachedCard);
-                if (now - cachedData.timestamp < 3 * 24 * 60 * 60 * 1000) { // 3 days in milliseconds
+                if (cachedCard) {
+                    const cachedData = JSON.parse(cachedCard);
                     this.applyCardData(cachedData.data);
                     return;
-                } else {
-                    localStorage.removeItem(cacheKey);
                 }
+            } else {
+                url = `https://api.scryfall.com/cards/${setOrCardId}`;
             }
-        } else {
-            url = `https://api.scryfall.com/cards/${setOrCardId}`;
-        }
 
-        try {
-            await delayScryfallCall();
-            const response = await fetch(url);
-            const data = await response.json();
-            this.applyCardData(data);
-            const cacheKey = `card_${this.set}_${this.nr}`;
-            localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
-        } catch (error) {
-            console.error("Error updating card:", error);
+            try {
+                await delayScryfallCall();
+                const response = await fetch(url);
+                const data = await response.json();
+                this.applyCardData(data);
+                const cacheKey = `card_${this.set}_${this.nr}`;
+                localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
+            } catch (error) {
+                console.error("Error updating card:", error);
+            }
+        } finally {
+            this.endUpdate();
         }
+    }
+
+    startUpdate() {
+        if (this.elem != null)
+            this.elem.classList.add("updating");
+    }
+
+    endUpdate() {
+        if (this.elem != null)
+            this.elem.classList.remove("updating");
     }
 
     async search(name) {
@@ -287,7 +298,10 @@ async function parseDeck() {
         }
     }
 
-    for (const cardText of deckText.split("\n")) {
+    const deckLines = deckText.split("\n");
+    for (let i = 0; i < deckLines.length; i++) {
+        showToast(`Parsing card ${i + 1} of ${deckLines.length}...`);
+        const cardText = deckLines[i];
         if (cardText.trim() === "" || cardText.startsWith("//")) {
             cards.push(cardText);
             continue;
@@ -303,6 +317,8 @@ async function parseDeck() {
         parent.appendChild(clone);
         cards.push(card);
     }
+
+    hideToaster();
 
     updateList();
 }
@@ -329,14 +345,25 @@ async function copyToClipboard() {
     }
 }
 
+let toastTimeout;
+
 function showToast(message) {
     var toaster = document.getElementById('toaster');
     var toasterMessage = document.getElementById('toasterMessage');
     toasterMessage.textContent = message;
     toaster.classList.add("show");
-    setTimeout(function () {
+
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+    }
+
+    toastTimeout = setTimeout(function () {
         toaster.classList.remove("show");
     }, 3000);
+}
+
+function hideToaster() {
+    document.getElementById('toaster').classList.remove("show");
 }
 
 function cleanUpLocalStorage() {

@@ -75,7 +75,7 @@ body {
 .card .flipSvg {
     display: none;
     position: absolute;
-    width: 29px;
+    width: 28px;
     top: 70px;
     right: 18px;
     background: #82828275;
@@ -114,8 +114,43 @@ body {
     text-shadow: 1px 1px 1px black;
 }
 
-.card.selected .cardFace{
+.card.selected .cardFace {
     outline: 3px solid purple;
+}
+
+.card .update {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    z-index: 2000;
+    backdrop-filter: blur(3px);
+    border-radius: 8px;
+}
+
+.card .updateSvg {
+    position: absolute;
+    width: 60px;
+    top: calc(50% - 30px);
+    left: calc(50% - 30px);
+    filter: invert(1) brightness(0.6);
+    z-index: 2001;
+    animation: rotateSpinner 800ms linear infinite;
+}
+
+@keyframes rotateSpinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.card.updating .update {
+    display: block;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
 }
 
 button {
