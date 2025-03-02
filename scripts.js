@@ -93,10 +93,9 @@ class Card {
 
         this.elem.querySelector(".cardImg").src = this.imageUri;
 
-        if (this.twoFaced)
-        {
+        if (this.twoFaced) {
             this.elem.classList.add("twoFaced");
-            this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];            
+            this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];
         }
         else
             this.elem.classList.remove("twoFaced");
@@ -153,9 +152,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (!lastDeck) {
         lastDeckButton.disabled = true;
     }
-
-    // var test = await fetch("https://deckstats.net/api.php?action=get_deck&id_type=saved&owner_id=24472&id=1126678&response_type=list");
-    // console.log(await test.json());
 });
 
 function loadLastDeck() {
@@ -201,8 +197,37 @@ async function parseDeck() {
 
     var deckText = document.getElementById("deckInput").value;
 
+    // Example deck URL: https://deckstats.net/decks/276918/3990370-rawr-from-the-dead
+    const deckUrlRegex = /^https:\/\/deckstats\.net\/decks\/(?<userId>\d+)\/(?<deckId>\d+)-/;
+    const deckUrlMatch = deckText.match(deckUrlRegex);
+
+    if (deckUrlMatch) {
+        const { userId, deckId } = deckUrlMatch.groups;
+        let apiUrl = `https://deckstats.net/api.php?action=get_deck&id_type=saved&owner_id=${userId}&id=${deckId}&response_type=json`;
+        try {
+            const response = await fetch(apiUrl);
+            const deckData = await response.json();
+            
+            var sets = localStorage.getItem('deckstatSets');
+
+            if (sets)
+                sets = JSON.parse(sets);
+            else {
+                const setsResponse = await fetch('deckstats_sets.json');
+                const setsData = await setsResponse.json();
+                sets = setsData;
+                localStorage.setItem('deckstatSets', JSON.stringify(sets));
+            }
+
+            deckText = deckData.sections.map(s => s.cards.map(c => `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`).join('\n')).join('\n');
+            document.getElementById("deckInput").value = deckText;
+        } catch (error) {
+            print("Deck could not be loaded; " + JSON.stringify(error));
+        }
+    }
+
     for (const cardText of deckText.split("\n")) {
-        if(cardText.trim() === "" || cardText.startsWith("//"))
+        if (cardText.trim() === "" || cardText.startsWith("//"))
             continue;
 
         print(`\nParsing card: ${cardText}`);
