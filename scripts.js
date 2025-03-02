@@ -36,31 +36,56 @@ class Card {
     }
 
     async update(setOrCardId, nr) {
-        const url = nr ? `https://api.scryfall.com/cards/${setOrCardId}/${nr}` : `https://api.scryfall.com/cards/${setOrCardId}`;
+        setOrCardId = setOrCardId.toUpperCase();
+        nr = nr.toUpperCase();
+
+        const now = new Date().getTime();
+        let url;
+
+        if (nr) {
+            url = `https://api.scryfall.com/cards/${setOrCardId}/${nr}`;
+            const cacheKey = `card_${setOrCardId}_${nr}`;
+            const cachedCard = localStorage.getItem(cacheKey);
+
+            if (cachedCard) {
+                const cachedData = JSON.parse(cachedCard);
+                if (now - cachedData.timestamp < 3 * 24 * 60 * 60 * 1000) { // 3 days in milliseconds
+                    this.applyCardData(cachedData.data);
+                    return;
+                } else {
+                    localStorage.removeItem(cacheKey);
+                }
+            }
+        } else {
+            url = `https://api.scryfall.com/cards/${setOrCardId}`;
+        }
 
         try {
             const response = await fetch(url);
             const data = await response.json();
-            console.log(data);
-            this.cardId = data.id;
-            this.oracleId = data.oracle_id;
-            if (!data.image_uris) {
-                this.twoFaced = true;
-                this.imageUris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
-                this.imageUri = this.uris[0];
-            }
-            else
-                this.imageUri = data.image_uris.normal;
-            this.set = data.set;
-            this.nr = data.collector_number;
-            this.name = data.name;
-            this.scryfall_uri = data.scryfall_uri
-            this.updateElem();
-
-            await new Promise(resolve => setTimeout(resolve, 100));
+            this.applyCardData(data);
+            const cacheKey = `card_${this.set}_${this.nr}`;
+            localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
         } catch (error) {
             console.error("Error updating card:", error);
         }
+    }
+
+    applyCardData(data) {
+        this.cardId = data.id;
+        this.oracleId = data.oracle_id;
+        if (!data.image_uris) {
+            this.twoFaced = true;
+            this.imageUris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
+            this.imageUri = this.imageUris[0];
+        } else {
+            this.imageUri = data.image_uris.normal;
+        }
+        this.set = data.set.toUpperCase();
+        this.nr = data.collector_number.toUpperCase();
+        this.name = data.name;
+        this.scryfall_uri = data.scryfall_uri;
+        this.updateElem();
     }
 
     updateElem() {
@@ -152,6 +177,7 @@ async function onDrop(e) {
 };
 
 async function parseDeck() {
+    document.getElementById("loadDeck").disabled = true;
     document.getElementById("lastDeck").disabled = true;
     document.getElementById("copyScryfallBtn").disabled = false;
 
@@ -205,7 +231,7 @@ function showToast(message) {
     var toasterMessage = document.getElementById('toasterMessage');
     toasterMessage.textContent = message;
     toaster.classList.add("show");
-    setTimeout(function() {
+    setTimeout(function () {
         toaster.classList.remove("show");
     }, 3000);
 }
