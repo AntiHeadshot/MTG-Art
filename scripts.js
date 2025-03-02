@@ -202,6 +202,9 @@ async function parseDeck() {
     var deckText = document.getElementById("deckInput").value;
 
     for (const cardText of deckText.split("\n")) {
+        if(cardText.trim() === "" || cardText.startsWith("//"))
+            continue;
+
         print(`\nParsing card: ${cardText}`);
         var card = await Card.parseCardText(cardText);
         var clone = template.cloneNode(true);
