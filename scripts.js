@@ -11,7 +11,7 @@ class Card {
         this.count = count;
         this.cardId = cardId;
         this.oracleId = oracleId;
-        this.uri = imageUri;
+        this.imageUri = imageUri;
     }
 
     getDescription() { return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`; }
@@ -46,14 +46,15 @@ class Card {
             this.oracleId = data.oracle_id;
             if (!data.image_uris) {
                 this.twoFaced = true;
-                this.uris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
-                this.uri = this.uris[0];
+                this.imageUris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
+                this.imageUri = this.uris[0];
             }
             else
-                this.uri = data.image_uris.normal;
+                this.imageUri = data.image_uris.normal;
             this.set = data.set;
             this.nr = data.collector_number;
             this.name = data.name;
+            this.scryfall_uri = data.scryfall_uri
             this.updateElem();
 
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -66,7 +67,7 @@ class Card {
         if (this.elem == null)
             return;
 
-        this.elem.querySelector("img").src = this.uri;
+        this.elem.querySelector("img").src = this.imageUri;
         this.elem.setAttribute("identifier", this.getDescription());
         this.elem.id = "card" + this.cardId;
     }
@@ -152,6 +153,7 @@ async function onDrop(e) {
 
 async function parseDeck() {
     document.getElementById("lastDeck").disabled = true;
+    document.getElementById("copyScryfallBtn").disabled = false;
 
     var template = document.getElementById("cardTemplate");
     var parent = document.getElementById("cardContainer");
@@ -186,4 +188,24 @@ window.addEventListener("unhandledrejection", function (event) {
 
 function print(text) {
     document.getElementById("deckInput").value += text;
+}
+
+async function copyToClipboard() {
+    var textToCopy = cards.map(c => `${c.count} ${c.scryfall_uri}`).join("\n");
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        showToast("copied to clipboard");
+    } catch (err) {
+        console.error('Could not copy text: ', err);
+    }
+}
+
+function showToast(message) {
+    var toaster = document.getElementById('toaster');
+    var toasterMessage = document.getElementById('toasterMessage');
+    toasterMessage.textContent = message;
+    toaster.classList.add("show");
+    setTimeout(function() {
+        toaster.classList.remove("show");
+    }, 3000);
 }

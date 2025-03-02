@@ -9,19 +9,20 @@
 
 <body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
     <div id="cardContainer" class="scrollbar">
-        <div class="card" 
-            id="cardTemplate" 
-            style="display: none;"
-            onclick="openScryfall(event, this.card)" 
-            draggable="false" >
+        <div class="card" id="cardTemplate" style="display: none;" onclick="openScryfall(event, this.card)"
+            draggable="false">
             <img src="">
         </div>
     </div>
     <div id="deckContainer">
         <button onclick="parseDeck()">load</button>
         <button id="lastDeck" onclick="loadLastDeck()">load last deck</button>
+        <button id="copyScryfallBtn" disabled onclick="copyToClipboard()">copy Scryfall Links to clipboard</button>
         <textarea id="deckInput">1 [CMR#656] Vampiric Tutor
 1 [TMH3#2] Eldrazi Spawn</textarea>
+    </div>
+    <div id="toaster">
+        <div id="toasterMessage"></div>
     </div>
 </body>
 
