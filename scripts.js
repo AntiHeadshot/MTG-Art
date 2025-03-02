@@ -17,12 +17,22 @@ class Card {
     getDescription() { return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`; }
 
     static async parseCardText(cardText) {
-        const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>\w+)\]\s+(?<name>.+)$/;
+        const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+(?<name>.+)$/;
         let match = cardText.match(regex);
 
         if (!match) {
-            const regex2 = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>\w+)$/;
+            const regex2 = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-]+)$/;
             match = cardText.match(regex2);
+        }
+        if (!match) {
+            const regex3 = /^(?<count>\d+)\s+(?<name>.+)$/;
+            match = cardText.match(regex3);
+
+            const { count, name } = match.groups;
+
+            var card = new Card(parseInt(count, 10));
+            await card.search(name);
+            return card;
         }
         if (!match) {
             throw new Error("Invalid card text format");
@@ -62,6 +72,7 @@ class Card {
         try {
             const response = await fetch(url);
             const data = await response.json();
+            await new Promise(resolve => setTimeout(resolve, 100));
             this.applyCardData(data);
             const cacheKey = `card_${this.set}_${this.nr}`;
             localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
@@ -70,9 +81,35 @@ class Card {
         }
     }
 
+    async search(name) {
+
+        const now = new Date().getTime();
+        let url;
+
+        url = `https://api.scryfall.com/cards/search?order=name&q=%21\"${name}\"`;
+
+        try {
+            const response = await fetch(url);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const data = await response.json();
+
+            if (data.total_cards.length < 1) {
+                console.log(data);
+                return;
+            }
+
+            this.applyCardData(data.data[0]);
+            const cacheKey = `card_${this.set}_${this.nr}`;
+            localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data: data.data[0] }));
+        } catch (error) {
+            console.error("Error updating card:", error);
+        }
+    }
+
     applyCardData(data) {
         this.cardId = data.id;
         this.oracleId = data.oracle_id;
+        console.log(data);
         if (!data.image_uris) {
             this.twoFaced = true;
             this.imageUris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
@@ -167,13 +204,13 @@ async function onDrop(e) {
 
         if (text && text.length == 1) {
             text = text[0];
-            if (/^https:\/\/scryfall\.com\/card\/\w+\/\w+\/[\w-]+$/.test(text)) {
+            if (/^https:\/\/scryfall\.com\/card\/\w+\/[\w-]+\/[\w-]+$/.test(text)) {
                 const urlParts = text.split('/');
 
                 await openedCard.update(urlParts[4], urlParts[5]);
                 updateList();
 
-            } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/\w+\/[\w-]+\.jpg\?\d+$/.test(text)) {
+            } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/[\w-]+\/[\w-]+\.jpg\?\d+$/.test(text)) {
                 const id = text.split('/')[7].split('.')[0];
 
                 await openedCard.update(id);
@@ -207,7 +244,7 @@ async function parseDeck() {
         try {
             const response = await fetch(apiUrl);
             const deckData = await response.json();
-            
+
             var sets = localStorage.getItem('deckstatSets');
 
             if (sets)
@@ -219,10 +256,14 @@ async function parseDeck() {
                 localStorage.setItem('deckstatSets', JSON.stringify(sets));
             }
 
-            deckText = deckData.sections.map(s => s.cards.map(c => `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`).join('\n')).join('\n');
+            deckText = deckData.sections.map(s => s.cards.map(c => {
+                if (c.set_id)
+                    return `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`;
+                return `${c.amount} ${c.name}`;
+            }).join('\n')).join('\n');
             document.getElementById("deckInput").value = deckText;
         } catch (error) {
-            print("Deck could not be loaded; " + JSON.stringify(error));
+            print("Deck could not be loaded; " + JSON.stringify(error.toString()));
         }
     }
 
