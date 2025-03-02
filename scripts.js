@@ -109,7 +109,6 @@ class Card {
     applyCardData(data) {
         this.cardId = data.id;
         this.oracleId = data.oracle_id;
-        console.log(data);
         if (!data.image_uris) {
             this.twoFaced = true;
             this.imageUris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
