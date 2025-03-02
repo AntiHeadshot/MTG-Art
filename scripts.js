@@ -3,6 +3,17 @@ let popupWindow;
 let cards = [];
 let lastDeck = localStorage.getItem('deck');
 
+async function delayScryfallCall() {
+    if (delayScryfallCall.lastCall) {
+        const now = Date.now();
+        const timeSinceLastCall = now - delayScryfallCall.lastCall;
+        if (timeSinceLastCall < 100) {
+            await new Promise(resolve => setTimeout(resolve, 100 - timeSinceLastCall));
+        }
+    }
+    delayScryfallCall.lastCall = Date.now();
+}
+
 class Card {
     constructor(count, set, nr, name, cardId, oracleId, imageUri) {
         this.set = set;
@@ -48,7 +59,7 @@ class Card {
     async update(setOrCardId, nr) {
         setOrCardId = setOrCardId.toUpperCase();
 
-        const now = new Date().getTime();
+        const now = Date.now();
         let url;
 
         if (nr) {
@@ -70,9 +81,9 @@ class Card {
         }
 
         try {
+            await delayScryfallCall();
             const response = await fetch(url);
             const data = await response.json();
-            await new Promise(resolve => setTimeout(resolve, 100));
             this.applyCardData(data);
             const cacheKey = `card_${this.set}_${this.nr}`;
             localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
@@ -83,14 +94,14 @@ class Card {
 
     async search(name) {
 
-        const now = new Date().getTime();
+        const now = Date.now();
         let url;
 
         url = `https://api.scryfall.com/cards/search?order=name&q=%21\"${name}\"`;
 
         try {
+            await delayScryfallCall();
             const response = await fetch(url);
-            await new Promise(resolve => setTimeout(resolve, 100));
             const data = await response.json();
 
             if (data.total_cards.length < 1) {
@@ -196,6 +207,7 @@ function loadLastDeck() {
 
 async function onDrop(e) {
     e.preventDefault();
+    popupWindow.focus();
     print("\ndropped:\n" + e.dataTransfer.getData("text/uri-list"));
 
     if (openedCard != null) {
@@ -217,7 +229,6 @@ async function onDrop(e) {
             }
         }
     }
-    popupWindow.focus();
 };
 
 async function parseDeck() {
@@ -327,3 +338,19 @@ function showToast(message) {
         toaster.classList.remove("show");
     }, 3000);
 }
+
+function cleanUpLocalStorage() {
+    const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000;
+    const threeDaysAgo = Date.now() - threeDaysInMillis;
+
+    for (const key in localStorage) {
+        if (key.startsWith('card_')) {
+            const cachedCard = JSON.parse(localStorage.getItem(key));
+            if (cachedCard.timestamp < threeDaysAgo) {
+                localStorage.removeItem(key);
+            }
+        }
+    }
+}
+
+cleanUpLocalStorage();
