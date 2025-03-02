@@ -37,7 +37,6 @@ class Card {
 
     async update(setOrCardId, nr) {
         setOrCardId = setOrCardId.toUpperCase();
-        nr = nr.toUpperCase();
 
         const now = new Date().getTime();
         let url;
@@ -82,7 +81,7 @@ class Card {
             this.imageUri = data.image_uris.normal;
         }
         this.set = data.set.toUpperCase();
-        this.nr = data.collector_number.toUpperCase();
+        this.nr = data.collector_number;
         this.name = data.name;
         this.scryfall_uri = data.scryfall_uri;
         this.updateElem();
@@ -91,6 +90,16 @@ class Card {
     updateElem() {
         if (this.elem == null)
             return;
+
+        this.elem.querySelector(".cardImg").src = this.imageUri;
+
+        if (this.twoFaced)
+        {
+            this.elem.classList.add("twoFaced");
+            this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];            
+        }
+        else
+            this.elem.classList.remove("twoFaced");
 
         this.elem.querySelector("img").src = this.imageUri;
         this.elem.setAttribute("identifier", this.getDescription());
@@ -139,11 +148,14 @@ function updateList() {
     localStorage.setItem('deck', deck);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     const lastDeckButton = document.getElementById("lastDeck");
     if (!lastDeck) {
         lastDeckButton.disabled = true;
     }
+
+    // var test = await fetch("https://deckstats.net/api.php?action=get_deck&id_type=saved&owner_id=24472&id=1126678&response_type=list");
+    // console.log(await test.json());
 });
 
 function loadLastDeck() {

@@ -41,12 +41,63 @@ body {
     margin: 6px;
     border-radius: 9px;
     position: relative;
+    perspective: 1000px;
 }
 
-.card>img {
+.cardFace {
     width: 100%;
     border-radius: 9px;
     margin-bottom: -4px;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    transition: transform 1s ease-in-out;
+}
+
+.card img {
+    width: 100%;
+    border-radius: 9px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Safari */
+}
+
+.card .cardFlipImg {
+    display: none;
+    position: absolute;
+    top: 0;
+    transform: rotateY(180deg);
+}
+
+.card.twoFaced .cardFlipImg {
+    display: block;
+}
+
+.card .flipSvg {
+    display: none;
+    position: absolute;
+    width: 29px;
+    top: 70px;
+    right: 18px;
+    background: #82828275;
+    padding: 4px;
+    outline: 2px solid #6e6e6e;
+    border-radius: 50%;
+    filter: contrast(0.5);
+    z-index: 1000;
+}
+
+.card.flipped .cardFace {
+    transform: rotateY(180deg);
+    transition: transform 1s ease-in-out;
+}
+
+.card.flipped .flipSvg {
+    filter: invert(1);
+    transition: filter 1s ease-in-out;
+}
+
+.card.twoFaced .flipSvg {
+    display: block;
 }
 
 .card::after {
