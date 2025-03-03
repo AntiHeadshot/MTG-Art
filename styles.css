@@ -10,12 +10,17 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
-#cardContainer {
+#cards {
     position: absolute;
     width: 200px;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+#cardContainer {
+    position: relative;
+    width: 100%;
 }
 
 #deckContainer {
@@ -40,8 +45,10 @@ body {
     width: calc(100% - 12px);
     margin: 6px;
     border-radius: 9px;
-    position: relative;
     perspective: 1000px;
+    position: sticky;
+    top: 6px;
+    bottom: 6px;
 }
 
 .cardFace {
@@ -100,7 +107,7 @@ body {
     display: block;
 }
 
-.card::after {
+/* .card::after {
     position: absolute;
     content: attr(identifier);
     display: inline-block;
@@ -112,7 +119,7 @@ body {
     transform: rotate(90deg);
     transform-origin: bottom left;
     text-shadow: 1px 1px 1px black;
-}
+} */
 
 .card.selected .cardFace {
     outline: 3px solid purple;
