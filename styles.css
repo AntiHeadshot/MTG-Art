@@ -29,7 +29,7 @@ body {
 }
 
 #deckInput {
-    width: calc(100% - 2px);
+    width: calc(100% - 5px);
     background-color: #2c2c2c;
     border: 1px solid #4c4c4c;
     color: #ffffff;
@@ -138,7 +138,7 @@ body {
     left: calc(50% - 30px);
     filter: invert(1) brightness(0.6);
     z-index: 2001;
-    animation: rotateSpinner 800ms linear infinite;
+    animation: rotateSpinner 800ms steps(12) infinite;
 }
 
 @keyframes rotateSpinner {

@@ -166,7 +166,7 @@ class Card {
 
 function openScryfall(evt, card) {
     var oracleId = card.oracleId;
-    var imgsrc = document.getElementById("deckContainer").getBoundingClientRect();
+    var imgsrc = document.getElementById("deckInput").getBoundingClientRect();
     var src = "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
 
     var dx = evt.screenX - evt.clientX;
