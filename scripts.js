@@ -259,6 +259,8 @@ async function onDrop(e) {
 };
 
 async function parseDeck() {
+    if(document.getElementById("loadDeck").disabled)
+        return;
     document.getElementById("loadDeck").disabled = true;
     document.getElementById("copyScryfallBtn").disabled = false;
 
