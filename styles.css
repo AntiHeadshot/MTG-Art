@@ -14,13 +14,16 @@ body {
     position: absolute;
     width: 200px;
     height: 100%;
-    overflow-y: auto;
+    overflow-y: visible;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 #cardContainer {
     position: relative;
-    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 #deckContainer {
@@ -31,6 +34,8 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
 }
 
 #deckInput {
@@ -39,21 +44,24 @@ body {
     border: 1px solid #4c4c4c;
     color: #ffffff;
     flex-grow: 1;
+    resize: none;
 }
 
 .card {
-    width: calc(100% - 12px);
+    width: 176px;
     margin: 6px;
-    border-radius: 9px;
+    border-radius: 5%;
     perspective: 1000px;
     position: sticky;
     top: 6px;
     bottom: 6px;
+    left: 6px;
+    right: 6px;
 }
 
 .cardFace {
+    border-radius: 5%;
     width: 100%;
-    border-radius: 9px;
     transform-style: preserve-3d;
     transform: rotateY(0deg);
     transition: transform 1s ease-in-out;
@@ -61,7 +69,7 @@ body {
 
 .card img {
     width: 100%;
-    border-radius: 9px;
+    border-radius: 5%;
     backface-visibility: hidden;
     /* Safari */
     -webkit-backface-visibility: hidden;
@@ -72,7 +80,7 @@ body {
     display: none;
     position: absolute;
     top: 0;
-    transform: rotateY(180deg);
+    transform: rotateY(-180deg);
 }
 
 .card.twoFaced .cardFlipImg {
@@ -85,16 +93,11 @@ body {
     width: 28px;
     top: 70px;
     right: 18px;
-    background: #82828275;
-    padding: 4px;
-    outline: 2px solid #6e6e6e;
-    border-radius: 50%;
-    filter: contrast(0.5);
     z-index: 1000;
 }
 
 .card.flipped .cardFace {
-    transform: rotateY(180deg);
+    transform: rotateY(-180deg);
     transition: transform 1s ease-in-out;
 }
 
@@ -138,6 +141,22 @@ body {
     border-radius: 8px;
 }
 
+svg {
+    filter: invert(1) brightness(0.6);
+    transition: filter 1s ease-in-out;
+}
+
+svg.border {
+    background: #82828275;
+    padding: 4px;
+    border: 2px solid #6e6e6e;
+    border-radius: 2px;
+}
+
+svg.border.round {
+    border-radius: 50%;
+}
+
 .card .updateSvg {
     position: absolute;
     width: 60px;
@@ -160,8 +179,16 @@ body {
     transition: opacity 1s ease-in-out;
 }
 
+#deckEnd {
+    height: 0;
+    padding-top: 50px;
+    display: flex;
+}
+
 button {
     margin: 4px;
+    padding: 4px 20px 4px 20px;
+    align-self: center;
 }
 
 .scrollbar::-webkit-scrollbar-track {
@@ -203,4 +230,47 @@ button {
 
 #toaster.show {
     opacity: 1;
+}
+
+#modeButton {
+    position: absolute;
+    height: 28px;
+    top: 4px;
+    right: 4px;
+    z-index: 10000;
+}
+
+.artView #modeButton {
+    right: 4px;
+}
+
+#modeButton .hidden {
+    transform: scale(0);
+    transform-origin: center;
+    transition: transform 0.5s ease-in-out;
+}
+
+.artView #modeButton .hidden {
+    transform: scale(1);
+    transition: transform 0.5s ease-in-out;
+}
+
+.artView #deckContainer {
+    display: none;
+}
+
+.artView #cards {
+    width: 100%;
+}
+
+.artView #cardContainer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.artView .card {
+    position: relative;
+    width: min(240px, 50% - 20px);
+    transform: none!important;
 }

@@ -1,7 +1,9 @@
 let openedCard;
 let popupWindow;
 let cards = [];
-let lastDeck = localStorage.getItem('deck');
+let cardCnt = 0;
+let observer;
+let firstCard;
 
 async function delayScryfallCall() {
     if (delayScryfallCall.lastCall) {
@@ -108,7 +110,7 @@ class Card {
         const now = Date.now();
         let url;
 
-        url = `https://api.scryfall.com/cards/search?order=name&q=%21\"${name}\"`;
+        url = `https://api.scryfall.com/cards/search?order=name&q=%21\"${name}\"&include_extras=true`;
 
         try {
             await delayScryfallCall();
@@ -161,6 +163,27 @@ class Card {
         this.elem.querySelector("img").src = this.imageUri;
         this.elem.setAttribute("identifier", this.getDescription());
         this.elem.id = "card" + this.cardId;
+
+        if (!this.elem.style.zIndex)
+            this.elem.style.zIndex = 9000 - this.order;
+        this.elem.style.top = `${this.order * 2 + 4}px`;
+        this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
+        this.elem.style.transition = `bottom 1s ease-in-out`;
+        this.elem.style.transform = `rotate(${(Math.random()-0.5) * 2 * 2}deg)`;
+
+        new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.zIndex = 9000 - entry.target.card.order;
+                } else {
+                    entry.target.style.zIndex = 1000;
+                }
+            });
+        }, {
+            root: document,
+            rootMargin: `-${this.order * 2 + 5}px 0px 0px 0px`,
+            threshold: 1
+        }).observe(this.elem);
     }
 }
 
@@ -206,15 +229,8 @@ function updateList() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-    const lastDeckButton = document.getElementById("lastDeck");
-    if (!lastDeck) {
-        lastDeckButton.disabled = true;
-    }
+    document.getElementById("deckInput").value = localStorage.getItem('deck');
 });
-
-function loadLastDeck() {
-    document.getElementById("deckInput").value = lastDeck;
-}
 
 async function onDrop(e) {
     e.preventDefault();
@@ -244,7 +260,6 @@ async function onDrop(e) {
 
 async function parseDeck() {
     document.getElementById("loadDeck").disabled = true;
-    document.getElementById("lastDeck").disabled = true;
     document.getElementById("copyScryfallBtn").disabled = false;
 
     var template = document.getElementById("cardTemplate");
@@ -283,7 +298,7 @@ async function parseDeck() {
                 return `${c.amount} ${c.name}`;
             }).join('\n')).join('\n');
 
-            if (deckData.tokens) {
+            if (deckData?.tokens?.length > 0) {
                 deckText += '\n\n// Tokens\n';
                 deckText += deckData.tokens.map(c => {
                     if (c.set_id)
@@ -299,6 +314,8 @@ async function parseDeck() {
     }
 
     const deckLines = deckText.split("\n");
+    let cardNr = 0;
+
     for (let i = 0; i < deckLines.length; i++) {
         showToast(`Parsing card ${i + 1} of ${deckLines.length}...`);
         const cardText = deckLines[i];
@@ -309,6 +326,7 @@ async function parseDeck() {
 
         print(`\nParsing card: ${cardText}`);
         var card = await Card.parseCardText(cardText);
+        card.order = ++cardNr;
         var clone = template.cloneNode(true);
         clone.card = card;
         card.elem = clone;
@@ -316,6 +334,13 @@ async function parseDeck() {
         clone.style.display = "block";
         parent.appendChild(clone);
         cards.push(card);
+        cardCnt++;
+    }
+
+    for (const card of cards) {
+        if (card instanceof Card) {
+            card.updateElem();
+        }
     }
 
     hideToaster();
@@ -381,6 +406,3 @@ function cleanUpLocalStorage() {
 }
 
 cleanUpLocalStorage();
-
-
-//todo do something with https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API

@@ -8,6 +8,21 @@
 </head>
 
 <body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
+    <svg id="modeButton" class="border" focusable="false" draggable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24" onclick="this.parentElement.classList.toggle('artView'); event.stopPropagation();">
+        <rect x="3" y="3" width="5" height="5" rx="2" ry="2" />
+        <rect x="3" y="9.5" width="5" height="5" rx="2" ry="2" />
+        <rect x="3" y="16" width="5" height="5" rx="2" ry="2" />
+        <rect x="10" y="3" width="12" height="18" rx="2" ry="2"  class="hidden"/>
+
+        <rect x="10" y="3" width="5" height="5" rx="2" ry="2" />
+        <rect x="10" y="9.5" width="5" height="5" rx="2" ry="2" />
+        <rect x="10" y="16" width="5" height="5" rx="2" ry="2" />
+
+        <rect x="17" y="3" width="5" height="5" rx="2" ry="2" />
+        <rect x="17" y="9.5" width="5" height="5" rx="2" ry="2" />
+        <rect x="17" y="16" width="5" height="5" rx="2" ry="2" />
+    </svg>
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
             <div class="card" id="cardTemplate" style="display: none;" onclick="openScryfall(event, this.card)"
@@ -16,7 +31,7 @@
                     <img class="cardImg" draggable="false" src="">
                     <img class="cardFlipImg" draggable="false" src="">
                 </div>
-                <svg class="flipSvg" focusable="false" draggable="false" aria-hidden="true"
+                <svg class="flipSvg border round" focusable="false" draggable="false" aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"
                     onclick="this.parentElement.classList.toggle('flipped'); event.stopPropagation();">
                     <path
@@ -47,11 +62,10 @@
                 </div>
             </div>
         </div>
-        <div style="height: 0; padding-top:100%"></div>
+        <div id="deckEnd"></div>
     </div>
     <div id="deckContainer">
-        <button id="loadDeck" onclick="parseDeck()">load</button>
-        <button id="lastDeck" onclick="loadLastDeck()">load last deck</button>
+        <button id="loadDeck" onclick="parseDeck()">Load Deck</button>
         <button id="copyScryfallBtn" disabled onclick="copyToClipboard()">copy Scryfall Links to clipboard</button>
         <textarea id="deckInput">1 [CMR#656] Vampiric Tutor
 1 [TMH3#2] Eldrazi Spawn</textarea>
