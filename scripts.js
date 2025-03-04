@@ -5,6 +5,13 @@ let cardCnt = 0;
 let observer;
 let firstCard;
 
+const Format = Object.freeze({
+    DECKSTAT: 'deckstat',
+    MTGPRINT: 'mtgprint',
+    SCRYFALL: 'scryfall',
+    UNDEFINED: 'undefined'
+});
+
 async function delayScryfallCall() {
     if (delayScryfallCall.lastCall) {
         const now = Date.now();
@@ -17,37 +24,56 @@ async function delayScryfallCall() {
 }
 
 class Card {
-    constructor(count, set, nr, name, cardId, oracleId, imageUri) {
+    constructor(count, format, set, nr, name, cardId, oracleId, imageUri) {
+        this.count = count;
+        this.format = format;
         this.set = set;
         this.nr = nr;
         this.name = name;
-        this.count = count;
         this.cardId = cardId;
         this.oracleId = oracleId;
         this.imageUri = imageUri;
     }
 
     getDescription() {
-        if (this.isSearched)
+        if (this.format === Format.UNDEFINED)
             return `${this.count} ${this.searchName}`;
+        if (this.format === Format.MTGPRINT)
+            return `${this.count} ${this.name} (${this.set.toUpperCase()}) ${this.nr}`;
+        if (this.format === Format.SCRYFALL)
+            return `${this.count} ${this.scryfall_uri}`;
+
         return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`;
     }
 
     static async parseCardText(cardText) {
-        const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+(?<name>.+)$/;
+        // Example cardText: "1 [CMR#656] Vampiric Tutor"
+        const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+.+$/;
         let match = cardText.match(regex);
+        let format = Format.DECKSTAT;
 
         if (!match) {
+            // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
             const regex2 = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-]+)$/;
+            format = Format.MTGPRINT;
             match = cardText.match(regex2);
         }
         if (!match) {
+            // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
+            const regex3 = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-%]+)\/[\w\-%()\/]+)/;
+            format = Format.SCRYFALL;
+            match = cardText.match(regex3);
+        }
+        
+        if (!match) {
+            // Example cardText: "1 Vampiric Tutor"
             const regex3 = /^(?<count>\d+)\s+(?<name>.+)$/;
+            format = Format.UNDEFINED;
             match = cardText.match(regex3);
 
             const { count, name } = match.groups;
 
-            var card = new Card(parseInt(count, 10));
+            var card = new Card(parseInt(count, 10), format);
             await card.search(name);
             return card;
         }
@@ -57,7 +83,7 @@ class Card {
 
         const { count, set, nr } = match.groups;
 
-        var card = new Card(parseInt(count, 10));
+        var card = new Card(parseInt(count, 10), format);
         await card.update(set, nr);
         return card;
     }
@@ -88,7 +114,6 @@ class Card {
                 await delayScryfallCall();
                 const response = await fetch(url);
                 const data = await response.json();
-                this.isSearched = false;
                 this.applyCardData(data);
                 const cacheKey = `card_${this.set}_${this.nr}`;
                 localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
@@ -118,7 +143,19 @@ class Card {
         url = `https://api.scryfall.com/cards/search?order=name&q=%21\"${name}\"&include_extras=true`;
 
         try {
+            const cacheSearchKey = `card_${name}`;
+            const cachedCard = localStorage.getItem(cacheSearchKey);
+
+            this.searchName = name;
+
+            if (cachedCard) {
+                const cachedData = JSON.parse(cachedCard);
+                await this.update(cachedData.set, cachedData.nr);
+                return;
+            }
+
             await delayScryfallCall();
+
             const response = await fetch(url);
             const data = await response.json();
 
@@ -128,10 +165,9 @@ class Card {
             }
 
             this.applyCardData(data.data[0]);
-            this.isSearched = true;
-            this.searchName = name;
-            const cacheKey = `card_${this.set}_${this.nr}`;
-            localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data: data.data[0] }));
+
+            localStorage.setItem(cacheSearchKey, JSON.stringify({ timestamp: now, set: this.set, nr: this.nr }));
+            localStorage.setItem(`card_${this.set}_${this.nr}`, JSON.stringify({ timestamp: now, data: data.data[0] }));
         } catch (error) {
             console.error("Error updating card:", error);
         }
@@ -198,7 +234,7 @@ function openScryfall(evt, card) {
     var oracleId = card.oracleId;
     var imgsrc = document.getElementById("deckInput").getBoundingClientRect();
 
-    var src = card.isSearched ?
+    var src = card.format === Format.UNDEFINED ?
         `https://scryfall.com/search?order=name&q=%21\"${card.searchName}\"&include_extras=true&as=grid&order=released&unique=prints` :
         "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
 
@@ -245,7 +281,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 // Cardlist from deckstats.net
 1 [CMR#656] Vampiric Tutor
-1 [TMH3#2] Eldrazi Spawn
+2 [TMH3#2] Eldrazi Spawn
 
 // link to a public deck on deckstats.net
 https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
@@ -254,9 +290,13 @@ https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
 1 Legion's Landing // Adanto, the First Fort (PXTC) 22
 2 Vampiric Tutor (CMR) 656
 
+// link to a card on scryfall.com
+1 https://scryfall.com/card/cmr/656/vampiric-tutor
+2 https://scryfall.com/card/totc/10/zombie?utm_source=api
+
 // Cardnames and count without set names
 1 Vampiric Tutor
-1 Eldrazi Spawn
+2 Eldrazi Spawn
 // if you do this the card will be undefined untill you change it to a specific card
 
 // How to use:
@@ -284,12 +324,16 @@ async function onDrop(e) {
                 const urlParts = text.split('/');
 
                 await openedCard.update(urlParts[4], urlParts[5]);
+                if (openedCard.format === Format.UNDEFINED)
+                    openedCard.format = Format.DECKSTAT;
                 updateList();
 
             } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/[\w-]+\/[\w-]+\.jpg\?\d+$/.test(text)) {
                 const id = text.split('/')[7].split('.')[0];
 
                 await openedCard.update(id);
+                if (openedCard.format === Format.UNDEFINED)
+                    openedCard.format = Format.DECKSTAT;
                 updateList();
             }
         }
@@ -299,7 +343,7 @@ async function onDrop(e) {
 async function parseDeck() {
     var deckText = document.getElementById("deckInput").value;
 
-    if(deckText.trim() === "")
+    if (deckText.trim() === "")
         return;
 
     if (document.getElementById("loadDeck").disabled)
