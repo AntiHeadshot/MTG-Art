@@ -242,7 +242,7 @@ async function onDrop(e) {
 
         if (text && text.length == 1) {
             text = text[0];
-            if (/^https:\/\/scryfall\.com\/card\/\w+\/[\w-]+\/[\w-]+$/.test(text)) {
+            if (/^https:\/\/scryfall\.com\/card\/\w+\/[\w\-%]+\/[\w\-%()\/]+$/.test(text)) {
                 const urlParts = text.split('/');
 
                 await openedCard.update(urlParts[4], urlParts[5]);
