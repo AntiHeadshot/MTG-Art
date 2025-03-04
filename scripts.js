@@ -27,7 +27,11 @@ class Card {
         this.imageUri = imageUri;
     }
 
-    getDescription() { return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`; }
+    getDescription() {
+        if (this.isSearched)
+            return `${this.count} ${this.searchName}`;
+        return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`;
+    }
 
     static async parseCardText(cardText) {
         const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+(?<name>.+)$/;
@@ -84,6 +88,7 @@ class Card {
                 await delayScryfallCall();
                 const response = await fetch(url);
                 const data = await response.json();
+                this.isSearched = false;
                 this.applyCardData(data);
                 const cacheKey = `card_${this.set}_${this.nr}`;
                 localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
@@ -123,6 +128,8 @@ class Card {
             }
 
             this.applyCardData(data.data[0]);
+            this.isSearched = true;
+            this.searchName = name;
             const cacheKey = `card_${this.set}_${this.nr}`;
             localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data: data.data[0] }));
         } catch (error) {
@@ -169,7 +176,7 @@ class Card {
         this.elem.style.top = `${this.order * 2 + 4}px`;
         this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
         this.elem.style.transition = `bottom 1s ease-in-out`;
-        this.elem.style.transform = `rotate(${(Math.random()-0.5) * 2 * 2}deg)`;
+        this.elem.style.transform = `rotate(${(Math.random() - 0.5) * 2 * 2}deg)`;
 
         new IntersectionObserver(entries => {
             entries.forEach(entry => {
@@ -190,7 +197,10 @@ class Card {
 function openScryfall(evt, card) {
     var oracleId = card.oracleId;
     var imgsrc = document.getElementById("deckInput").getBoundingClientRect();
-    var src = "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
+
+    var src = card.isSearched ?
+        `https://scryfall.com/search?order=name&q=%21\"${card.searchName}\"&include_extras=true&as=grid&order=released&unique=prints` :
+        "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
 
     var dx = evt.screenX - evt.clientX;
     var dy = evt.screenY - evt.clientY;
@@ -230,6 +240,34 @@ function updateList() {
 
 document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("deckInput").value = localStorage.getItem('deck');
+    document.getElementById("deckInput").setAttribute("placeholder",
+        `// Possible Inputs:
+
+// Cardlist from deckstats.net
+1 [CMR#656] Vampiric Tutor
+1 [TMH3#2] Eldrazi Spawn
+
+// link to a public deck on deckstats.net
+https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
+
+// list of cards from mtgprint.net
+1 Legion's Landing // Adanto, the First Fort (PXTC) 22
+2 Vampiric Tutor (CMR) 656
+
+// Cardnames and count without set names
+1 Vampiric Tutor
+1 Eldrazi Spawn
+// if you do this the card will be undefined untill you change it to a specific card
+
+// How to use:
+// 1. Paste your decklist here
+// 2. Press "Load Deck"
+// 3. Wait for the cards to load
+// 4. Click on a card to open it on Scryfall
+// 5. Drag and drop a card image from Skryfall on thi page to update the opened card
+// (The list will be saved automatically)
+// 7. Press "Copy to Clipboard" to copy the list of cards to your clipboard
+`);
 });
 
 async function onDrop(e) {
@@ -259,8 +297,14 @@ async function onDrop(e) {
 };
 
 async function parseDeck() {
-    if(document.getElementById("loadDeck").disabled)
+    var deckText = document.getElementById("deckInput").value;
+
+    if(deckText.trim() === "")
         return;
+
+    if (document.getElementById("loadDeck").disabled)
+        return;
+
     document.getElementById("loadDeck").disabled = true;
     document.getElementById("copyScryfallBtn").disabled = false;
 
@@ -269,8 +313,6 @@ async function parseDeck() {
 
     while (parent.lastChild && parent.lastChild.style?.display !== "none")
         parent.removeChild(parent.lastChild);
-
-    var deckText = document.getElementById("deckInput").value;
 
     // Example deck URL: https://deckstats.net/decks/276918/3990370-rawr-from-the-dead
     const deckUrlRegex = /^https:\/\/deckstats\.net\/decks\/(?<userId>\d+)\/(?<deckId>\d+)-/;
