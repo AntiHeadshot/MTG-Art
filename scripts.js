@@ -498,6 +498,7 @@ window.addEventListener("unhandledrejection", function (event) {
 });
 
 function print(text) {
+    console.log("printing: " + text);
     const scrollInfo = view.getScrollInfo();
     view.doc.setValue(view.doc.getValue() + '\n' + text);
     view.scrollTo(scrollInfo.left, scrollInfo.top);
