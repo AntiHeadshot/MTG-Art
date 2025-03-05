@@ -471,7 +471,7 @@ window.parseDeck = async function parseDeck() {
     updateList();
 
     hoverOn = true;
-    //view.on("beforeSelectionChange", scrollToSelectedCard);
+    view.on("beforeSelectionChange", scrollToSelectedCard);
 }
 
 function insertCardInOrder(parent, card, elem) {
@@ -585,7 +585,6 @@ view.doc.setValue(localStorage.getItem("deck"));
 let hoverOn = false;
 
 async function scrollToSelectedCard(_, obj) {
-    console.log(hoverOn);
     if (hoverOn && cards?.length > 0) {
         const line = Math.min(obj.ranges[0].anchor.line, obj.ranges[0].head.line);
         let closestCard = cards.find(card => card.lineNr >= line) || cards[cards.length - 1];
