@@ -81,8 +81,12 @@
     </div>
     <div id="deckContainer">
         <button id="loadDeck" onclick="parseDeck()">Load Deck</button>
-        <button id="copyScryfallBtn" disabled onclick="copyToClipboard()">copy Scryfall Links to clipboard</button>
-        <button id="convertToMtgPrintBtn" onclick="convertToMtgPrint()">Convert to MTGPrint</button>
+        <div style="align-self: center;">Convert to:</div>
+        <div id="convertButtons">
+            <button id="convertToScryfallBtn" disabled onclick="convertToFormat(Format.SCRYFALL)">Scryfall Links</button>
+            <button id="convertToDeckstatsBtn" disabled onclick="convertToFormat(Format.DECKSTATS)">deckstats.net</button>
+            <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">MTG Print</button>
+        </div>
         <textarea id="deckInput"></textarea>
     </div>
     <div id="toaster">

@@ -6,7 +6,7 @@ let observer;
 let firstCard;
 
 const Format = Object.freeze({
-    DECKSTAT: 'deckstat',
+    DECKSTATS: 'deckstats',
     MTGPRINT: 'mtgprint',
     SCRYFALL: 'scryfall',
     UNDEFINED: 'undefined'
@@ -50,7 +50,7 @@ class Card {
         // Example cardText: "1 [CMR#656] Vampiric Tutor"
         const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+.+$/;
         let match = cardText.match(regex);
-        let format = Format.DECKSTAT;
+        let format = Format.DECKSTATS;
 
         if (!match) {
             // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
@@ -380,7 +380,7 @@ async function onDrop(e) {
 
                 await openedCard.update(false, urlParts[4], urlParts[5]);
                 if (openedCard.format === Format.UNDEFINED)
-                    openedCard.format = Format.DECKSTAT;
+                    openedCard.format = Format.DECKSTATS;
                 updateList();
 
             } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/[\w-]+\/[\w-]+\.jpg\?\d+$/.test(text)) {
@@ -388,7 +388,7 @@ async function onDrop(e) {
 
                 await openedCard.update(false, id);
                 if (openedCard.format === Format.UNDEFINED)
-                    openedCard.format = Format.DECKSTAT;
+                    openedCard.format = Format.DECKSTATS;
                 updateList();
             }
         }
@@ -405,8 +405,9 @@ async function parseDeck() {
         return;
 
     document.getElementById("loadDeck").disabled = true;
-    document.getElementById("copyScryfallBtn").disabled = false;
+    document.getElementById("convertToScryfallBtn").disabled = false;
     document.getElementById("convertToMtgPrintBtn").disabled = false;
+    document.getElementById("convertToDeckstatsBtn").disabled = false;
 
     var template = document.getElementById("cardTemplate");
     var parent = document.getElementById("cardContainer");
@@ -514,10 +515,10 @@ async function copyToClipboard() {
     }
 }
 
-function convertToMtgPrint() {
+function convertToFormat(format) {
     for (const card of cards) {
         if (card instanceof Card)
-            card.format = Format.MTGPRINT;
+            card.format = format;
     }
 
     updateList();
