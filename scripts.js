@@ -228,6 +228,7 @@ class Card {
 
         if (!this.elem.style.zIndex)
             this.elem.style.zIndex = 9000 - this.order;
+
         this.elem.style.top = `${this.order * 2 + 4}px`;
         this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
         this.elem.style.transition = `bottom 1s ease-in-out`;
@@ -283,43 +284,43 @@ class Card {
 
         updateList();
     }
-}
 
-function openScryfall(evt, card) {
-    var oracleId = card.oracleId;
-    var imgsrc = document.getElementById("deckInput").getBoundingClientRect();
+    openScryfall(evt) {
+        var oracleId = this.oracleId;
+        var imgsrc = document.getElementById("deckInput").getBoundingClientRect();
 
-    var src = card.format === Format.UNDEFINED ?
-        `https://scryfall.com/search?order=name&q=%21\"${card.searchName}\"&include_extras=true&as=grid&order=released&unique=prints` :
-        "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
+        var src = this.format === Format.UNDEFINED ?
+            `https://scryfall.com/search?order=name&q=%21\"${this.searchName}\"&include_extras=true&as=grid&order=released&unique=prints` :
+            "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
 
-    var dx = evt.screenX - evt.clientX;
-    var dy = evt.screenY - evt.clientY;
+        var dx = evt.screenX - evt.clientX;
+        var dy = evt.screenY - evt.clientY;
 
-    if (openedCard != null)
-        openedCard.elem.classList.remove("selected");
-    openedCard = card;
-    openedCard.elem.classList.add("selected");
+        if (openedCard != null)
+            openedCard.elem.classList.remove("selected");
+        openedCard = this;
+        openedCard.elem.classList.add("selected");
 
-    clearInterval(timer);
-    if (popupWindow && !popupWindow.closed) {
-        popupWindow.location = src;
-        popupWindow.focus();
-    } else {
-        popupWindow = window.open(src, "_blank", `popup=true,` +
-            `width=${imgsrc.width},` +
-            `height=${imgsrc.height},` +
-            `left=${imgsrc.left + dx},` +
-            `top=${imgsrc.top + dy}`);
-    }
-
-    var timer = setInterval(function () {
-        if (popupWindow.closed) {
-            clearInterval(timer);
-            openedCard?.elem?.classList?.remove("selected");
-            openedCard = null;
+        clearInterval(timer);
+        if (popupWindow && !popupWindow.closed) {
+            popupWindow.location = src;
+            popupWindow.focus();
+        } else {
+            popupWindow = window.open(src, "_blank", `popup=true,` +
+                `width=${imgsrc.width},` +
+                `height=${imgsrc.height},` +
+                `left=${imgsrc.left + dx},` +
+                `top=${imgsrc.top + dy}`);
         }
-    }, 500);
+
+        var timer = setInterval(function () {
+            if (popupWindow.closed) {
+                clearInterval(timer);
+                openedCard?.elem?.classList?.remove("selected");
+                openedCard = null;
+            }
+        }, 500);
+    }
 }
 
 function updateList() {
@@ -331,38 +332,18 @@ function updateList() {
 
 document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("deckInput").value = localStorage.getItem('deck');
-    document.getElementById("deckInput").setAttribute("placeholder",
-        `// Possible Inputs:
+    document.getElementById("deckInput").setAttribute("placeholder", await (await fetch('placeholder.txt')).text());
 
-// Cardlist from deckstats.net
-1 [CMR#656] Vampiric Tutor
-2 [TMH3#2] Eldrazi Spawn
+    for (let elem of document.querySelectorAll("replacedSvg")) {
+        var parent = elem.parentElement;
+        var attributes = elem.attributes;
+        parent.innerHTML = await (await fetch(elem.getAttribute('data'))).text();
+        let newElement = parent.lastChild;
 
-// link to a public deck on deckstats.net
-https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
-
-// list of cards from mtgprint.net
-1 Legion's Landing // Adanto, the First Fort (PXTC) 22
-2 Vampiric Tutor (CMR) 656
-
-// link to a card on scryfall.com
-1 https://scryfall.com/card/cmr/656/vampiric-tutor
-2 https://scryfall.com/card/totc/10/zombie?utm_source=api
-
-// Cardnames and count without set names
-1 Vampiric Tutor
-2 Eldrazi Spawn
-// if you do this the card will be undefined untill you change it to a specific card
-
-// How to use:
-// 1. Paste your decklist here
-// 2. Press "Load Deck"
-// 3. Wait for the cards to load
-// 4. Click on a card to open it on Scryfall
-// 5. Drag and drop a card image from Skryfall on thi page to update the opened card
-// (The list will be saved automatically)
-// 7. Press "Copy to Clipboard" to copy the list of cards to your clipboard
-`);
+        for (let attr of attributes) {
+            newElement.setAttribute(attr.name, attr.value);
+        }
+    }
 });
 
 async function onDrop(e) {
@@ -477,7 +458,9 @@ async function parseDeck() {
         card.elem = clone;
         card.updateElem();
         clone.style.display = "block";
-        parent.appendChild(clone);
+
+        insertCardInOrder(parent, card, clone)
+
         cards.push(card);
         cardCnt++;
     }
@@ -491,6 +474,21 @@ async function parseDeck() {
     hideToaster();
 
     updateList();
+}
+
+function insertCardInOrder(parent, card, elem) {
+    let inserted = false;
+    for (let j = 0; j < parent.children.length; j++) {
+        let child = parent.children[j];
+        if (child.card?.order > card.order) {
+            parent.insertBefore(elem, child);
+            inserted = true;
+            break;
+        }
+    }
+    if (!inserted) {
+        parent.appendChild(elem);
+    }
 }
 
 window.addEventListener("error", function (event) {

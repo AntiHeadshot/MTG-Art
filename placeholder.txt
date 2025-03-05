@@ -1,0 +1,30 @@
+// Possible Inputs:
+
+// Cardlist from deckstats.net
+1 [CMR#656] Vampiric Tutor
+2 [TMH3#2] Eldrazi Spawn
+
+// link to a public deck on deckstats.net
+https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
+
+// list of cards from mtgprint.net
+1 Legion's Landing // Adanto, the First Fort (PXTC) 22
+2 Vampiric Tutor (CMR) 656
+
+// link to a card on scryfall.com
+1 https://scryfall.com/card/cmr/656/vampiric-tutor
+2 https://scryfall.com/card/totc/10/zombie?utm_source=api
+
+// Cardnames and count without set names
+1 Vampiric Tutor
+2 Eldrazi Spawn
+// if you do this the card will be undefined untill you change it to a specific card
+
+// How to use:
+// 1. Paste your decklist here
+// 2. Press "Load Deck"
+// 3. Wait for the cards to load
+// 4. Click on a card to open it on Scryfall
+// 5. Drag and drop a card image from Skryfall on thi page to update the opened card
+// (The list will be saved automatically)
+// 7. Press "Copy to Clipboard" to copy the list of cards to your clipboard
