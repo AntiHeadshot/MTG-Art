@@ -2,8 +2,6 @@ let openedCard;
 let popupWindow;
 let cards = [];
 let cardCnt = 0;
-let observer;
-let firstCard;
 
 const Format = Object.freeze({
     DECKSTATS: 'deckstats',
@@ -11,6 +9,8 @@ const Format = Object.freeze({
     SCRYFALL: 'scryfall',
     UNDEFINED: 'undefined'
 });
+
+window.Format = Format;
 
 async function delayScryfallCall() {
     if (delayScryfallCall.lastCall) {
@@ -287,7 +287,7 @@ class Card {
 
     openScryfall(evt) {
         var oracleId = this.oracleId;
-        var imgsrc = document.getElementById("deckInput").getBoundingClientRect();
+        var imgsrc = view.display.wrapper.getBoundingClientRect();
 
         var src = this.format === Format.UNDEFINED ?
             `https://scryfall.com/search?order=name&q=%21\"${this.searchName}\"&include_extras=true&as=grid&order=released&unique=prints` :
@@ -325,28 +325,15 @@ class Card {
 
 function updateList() {
     var deck = cards.map(c => c.getDescription ? c.getDescription() : c).join("\n");
-    document.getElementById("deckInput").value = deck;
+    
+    const scrollInfo = view.getScrollInfo();
+    view.doc.setValue(deck);
+    view.scrollTo(scrollInfo.left, scrollInfo.top);
 
     localStorage.setItem('deck', deck);
 }
 
-document.addEventListener("DOMContentLoaded", async function () {
-    document.getElementById("deckInput").value = localStorage.getItem('deck');
-    document.getElementById("deckInput").setAttribute("placeholder", await (await fetch('placeholder.txt')).text());
-
-    for (let elem of document.querySelectorAll("replacedSvg")) {
-        var parent = elem.parentElement;
-        var attributes = elem.attributes;
-        parent.innerHTML = await (await fetch(elem.getAttribute('data'))).text();
-        let newElement = parent.lastChild;
-
-        for (let attr of attributes) {
-            newElement.setAttribute(attr.name, attr.value);
-        }
-    }
-});
-
-async function onDrop(e) {
+window.onDrop = async function onDrop(e) {
     e.preventDefault();
     popupWindow.focus();
     print("\ndropped:\n" + e.dataTransfer.getData("text/uri-list"));
@@ -376,8 +363,8 @@ async function onDrop(e) {
     }
 };
 
-async function parseDeck() {
-    var deckText = document.getElementById("deckInput").value;
+window.parseDeck = async function parseDeck() {
+    var deckText = view.doc.getValue();
 
     if (deckText.trim() === "")
         return;
@@ -433,7 +420,7 @@ async function parseDeck() {
                 }).join('\n');
             }
 
-            document.getElementById("deckInput").value = deckText;
+            view.doc.setValue(deckText);
         } catch (error) {
             print("Deck could not be loaded; " + JSON.stringify(error.toString()));
         }
@@ -453,6 +440,7 @@ async function parseDeck() {
         print(`\nParsing card: ${cardText}`);
         var card = await Card.parseCardText(cardText);
         card.order = ++cardNr;
+        card.lineNr = i;
         var clone = template.cloneNode(true);
         clone.card = card;
         card.elem = clone;
@@ -500,10 +488,12 @@ window.addEventListener("unhandledrejection", function (event) {
 });
 
 function print(text) {
-    document.getElementById("deckInput").value += text;
+    const scrollInfo = view.getScrollInfo();
+    view.doc.setValue(view.doc.getValue() + text);
+    view.scrollTo(scrollInfo.left, scrollInfo.top);
 }
 
-async function copyToClipboard() {
+window.copyToClipboard = async function copyToClipboard() {
     var textToCopy = cards.filter(c => c.scryfall_uri).map(c => `${c.count} ${c.scryfall_uri}`).join("\n");
     try {
         await navigator.clipboard.writeText(textToCopy);
@@ -513,7 +503,7 @@ async function copyToClipboard() {
     }
 }
 
-function convertToFormat(format) {
+window.convertToFormat = function convertToFormat(format) {
     for (const card of cards) {
         if (card instanceof Card)
             card.format = format;
@@ -543,6 +533,15 @@ function hideToaster() {
     document.getElementById('toaster').classList.remove("show");
 }
 
+window.highlightDeckInput = function highlightDeckInput(card) {
+    const cardText = card.getDescription();
+    view.setSelection({ line: card.lineNr, ch: 0 }, { line: card.lineNr, ch: cardText.length });
+}
+
+window.removeHighlightDeckInput = function removeHighlightDeckInput(card) {
+    view.setSelection({ line: card.lineNr, ch: 0 });
+}
+
 function cleanUpLocalStorage() {
     const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000;
     const threeDaysAgo = Date.now() - threeDaysInMillis;
@@ -558,3 +557,19 @@ function cleanUpLocalStorage() {
 }
 
 cleanUpLocalStorage();
+
+let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
+view.doc.setValue(localStorage.getItem("deck"));
+
+var placeholderText = await(await fetch('placeholder.txt')).text();
+
+for (let elem of document.querySelectorAll("replacedSvg")) {
+    var parent = elem.parentElement;
+    var attributes = elem.attributes;
+    parent.innerHTML = await(await fetch(elem.getAttribute('data'))).text();
+    let newElement = parent.lastChild;
+
+    for (let attr of attributes) {
+        newElement.setAttribute(attr.name, attr.value);
+    }
+}

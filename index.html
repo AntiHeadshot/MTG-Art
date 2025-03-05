@@ -2,21 +2,28 @@
 <html>
 
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css"
+    integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" type="text/css" href="styles.css?v=5">
-    <script src="scripts.js?v=5"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js" integrity="sha512-8RnEqURPUc5aqFEN04aQEiPlSAdE0jlFS/9iGgUyNtwFnSKCXhmB6ZTNl7LnDtDWKabJIASzXrzD0K+LYexU9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.js" integrity="sha512-4i/wqLBUQRN1JXTwHTYjnZXUVi57tiOAMehaWWLqCXJpaIz9tgtOKJuEPUuBZ0+G7Bh/XJIsU/+gTCHBOWlFTw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <script defer type="module" src="scripts.js?v=5"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
     <div id="modeButton" class="clickable"
         onclick="this.parentElement.classList.toggle('artView'); event.stopPropagation(); parseDeck();">
-        <replacedSvg data="img/mode.svg" class="gray border" style="height: 100%;pointer-events: none;" focusable="false" draggable="false" aria-hidden="true">
+        <replacedSvg data="img/mode.svg" class="gray border" style="height: 100%;pointer-events: none;"
+            focusable="false" draggable="false" aria-hidden="true">
         </replacedSvg>
     </div>
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
             <div class="card" id="cardTemplate" style="display: none;" onclick="this.card.openScryfall(event)"
-                draggable="false" focusable="false">
+                draggable="false" focusable="false" onmouseover="highlightDeckInput(this.card)"
+                onmouseout="removeHighlightDeckInput(this.card)">
                 <div class="cardFace">
                     <img class="cardImg" focusable="false" draggable="false" src="">
                     <img class="cardFlipImg" focusable="false" draggable="false" src="">
@@ -24,10 +31,12 @@
                 <img src="img/flip.svg" class="flipSvg gray border round clickable" focusable="false" draggable="false"
                     aria-hidden="true"
                     onclick="this.parentElement.classList.toggle('flipped'); event.stopPropagation();">
-                <img src="img/rollback.svg" class="rollbackSvg gray border round clickable" focusable="false" draggable="false"
-                    aria-hidden="true" onclick="this.closest('.card').card.rollback(); event.stopPropagation();">
-                <img src="img/forward.svg" class="forwardSvg gray border round clickable" focusable="false" draggable="false"
-                    aria-hidden="true" onclick="this.closest('.card').card.forward(); event.stopPropagation();">
+                <img src="img/rollback.svg" class="rollbackSvg gray border round clickable" focusable="false"
+                    draggable="false" aria-hidden="true"
+                    onclick="this.closest('.card').card.rollback(); event.stopPropagation();">
+                <img src="img/forward.svg" class="forwardSvg gray border round clickable" focusable="false"
+                    draggable="false" aria-hidden="true"
+                    onclick="this.closest('.card').card.forward(); event.stopPropagation();">
                 <div class="update">
                     <img src="img/update.svg" class="updateSvg" focusable="false" draggable="false" aria-hidden="true">
                 </div>
