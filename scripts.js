@@ -405,6 +405,7 @@ async function parseDeck() {
 
     document.getElementById("loadDeck").disabled = true;
     document.getElementById("copyScryfallBtn").disabled = false;
+    document.getElementById("convertToMtgPrintBtn").disabled = false;
 
     var template = document.getElementById("cardTemplate");
     var parent = document.getElementById("cardContainer");
@@ -510,6 +511,15 @@ async function copyToClipboard() {
     } catch (err) {
         console.error('Could not copy text: ', err);
     }
+}
+
+function convertToMtgPrint() {
+    for (const card of cards) {
+        if (card instanceof Card)
+            card.format = Format.MTGPRINT;
+    }
+
+    updateList();
 }
 
 let toastTimeout;
