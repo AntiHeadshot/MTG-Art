@@ -84,11 +84,11 @@ class Card {
         const { count, set, nr } = match.groups;
 
         var card = new Card(parseInt(count, 10), format);
-        await card.update(set, nr);
+        await card.update(false, set, nr);
         return card;
     }
 
-    async update(setOrCardId, nr) {
+    async update(isRevert, setOrCardId, nr) {
         setOrCardId = setOrCardId.toUpperCase();
 
         if (nr) {
@@ -105,8 +105,11 @@ class Card {
         if (!this.history)
             this.history = [];
 
-        if (this.set && this.nr)
-            this.history.push({ set: this.set, nr: this.nr });
+        if (!isRevert) {
+            this.future = [];
+            if (this.set && this.nr)
+                this.history.push({ set: this.set, nr: this.nr });
+        }
 
         try {
             if (nr) {
@@ -163,7 +166,7 @@ class Card {
 
             if (cachedCard) {
                 const cachedData = JSON.parse(cachedCard);
-                await this.update(cachedData.set, cachedData.nr);
+                await this.update(false, cachedData.set, cachedData.nr);
                 return;
             }
 
@@ -256,12 +259,11 @@ class Card {
 
         const lastState = this.history.pop();
         this.future.push({ set: this.set, nr: this.nr });
-        this.update(lastState.set, lastState.nr);
-        this.history.pop();
+        this.update(true, lastState.set, lastState.nr);
 
         this.elem.classList.toggle("revertable", this.history?.length > 0);
         this.elem.classList.add("forwardable");
-        
+
         updateList();
     }
 
@@ -274,8 +276,7 @@ class Card {
 
         const nextState = this.future.pop();
         this.history.push({ set: this.set, nr: this.nr });
-        this.update(nextState.set, nextState.nr);
-        this.history.pop();
+        this.update(true, nextState.set, nextState.nr);
 
         this.elem.classList.add("revertable");
         this.elem.classList.toggle("forwardable", this.future?.length > 0);
@@ -377,7 +378,7 @@ async function onDrop(e) {
             if (/^https:\/\/scryfall\.com\/card\/\w+\/[\w\-%]+\/[\w\-%()\/]+$/.test(text)) {
                 const urlParts = text.split('/');
 
-                await openedCard.update(urlParts[4], urlParts[5]);
+                await openedCard.update(false, urlParts[4], urlParts[5]);
                 if (openedCard.format === Format.UNDEFINED)
                     openedCard.format = Format.DECKSTAT;
                 updateList();
@@ -385,7 +386,7 @@ async function onDrop(e) {
             } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/[\w-]+\/[\w-]+\.jpg\?\d+$/.test(text)) {
                 const id = text.split('/')[7].split('.')[0];
 
-                await openedCard.update(id);
+                await openedCard.update(false, id);
                 if (openedCard.format === Format.UNDEFINED)
                     openedCard.format = Format.DECKSTAT;
                 updateList();
