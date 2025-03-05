@@ -64,7 +64,7 @@ class Card {
             format = Format.SCRYFALL;
             match = cardText.match(regex3);
         }
-        
+
         if (!match) {
             // Example cardText: "1 Vampiric Tutor"
             const regex3 = /^(?<count>\d+)\s+(?<name>.+)$/;
@@ -91,10 +91,23 @@ class Card {
     async update(setOrCardId, nr) {
         setOrCardId = setOrCardId.toUpperCase();
 
+        if (nr) {
+            if (this.set == setOrCardId && this.nr == nr)
+                return;
+        } else if (this.cardId == setOrCardId)
+            return;
+
         const now = Date.now();
         let url;
 
         this.startUpdate();
+
+        if (!this.history)
+            this.history = [];
+
+        if (this.set && this.nr)
+            this.history.push({ set: this.set, nr: this.nr });
+
         try {
             if (nr) {
                 url = `https://api.scryfall.com/cards/${setOrCardId}/${nr}`;
@@ -203,6 +216,9 @@ class Card {
         else
             this.elem.classList.remove("twoFaced");
 
+        this.elem.classList.toggle("revertable", this.history?.length > 0);
+        this.elem.classList.toggle("forwardable", this.future?.length > 0);
+
         this.elem.querySelector("img").src = this.imageUri;
         this.elem.setAttribute("identifier", this.getDescription());
         this.elem.id = "card" + this.cardId;
@@ -212,7 +228,9 @@ class Card {
         this.elem.style.top = `${this.order * 2 + 4}px`;
         this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
         this.elem.style.transition = `bottom 1s ease-in-out`;
-        this.elem.style.transform = `rotate(${(Math.random() - 0.5) * 2 * 2}deg)`;
+
+        if (!this.elem.style.transform)
+            this.elem.style.transform = `rotate(${(Math.random() - 0.5) * 2 * 2}deg)`;
 
         new IntersectionObserver(entries => {
             entries.forEach(entry => {
@@ -227,6 +245,42 @@ class Card {
             rootMargin: `-${this.order * 2 + 5}px 0px 0px 0px`,
             threshold: 1
         }).observe(this.elem);
+    }
+
+    rollback() {
+        if (!this.history?.length)
+            return;
+
+        if (!this.future)
+            this.future = [];
+
+        const lastState = this.history.pop();
+        this.future.push({ set: this.set, nr: this.nr });
+        this.update(lastState.set, lastState.nr);
+        this.history.pop();
+
+        this.elem.classList.toggle("revertable", this.history?.length > 0);
+        this.elem.classList.add("forwardable");
+        
+        updateList();
+    }
+
+    forward() {
+        if (!this.future?.length)
+            return;
+
+        if (!this.history)
+            this.history = [];
+
+        const nextState = this.future.pop();
+        this.history.push({ set: this.set, nr: this.nr });
+        this.update(nextState.set, nextState.nr);
+        this.history.pop();
+
+        this.elem.classList.add("revertable");
+        this.elem.classList.toggle("forwardable", this.future?.length > 0);
+
+        updateList();
     }
 }
 

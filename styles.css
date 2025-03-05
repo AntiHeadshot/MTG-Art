@@ -10,6 +10,14 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
+img,svg{
+    user-select: none;
+    -drag: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+}
+
 #cards {
     position: absolute;
     width: 200px;
@@ -87,6 +95,31 @@ body {
     display: block;
 }
 
+.card.revertable .rollbackSvg{
+    display:block;
+}
+
+.card.forwardable .forwardSvg{
+    display:block;
+}
+
+.card .rollbackSvg,
+.card .forwardSvg {
+    display: none;
+    position: absolute;
+    width: 28px;
+    bottom: 20px;
+    z-index: 1000;
+}
+
+.card .rollbackSvg {
+    left: 20px;
+}
+
+.card .forwardSvg {
+    right: 20px;
+}
+
 .card .flipSvg {
     display: none;
     position: absolute;
@@ -147,7 +180,7 @@ svg {
 }
 
 svg.border {
-    background: #82828275;
+    background: #ffffff6e;
     padding: 4px;
     border: 2px solid #6e6e6e;
     border-radius: 2px;
