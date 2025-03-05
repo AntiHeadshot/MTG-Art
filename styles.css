@@ -350,5 +350,5 @@ button {
 .CodeMirror-selected,
 .CodeMirror-selected {
     background: purple;
-    opacity: 0.5;
+    box-shadow: 0 0 8px 8px purple;
 }

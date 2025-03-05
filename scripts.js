@@ -233,8 +233,10 @@ class Card {
         this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
         this.elem.style.transition = `bottom 1s ease-in-out`;
 
-        if (!this.elem.style.transform)
-            this.elem.style.transform = `rotate(${(Math.random() - 0.5) * 2 * 2}deg)`;
+        if (!this.elem.style.transform) {
+            this.rotation = (Math.random() - 0.5) * 2 * 2;
+            this.elem.style.transform = `rotate(${this.rotation}deg)`;
+        }
 
         new IntersectionObserver(entries => {
             entries.forEach(entry => {
@@ -324,11 +326,16 @@ class Card {
 }
 
 function updateList() {
+    let lastHoverOn = hoverOn;
+    hoverOn = false;
+
     var deck = cards.map(c => c.getDescription ? c.getDescription() : c).join("\n");
-    
+
     const scrollInfo = view.getScrollInfo();
     view.doc.setValue(deck);
     view.scrollTo(scrollInfo.left, scrollInfo.top);
+
+    hoverOn = lastHoverOn;
 
     localStorage.setItem('deck', deck);
 }
@@ -462,6 +469,9 @@ window.parseDeck = async function parseDeck() {
     hideToaster();
 
     updateList();
+
+    hoverOn = true;
+    //view.on("beforeSelectionChange", scrollToSelectedCard);
 }
 
 function insertCardInOrder(parent, card, elem) {
@@ -489,7 +499,7 @@ window.addEventListener("unhandledrejection", function (event) {
 
 function print(text) {
     const scrollInfo = view.getScrollInfo();
-    view.doc.setValue(view.doc.getValue() + text);
+    view.doc.setValue(view.doc.getValue() + '\n' + text);
     view.scrollTo(scrollInfo.left, scrollInfo.top);
 }
 
@@ -535,11 +545,18 @@ function hideToaster() {
 
 window.highlightDeckInput = function highlightDeckInput(card) {
     const cardText = card.getDescription();
+
+    let lastHoverOn = hoverOn;
+    hoverOn = false;
     view.setSelection({ line: card.lineNr, ch: 0 }, { line: card.lineNr, ch: cardText.length });
+    hoverOn = lastHoverOn;
 }
 
 window.removeHighlightDeckInput = function removeHighlightDeckInput(card) {
+    let lastHoverOn = hoverOn;
+    hoverOn = false;
     view.setSelection({ line: card.lineNr, ch: 0 });
+    hoverOn = lastHoverOn;
 }
 
 function cleanUpLocalStorage() {
@@ -560,6 +577,37 @@ cleanUpLocalStorage();
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 view.doc.setValue(localStorage.getItem("deck"));
+
+let hoverOn = false;
+
+async function scrollToSelectedCard(_, obj) {
+    console.log(hoverOn);
+    if (hoverOn && cards?.length > 0) {
+        const line = Math.min(obj.ranges[0].anchor.line, obj.ranges[0].head.line);
+        let closestCard = cards.find(card => card.lineNr >= line) || cards[cards.length - 1];
+        if (closestCard.elem) {
+            var cardsContainer = document.getElementById("cards");
+
+            var cardRect = closestCard.elem.getBoundingClientRect();
+            var cardHeight = cardRect.height;
+            var cardWidth = cardRect.width;
+            var radians = Math.abs(closestCard.rotation * (Math.PI / 180));
+
+            let sin = Math.sin(radians);
+            let cos = Math.cos(radians);
+
+            var adjustedHeight = (cardWidth * sin - cardHeight * cos)
+                / (sin * sin - cos * cos);
+
+            cardsContainer.scrollTo({
+                top: Math.max(0, closestCard.order
+                    * (adjustedHeight + 10)
+                    - cardsContainer.getBoundingClientRect().height / 2),
+                behavior: "smooth",
+            });
+        }
+    }
+}
 
 var placeholderText = await(await fetch('placeholder.txt')).text();
 
