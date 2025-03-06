@@ -3,20 +3,21 @@
 
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css"
-    integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+        integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" type="text/css" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js" integrity="sha512-8RnEqURPUc5aqFEN04aQEiPlSAdE0jlFS/9iGgUyNtwFnSKCXhmB6ZTNl7LnDtDWKabJIASzXrzD0K+LYexU9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"
+        integrity="sha512-8RnEqURPUc5aqFEN04aQEiPlSAdE0jlFS/9iGgUyNtwFnSKCXhmB6ZTNl7LnDtDWKabJIASzXrzD0K+LYexU9g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.js" integrity="sha512-4i/wqLBUQRN1JXTwHTYjnZXUVi57tiOAMehaWWLqCXJpaIz9tgtOKJuEPUuBZ0+G7Bh/XJIsU/+gTCHBOWlFTw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
     <script defer type="module" src="scripts.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
-    <div id="modeButton" class="clickable"
-        onclick="this.parentElement.classList.toggle('artView'); event.stopPropagation(); parseDeck();">
+    <div id="modeButton" class="clickable" onclick="swapMode(); event.stopPropagation(); parseDeck();">
         <replacedSvg data="img/mode.svg" class="gray border" style="height: 100%;pointer-events: none;"
-            focusable="false" draggable="false" aria-hidden="true">
+            draggable="false">
         </replacedSvg>
     </div>
     <div id="cards" class="scrollbar">
@@ -28,14 +29,11 @@
                     <img class="cardImg" focusable="false" draggable="false" src="">
                     <img class="cardFlipImg" focusable="false" draggable="false" src="">
                 </div>
-                <img src="img/flip.svg" class="flipSvg gray border round clickable" focusable="false" draggable="false"
-                    aria-hidden="true"
+                <img src="img/flip.svg" class="flipSvg gray border round clickable" draggable="false"
                     onclick="this.parentElement.classList.toggle('flipped'); event.stopPropagation();">
-                <img src="img/rollback.svg" class="rollbackSvg gray border round clickable" focusable="false"
-                    draggable="false" aria-hidden="true"
+                <img src="img/rollback.svg" class="rollbackSvg gray border round clickable" draggable="false"
                     onclick="this.closest('.card').card.rollback(); event.stopPropagation();">
-                <img src="img/forward.svg" class="forwardSvg gray border round clickable" focusable="false"
-                    draggable="false" aria-hidden="true"
+                <img src="img/forward.svg" class="forwardSvg gray border round clickable" draggable="false"
                     onclick="this.closest('.card').card.forward(); event.stopPropagation();">
                 <div class="update">
                     <img src="img/update.svg" class="updateSvg" focusable="false" draggable="false" aria-hidden="true">
@@ -53,6 +51,27 @@
             <button id="convertToDeckstatsBtn" disabled
                 onclick="convertToFormat(Format.DECKSTATS)">deckstats.net</button>
             <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">MTG Print</button>
+        </div>
+        <div id="searchButtons">
+            <img id="allArt" src="img/allArt.svg" class="selected allArtSvg gray border clickable" draggable="false" title="show all arts"
+                onclick="selectAllArt();">
+            <img id="extendedArt" src="img/extendedArt.svg" class="selectExtendedArtSvg gray border clickable"
+                draggable="false" title="show extended arts" onclick="selectExtendedArt();">
+                <img id="fullArt" src="img/fullArt.svg" class="fullArtSvg gray border clickable" draggable="false" title="show full arts"
+                onclick="selectFullArt();">
+                
+                <div style="width:24px"></div>
+                
+                <img src="img/1993Frame.svg" class="gray border clickable" draggable="false" title="show 1993 frames"
+                onclick="selectFrameType(this, Frame._1993);">
+                <img src="img/1997Frame.svg" class="gray border clickable" draggable="false" title="show 1997 frames"
+                onclick="selectFrameType(this, Frame._1997);">
+                <img src="img/2003Frame.svg" class="gray border clickable" draggable="false" title="show 2003 frames"
+                onclick="selectFrameType(this, Frame._2003);">
+                <img src="img/2015Frame.svg" class="gray border clickable" draggable="false" title="show 2015 frames"
+                onclick="selectFrameType(this, Frame._2015);">
+                <img src="img/futureFrame.svg" class="gray border clickable" draggable="false" title="show future frames"
+                onclick="selectFrameType(this, Frame.FUTURE);">
         </div>
         <textarea id="deckInput"></textarea>
     </div>

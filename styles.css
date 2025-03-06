@@ -47,13 +47,24 @@ svg {
     transition: opacity 1s ease-in-out;
 }
 
-#convertButtons {
+#convertButtons,
+#searchButtons {
     align-self: center;
     align-items: center;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+}
+
+#searchButtons img {
+    margin: 4px;
+    transition: filter 0.3s ease-in-out;
+}
+
+#searchButtons img.selected {
+    filter: invert(1);
+    transition: filter 0.3s ease-in-out;
 }
 
 #deckInput {
@@ -346,8 +357,7 @@ button {
     border-left: 2px solid purple;
 }
 
-.CodeMirror-focused
-.CodeMirror-selected,
+.CodeMirror-focused .CodeMirror-selected,
 .CodeMirror-selected {
     background: purple;
     box-shadow: 0 0 8px 8px purple;

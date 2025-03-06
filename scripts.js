@@ -4,6 +4,11 @@ let cards = [];
 let cardCnt = 0;
 let hoverOn = false;
 
+const Mode = Object.freeze({
+    INPUT: 'input',
+    ARTVIEW: 'artview',
+});
+
 const Format = Object.freeze({
     DECKSTATS: 'deckstats',
     MTGPRINT: 'mtgprint',
@@ -11,7 +16,23 @@ const Format = Object.freeze({
     UNDEFINED: 'undefined'
 });
 
+const Frame = Object.freeze({
+    _1993: '1993',
+    _1997: '1997',
+    _2003: '2003',
+    _2015: '2015',
+    FUTURE: 'future',
+});
+
+let frames = [];
+
+let mode = Mode.INPUT;
+
+let isExtendedArt = false;
+let isFullArt = false;
+
 window.Format = Format;
+window.Frame = Frame;
 
 async function delayScryfallCall() {
     if (delayScryfallCall.lastCall) {
@@ -37,14 +58,16 @@ class Card {
     }
 
     getDescription() {
-        if (this.format === Format.UNDEFINED)
-            return `${this.count} ${this.searchName}`;
-        if (this.format === Format.MTGPRINT)
-            return `${this.count} ${this.name} (${this.set.toUpperCase()}) ${this.nr}`;
-        if (this.format === Format.SCRYFALL)
-            return `${this.count} ${this.scryfall_uri}`;
-
-        return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`;
+        switch (this.format) {
+            case Format.UNDEFINED:
+                return `${this.count} ${this.searchName}`;
+            case Format.MTGPRINT:
+                return `${this.count} ${this.name} (${this.set.toUpperCase()}) ${this.nr}`;
+            case Format.SCRYFALL:
+                return `${this.count} ${this.scryfall_uri}`;
+            default:
+                return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`;
+        }
     }
 
     static async parseCardText(cardText) {
@@ -292,12 +315,28 @@ class Card {
         var oracleId = this.oracleId;
         var imgsrc = view.display.wrapper.getBoundingClientRect();
 
-        var src = this.format === Format.UNDEFINED ?
-            `https://scryfall.com/search?order=name&q=%21\"${this.searchName}\"&include_extras=true&as=grid&order=released&unique=prints` :
-            "https://scryfall.com/search?q=oracleid%3A" + oracleId + "&unique=prints&as=grid&order=released";
+        var querryParameters = "&unique=prints&as=grid&order=released";
+        var searchParameter = "";
 
-        var dx = evt.screenX - evt.clientX;
-        var dy = evt.screenY - evt.clientY;
+        if (isExtendedArt && isFullArt)
+            searchParameter += " (is:extendedart or is:full)";
+        else if (isExtendedArt)
+            searchParameter += " is:extendedart";
+        else if (isFullArt)
+            searchParameter += " is:full";
+
+        if (frames.length) {
+            if (frames.length == 1)
+                searchParameter += " frame:" + frames[0];
+            else
+                searchParameter += ` (${frames.map(f => `frame:${f}`).join(' or ')})`;
+        }
+
+        var src = this.format === Format.UNDEFINED ?
+            `https://scryfall.com/search?order=name&q=%21\"${this.searchName}\"&include_extras=true` :
+            "https://scryfall.com/search?q=oracleid%3A" + oracleId;
+
+        src += encodeURIComponent(searchParameter) + querryParameters;
 
         if (openedCard != null)
             openedCard.elem.classList.remove("selected");
@@ -309,6 +348,9 @@ class Card {
             popupWindow.location = src;
             popupWindow.focus();
         } else {
+            var dx = evt.screenX - evt.clientX;
+            var dy = evt.screenY - evt.clientY;
+
             popupWindow = window.open(src, "_blank", `popup=true,` +
                 `width=${imgsrc.width},` +
                 `height=${imgsrc.height},` +
@@ -323,6 +365,42 @@ class Card {
                 openedCard = null;
             }
         }, 500);
+    }
+
+    scrollTo(behavior) {
+        behavior ||= "smooth";
+        if (this.elem) {
+            var cardsContainer = document.getElementById("cards");
+
+            if (mode == Mode.INPUT) {
+                var adjustedHeight = this.getAdjustedHeight()
+
+                cardsContainer.scrollTo({
+                    top: Math.max(0, this.order
+                        * (adjustedHeight + 10)
+                        - cardsContainer.getBoundingClientRect().height / 2),
+                    behavior: behavior,
+                });
+            } else if (mode == Mode.ARTVIEW) {
+                this.elem.scrollIntoView({
+                    block: "start",
+                    behavior: behavior,
+                });
+            }
+        }
+    }
+
+    getAdjustedHeight() {
+        var cardRect = this.elem.getBoundingClientRect();
+        var cardHeight = cardRect.height;
+        var cardWidth = cardRect.width;
+        var radians = Math.abs(this.rotation * (Math.PI / 180));
+
+        let sin = Math.sin(radians);
+        let cos = Math.cos(radians);
+
+        return (cardWidth * sin - cardHeight * cos)
+            / (sin * sin - cos * cos);
     }
 }
 
@@ -564,6 +642,77 @@ window.removeHighlightDeckInput = function removeHighlightDeckInput(card) {
     hoverOn = lastHoverOn;
 }
 
+window.swapMode = function swapMode() {
+    let selectedCard;
+    switch (mode) {
+        case Mode.ARTVIEW:
+            selectedCard = cards.filter(c => c.elem).find(c => c.elem.getBoundingClientRect().top > 0);
+
+            document.body.classList.remove('artView');
+            mode = Mode.INPUT;
+            break;
+        case Mode.INPUT:
+            selectedCard = cards.filter(c => c.elem).find(c => {
+                let rect = c.elem.getBoundingClientRect();
+                return rect.top <= (window.innerHeight / 2 + 10) && rect.bottom >= (window.innerHeight / 2 - 10);
+            });
+
+            console.log(selectedCard);
+
+            document.body.classList.add('artView');
+            mode = Mode.ARTVIEW;
+            break;
+    }
+
+    selectedCard?.scrollTo("instant");
+};
+
+var allArtElem = document.getElementById("allArt");
+var extendedArtElem = document.getElementById("extendedArt");
+var fullArtElem = document.getElementById("fullArt");
+
+window.selectAllArt = function selectAllArt() {
+    var value = !(isFullArt || isExtendedArt)
+    isFullArt = value;
+    isExtendedArt = value;
+
+    updateArtButtons();
+    openedCard?.openScryfall();
+}
+
+window.selectExtendedArt = function selectWideArt() {
+    isExtendedArt = !isExtendedArt;
+
+    updateArtButtons();
+    openedCard?.openScryfall();
+}
+
+window.selectFullArt = function selectFullArt() {
+    isFullArt = !isFullArt;
+
+    updateArtButtons();
+    openedCard?.openScryfall();
+}
+
+window.selectFrameType = function selectFrameType(elem, frameType) {
+    if (frames.includes(frameType)) {
+        frames = frames.filter(f => f !== frameType);
+        elem.classList.remove("selected");
+    } else {
+        frames.push(frameType);
+        elem.classList.add("selected");
+    }
+
+    openedCard?.openScryfall();
+}
+
+function updateArtButtons() {
+
+    fullArtElem.classList.toggle("selected", isFullArt);
+    extendedArtElem.classList.toggle("selected", isExtendedArt);
+    allArtElem.classList.toggle("selected", !(isFullArt || isExtendedArt));
+}
+
 function cleanUpLocalStorage() {
     const threeDaysInMillis = 3 * 24 * 60 * 60 * 1000;
     const threeDaysAgo = Date.now() - threeDaysInMillis;
@@ -581,33 +730,13 @@ function cleanUpLocalStorage() {
 cleanUpLocalStorage();
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
-view.doc.setValue(localStorage.getItem("deck"));
+view.doc.setValue(localStorage.getItem("deck") ?? "");
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {
         const line = Math.min(obj.ranges[0].anchor.line, obj.ranges[0].head.line);
         let closestCard = cards.find(card => card.lineNr >= line) || cards[cards.length - 1];
-        if (closestCard.elem) {
-            var cardsContainer = document.getElementById("cards");
-
-            var cardRect = closestCard.elem.getBoundingClientRect();
-            var cardHeight = cardRect.height;
-            var cardWidth = cardRect.width;
-            var radians = Math.abs(closestCard.rotation * (Math.PI / 180));
-
-            let sin = Math.sin(radians);
-            let cos = Math.cos(radians);
-
-            var adjustedHeight = (cardWidth * sin - cardHeight * cos)
-                / (sin * sin - cos * cos);
-
-            cardsContainer.scrollTo({
-                top: Math.max(0, closestCard.order
-                    * (adjustedHeight + 10)
-                    - cardsContainer.getBoundingClientRect().height / 2),
-                behavior: "smooth",
-            });
-        }
+        closestCard.scrollTo();
     }
 }
 
