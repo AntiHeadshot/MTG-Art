@@ -1,14 +1,7 @@
-<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <linearGradient id="Gradient" x1="9%" y1="58%" x2="25%" y2="83%">
-            <stop offset="0%" stop-color="gray" />
-            <stop offset="50%" stop-color="lightgray" stop-opacity="0" />
-            <stop offset="100%" stop-color="gray" />
-        </linearGradient>
-    </defs>
-
-    <path d="M4 12 l16 -8 v8 l-16 8 z" fill="url(#Gradient)"/>
-    <rect x="4" y="1" width="16" height="22" rx="2" ry="2" stroke="#000" stroke-width="2" fill="transparent">
-    </rect>
-    
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <path d="M4,11L5,22L19,22L20,13C14.719,17.002 9.282,16.318 4,11Z" style="fill:rgb(128,128,128);"/>
+    <path d="M19.179,7C19.179,7 18.197,3.993 12,4C9.778,4.003 5.872,4.702 6,9C6.128,13.298 10.821,15.225 14,15C17.179,14.775 19,13 19,13L20,13C20,13 17.722,15.921 14,16C10.278,16.079 3.988,14.482 4,8C4.012,1.518 5,2 5,2L19,2L19.179,7Z" style="fill:rgb(128,128,128);"/>
+    <path d="M20,3L20,21C20,22.104 19.104,23 18,23L6,23C4.896,23 4,22.104 4,21L4,3C4,1.896 4.896,1 6,1L18,1C19.104,1 20,1.896 20,3Z" style="fill:none;stroke:black;stroke-width:2px;"/>
 </svg>

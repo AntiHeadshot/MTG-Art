@@ -1,14 +1,11 @@
-<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <linearGradient id="Gradient" x1="9%" y1="58%" x2="25%" y2="83%">
-            <stop offset="0%" stop-color="gray" />
-            <stop offset="50%" stop-color="lightgray" stop-opacity="0" />
-            <stop offset="100%" stop-color="gray" />
-        </linearGradient>
-    </defs>
-
-    <path d="M4 12 l16 -8 v8 l-16 8 z" fill="url(#Gradient)"/>
-    <rect x="4" y="1" width="16" height="22" rx="2" ry="2" stroke="#000" stroke-width="2" fill="transparent">
-    </rect>
-    
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(12,0,0,9,-66,-113)">
+        <path d="M7,14.14L7,14.971C7,15.048 6.953,15.111 6.895,15.111L6.105,15.111C6.047,15.111 6,15.048 6,14.971L6,14.14C6,14.063 6.047,14 6.105,14L6.895,14C6.953,14 7,14.063 7,14.14Z" style="fill:rgb(128,128,128);"/>
+    </g>
+    <path d="M20,3L20,21C20,22.104 19.104,23 18,23L6,23C4.896,23 4,22.104 4,21L4,3C4,1.896 4.896,1 6,1L18,1C19.104,1 20,1.896 20,3Z" style="fill:none;stroke:black;stroke-width:2px;"/>
+    <g transform="matrix(0.833333,0,0,1,1.99869,-0.00131544)">
+        <path d="M6,4L18,4" style="fill:none;stroke:rgb(128,128,128);stroke-width:2.17px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+    </g>
 </svg>

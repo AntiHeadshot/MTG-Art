@@ -657,8 +657,6 @@ window.swapMode = function swapMode() {
                 return rect.top <= (window.innerHeight / 2 + 10) && rect.bottom >= (window.innerHeight / 2 - 10);
             });
 
-            console.log(selectedCard);
-
             document.body.classList.add('artView');
             mode = Mode.ARTVIEW;
             break;

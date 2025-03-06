@@ -1,14 +1,12 @@
-<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <linearGradient id="Gradient" x1="9%" y1="58%" x2="25%" y2="83%">
-            <stop offset="0%" stop-color="gray" />
-            <stop offset="50%" stop-color="lightgray" stop-opacity="0" />
-            <stop offset="100%" stop-color="gray" />
-        </linearGradient>
-    </defs>
-
-    <path d="M4 12 l16 -8 v8 l-16 8 z" fill="url(#Gradient)"/>
-    <rect x="4" y="1" width="16" height="22" rx="2" ry="2" stroke="#000" stroke-width="2" fill="transparent">
-    </rect>
-    
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1.125,0,0,1.09091,-1.5,-1.09091)">
+        <path d="M20,2.833L20,21.167C20,22.179 19.203,23 18.222,23L5.778,23C4.797,23 4,22.179 4,21.167L4,2.833C4,1.821 4.797,1 5.778,1L18.222,1C19.203,1 20,1.821 20,2.833ZM5.778,2.833L5.778,21.167L18.222,21.167L18.222,2.833L5.778,2.833Z"/>
+    </g>
+    <rect x="6" y="3" width="12" height="10" style="fill:rgb(128,128,128);"/>
+    <path d="M18,3L18,13L6,13L6,3L18,3ZM17,4L7,4L7,12L17,12L17,4Z" style="fill:white;"/>
+    <g transform="matrix(1,0,0,0.7,-1.42109e-15,11.9)">
+        <rect x="6" y="3" width="12" height="10" style="fill:rgb(128,128,128);"/>
+    </g>
 </svg>

@@ -1,18 +1,10 @@
-<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <path d="M4,7.967L20,4L20,10L4,14L4,7.967Z" style="fill:url(#_Linear1);fill-rule:nonzero;"/>
+    <path d="M20,6L20,12C20,13.104 19.104,14 18,14L6,14C4.896,14 4,13.104 4,12L4,6C4,4.896 4.896,4 6,4L18,4C19.104,4 20,4.896 20,6Z" style="fill:none;stroke:black;stroke-width:2px;"/>
+    <path d="M20,3L20,21C20,22.104 19.104,23 18,23L6,23C4.896,23 4,22.104 4,21L4,3C4,1.896 4.896,1 6,1L18,1C19.104,1 20,1.896 20,3Z" style="fill:none;stroke:black;stroke-width:2px;"/>
     <defs>
-        <linearGradient id="Gradient" x1="9%" y1="58%" x2="25%" y2="83%">
-            <stop offset="0%" stop-color="gray" />
-            <stop offset="50%" stop-color="lightgray" stop-opacity="0" />
-            <stop offset="100%" stop-color="gray" />
-        </linearGradient>
+        <linearGradient id="_Linear1" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(3,5,-5,3,10,7)"><stop offset="0" style="stop-color:rgb(128,128,128);stop-opacity:1"/><stop offset="0.5" style="stop-color:rgb(211,211,211);stop-opacity:0"/><stop offset="1" style="stop-color:rgb(128,128,128);stop-opacity:1"/></linearGradient>
     </defs>
-
-    <path d="M6 8 l14 -4 v6 l-16 4 z" fill="url(#Gradient)"/>
-
-    <rect x="4" y="4" width="16" height="10" rx="2" ry="2" stroke="#000" stroke-width="2" fill="transparent">
-    </rect>
-
-    <rect x="4" y="1" width="16" height="22" rx="2" ry="2" stroke="#000" stroke-width="2" fill="transparent">
-    </rect>
-    
 </svg>
