@@ -43,6 +43,20 @@
         <div id="deckEnd"></div>
     </div>
     <div id="deckContainer">
+        <div class="searchButtons">
+            <div class="searchButtons">
+                <img src="img/allArt.svg" class="border transparent">
+                <img src="img/extendedArt.svg" class="border transparent">
+                <img src="img/fullArt.svg" class="border transparent">
+            </div>
+            <div class="searchButtons">
+                <img src="img/1993Frame.svg" class="border transparent">
+                <img src="img/1997Frame.svg" class="border transparent">
+                <img src="img/2003Frame.svg" class="border transparent">
+                <img src="img/2015Frame.svg" class="border transparent">
+                <img src="img/futureFrame.svg" class="border transparent">
+            </div>
+        </div>
         <button id="loadDeck" onclick="parseDeck()">Load Deck</button>
         <div style="align-self: center;">Convert to:</div>
         <div id="convertButtons">
@@ -52,28 +66,29 @@
                 onclick="convertToFormat(Format.DECKSTATS)">deckstats.net</button>
             <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">MTG Print</button>
         </div>
-        <div id="searchButtons">
-            <img id="allArt" src="img/allArt.svg" class="selected allArtSvg gray border clickable" draggable="false" title="show all arts"
-                onclick="selectAllArt();">
+        <textarea id="deckInput"></textarea>
+    </div>
+    <div id="searchButtons" class="searchButtons">
+        <div class="searchButtons">
+            <img id="allArt" src="img/allArt.svg" class="selected allArtSvg gray border clickable" draggable="false"
+                title="show all arts" onclick="selectAllArt();">
             <img id="extendedArt" src="img/extendedArt.svg" class="selectExtendedArtSvg gray border clickable"
                 draggable="false" title="show extended arts" onclick="selectExtendedArt();">
-                <img id="fullArt" src="img/fullArt.svg" class="fullArtSvg gray border clickable" draggable="false" title="show full arts"
-                onclick="selectFullArt();">
-                
-                <div style="width:24px"></div>
-                
-                <img src="img/1993Frame.svg" class="gray border clickable" draggable="false" title="show 1993 frames"
+            <img id="fullArt" src="img/fullArt.svg" class="fullArtSvg gray border clickable" draggable="false"
+                title="show full arts" onclick="selectFullArt();">
+        </div>
+        <div class="searchButtons">
+            <img src="img/1993Frame.svg" class="gray border clickable" draggable="false" title="show 1993 frames"
                 onclick="selectFrameType(this, Frame._1993);">
-                <img src="img/1997Frame.svg" class="gray border clickable" draggable="false" title="show 1997 frames"
+            <img src="img/1997Frame.svg" class="gray border clickable" draggable="false" title="show 1997 frames"
                 onclick="selectFrameType(this, Frame._1997);">
-                <img src="img/2003Frame.svg" class="gray border clickable" draggable="false" title="show 2003 frames"
+            <img src="img/2003Frame.svg" class="gray border clickable" draggable="false" title="show 2003 frames"
                 onclick="selectFrameType(this, Frame._2003);">
-                <img src="img/2015Frame.svg" class="gray border clickable" draggable="false" title="show 2015 frames"
+            <img src="img/2015Frame.svg" class="gray border clickable" draggable="false" title="show 2015 frames"
                 onclick="selectFrameType(this, Frame._2015);">
-                <img src="img/futureFrame.svg" class="gray border clickable" draggable="false" title="show future frames"
+            <img src="img/futureFrame.svg" class="gray border clickable" draggable="false" title="show future frames"
                 onclick="selectFrameType(this, Frame.FUTURE);">
         </div>
-        <textarea id="deckInput"></textarea>
     </div>
     <div id="toaster">
         <div id="toasterMessage"></div>
