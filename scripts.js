@@ -2,6 +2,7 @@ let openedCard;
 let popupWindow;
 let cards = [];
 let cardCnt = 0;
+let hoverOn = false;
 
 const Format = Object.freeze({
     DECKSTATS: 'deckstats',
@@ -581,8 +582,6 @@ cleanUpLocalStorage();
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 view.doc.setValue(localStorage.getItem("deck"));
-
-let hoverOn = false;
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {
