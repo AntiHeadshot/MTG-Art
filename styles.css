@@ -48,21 +48,21 @@ svg {
 }
 
 #convertButtons,
-.searchButtons{
+.searchButtons {
     align-self: center;
     align-items: center;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    pointer-events: none;    
+    pointer-events: none;
 }
 
-:nth-child(2 of .searchButtons){
+:nth-child(2 of .searchButtons) {
     margin-left: 24px;
 }
 
-#searchButtons{
+#searchButtons {
     position: absolute;
     width: calc(100% - 200px);
     left: 200px;
@@ -270,12 +270,13 @@ button {
     align-self: center;
 }
 
-.clickable{
+.clickable,
+button {
     cursor: pointer;
     pointer-events: all;
 }
 
-.transparent{
+.transparent {
     opacity: 0;
 }
 

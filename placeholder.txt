@@ -4,8 +4,8 @@
 1 [CMR#656] Vampiric Tutor
 2 [TMH3#2] Eldrazi Spawn
 
-// link to a public deck on deckstats.net
-https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
+// link to a public deck on deckstats.net (only if it is the first and only line)
+//https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
 
 // list of cards from mtgprint.net
 1 Legion's Landing // Adanto, the First Fort (PXTC) 22
