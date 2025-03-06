@@ -60,34 +60,39 @@
         <button id="loadDeck" onclick="parseDeck()">Load Deck</button>
         <div style="align-self: center;">Convert to:</div>
         <div id="convertButtons">
-            <button id="convertToScryfallBtn" disabled onclick="convertToFormat(Format.SCRYFALL)">Scryfall
-                Links</button>
-            <button id="convertToDeckstatsBtn" disabled
-                onclick="convertToFormat(Format.DECKSTATS)">deckstats.net</button>
-            <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">MTG Print</button>
+            <button id="convertToScryfallBtn" disabled onclick="convertToFormat(Format.SCRYFALL)">
+                Scryfall Links
+            </button>
+            <button id="convertToDeckstatsBtn" disabled onclick="convertToFormat(Format.DECKSTATS)">
+                deckstats.net
+            </button>
+            <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">
+                MTG Print
+            </button>
         </div>
         <textarea id="deckInput"></textarea>
     </div>
     <div id="searchButtons" class="searchButtons">
         <div class="searchButtons">
-            <img id="allArt" src="img/allArt.svg" width="24" class="selected allArtSvg gray border clickable" draggable="false"
-                title="show all arts" onclick="selectAllArt();">
-            <img id="extendedArt" src="img/extendedArt.svg" width="24" class="selectExtendedArtSvg gray border clickable"
-                draggable="false" title="show extended arts" onclick="selectExtendedArt();">
-            <img id="fullArt" src="img/fullArt.svg" width="24" class="fullArtSvg gray border clickable" draggable="false"
-                title="show full arts" onclick="selectFullArt();">
+            <img id="allArt" src="img/allArt.svg" width="24" class="selected allArtSvg gray border clickable"
+                draggable="false" title="show all arts" onclick="selectAllArt();">
+            <img id="extendedArt" src="img/extendedArt.svg" width="24"
+                class="selectExtendedArtSvg gray border clickable" draggable="false" title="show extended arts"
+                onclick="selectExtendedArt();">
+            <img id="fullArt" src="img/fullArt.svg" width="24" class="fullArtSvg gray border clickable"
+                draggable="false" title="show full arts" onclick="selectFullArt();">
         </div>
         <div class="searchButtons">
-            <img src="img/1993Frame.svg" width="24" class="gray border clickable" draggable="false" title="show 1993 frames"
-                onclick="selectFrameType(this, Frame._1993);">
-            <img src="img/1997Frame.svg" width="24" class="gray border clickable" draggable="false" title="show 1997 frames"
-                onclick="selectFrameType(this, Frame._1997);">
-            <img src="img/2003Frame.svg" width="24" class="gray border clickable" draggable="false" title="show 2003 frames"
-                onclick="selectFrameType(this, Frame._2003);">
-            <img src="img/2015Frame.svg" width="24" class="gray border clickable" draggable="false" title="show 2015 frames"
-                onclick="selectFrameType(this, Frame._2015);">
-            <img src="img/futureFrame.svg" width="24" class="gray border clickable" draggable="false" title="show future frames"
-                onclick="selectFrameType(this, Frame.FUTURE);">
+            <img src="img/1993Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 1993 frames" onclick="selectFrameType(this, Frame._1993);">
+            <img src="img/1997Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 1997 frames" onclick="selectFrameType(this, Frame._1997);">
+            <img src="img/2003Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 2003 frames" onclick="selectFrameType(this, Frame._2003);">
+            <img src="img/2015Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 2015 frames" onclick="selectFrameType(this, Frame._2015);">
+            <img src="img/futureFrame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show future frames" onclick="selectFrameType(this, Frame.FUTURE);">
         </div>
     </div>
     <div id="toaster">

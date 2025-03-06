@@ -728,7 +728,7 @@ function cleanUpLocalStorage() {
 cleanUpLocalStorage();
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
-view.doc.setValue(localStorage.getItem("deck") ?? "");
+view.doc.setValue(localStorage.getItem("deck") ?? await(await fetch('placeholder.txt')).text());
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {
@@ -737,8 +737,6 @@ async function scrollToSelectedCard(_, obj) {
         closestCard.scrollTo();
     }
 }
-
-var placeholderText = await(await fetch('placeholder.txt')).text();
 
 for (let elem of document.querySelectorAll("replacedSvg")) {
     var parent = elem.parentElement;
