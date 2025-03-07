@@ -497,6 +497,15 @@ window.parseDeck = async function parseDeck() {
                 return `${c.amount} ${c.name}`;
             }).join('\n')).join('\n');
 
+            if (deckData?.sideboard?.length > 0) {
+                deckText += '\n\n// Sideboard\n';
+                deckText += deckData.sideboard.map(c => {
+                    if (c.set_id)
+                        return `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`;
+                    return `${c.amount} ${c.name}`;
+                }).join('\n');
+            }
+
             if (deckData?.tokens?.length > 0) {
                 deckText += '\n\n// Tokens\n';
                 deckText += deckData.tokens.map(c => {
