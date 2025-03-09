@@ -390,3 +390,7 @@ button {
     background: purple;
     box-shadow: 0 0 8px 8px purple;
 }
+
+.isUndefined {
+    color: tomato !important;
+}

@@ -140,8 +140,13 @@ class Card {
         set = set?.toUpperCase();
 
         if (set) {
-            if (this.set === set && this.nr === nr)
-                return
+            if (this.set === set && this.nr === nr) {
+                if (this.history?.length && this.history[this.history.length - 1].isUndefined) {
+                    this.history.pop();
+                    this.history.push({ set: this.set, nr: this.nr, isUndefined: false });
+                }
+                return;
+            }
         }
         else if (this.cardId === cardId)
             return;
@@ -157,7 +162,7 @@ class Card {
         if (!isRevert) {
             this.future = [];
             if (this.set && this.nr)
-                this.history.push({ set: this.set, nr: this.nr });
+                this.history.push({ set: this.set, nr: this.nr, isUndefined: this.isUndefined });
         }
 
         try {
@@ -319,8 +324,9 @@ class Card {
             this.future = [];
 
         const lastState = this.history.pop();
-        this.future.push({ set: this.set, nr: this.nr });
+        this.future.push({ set: this.set, nr: this.nr, isUndefined: this.isUndefined });
         this.updateBySetNr(lastState.set, lastState.nr, true);
+        this.isUndefined = lastState.isUndefined;
 
         this.elem.classList.toggle("revertable", this.history?.length > 0);
         this.elem.classList.add("forwardable");
@@ -336,8 +342,9 @@ class Card {
             this.history = [];
 
         const nextState = this.future.pop();
-        this.history.push({ set: this.set, nr: this.nr });
+        this.history.push({ set: this.set, nr: this.nr, isUndefined: this.isUndefined });
         this.updateBySetNr(nextState.set, nextState.nr, true);
+        this.isUndefined = nextState.isUndefined;
 
         this.elem.classList.add("revertable");
         this.elem.classList.toggle("forwardable", this.future?.length > 0);
@@ -442,10 +449,17 @@ function updateList() {
     let lastHoverOn = hoverOn;
     hoverOn = false;
 
+    var deckCards = cards.filter(c => c instanceof Card);
+
     var deck = cards.map(c => c.getDescription ? c.getDescription() : c).join("\n");
 
     const scrollInfo = view.getScrollInfo();
     view.doc.setValue(deck);
+    for (let card of deckCards) {
+        if (card.isUndefined)
+            view.addLineClass(card.lineNr, "text", "isUndefined");
+    }
+
     view.scrollTo(scrollInfo.left, scrollInfo.top);
 
     hoverOn = lastHoverOn;
@@ -467,12 +481,14 @@ window.onDrop = async function onDrop(e) {
                 const urlParts = text.split('/');
 
                 await openedCard.updateBySetNr(urlParts[4], urlParts[5]);
+                openedCard.isUndefined = false;
                 updateList();
 
             } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/[\w-]+\/[\w-]+\.jpg\?\d+$/.test(text)) {
                 const id = text.split('/')[7].split('.')[0];
 
                 await openedCard.updateById(id);
+                openedCard.isUndefined = false;
                 updateList();
             }
         }
@@ -560,10 +576,13 @@ window.parseDeck = async function parseDeck() {
             continue;
         }
 
-        print(`\nParsing card: ${cardText}`);
         var card = await Card.parseCardText(cardText);
         card.order = ++cardNr;
         card.lineNr = i;
+
+        var line = view.getLine(i);
+        view.replaceRange(card.getDescription() + "✔️", { line: i, ch: 0 }, { line: i, ch: line.length });
+
         var clone = template.cloneNode(true);
         clone.card = card;
         card.elem = clone;
@@ -770,7 +789,7 @@ function cleanUpLocalStorage() {
         }
     } else {
         version = parseFloat(version, 10);
-        if(version<2){
+        if (version < 2) {
             for (const key in localStorage) {
                 if (key.startsWith('card_')) {
                     localStorage.removeItem(key);
@@ -786,6 +805,8 @@ cleanUpLocalStorage();
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 view.doc.setValue(localStorage.getItem("deck") ?? await(await fetch('placeholder.txt')).text());
+
+console.log(view);
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {

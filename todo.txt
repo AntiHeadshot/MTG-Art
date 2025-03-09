@@ -1,9 +1,5 @@
 - Refactor!!!
 
-- Highlight cards not fully specified
-
-- Put Tickmark behind Card when loading and immediatly update Text
-
 - dissable changing format while loading
 
 - dissable text input while loading
