@@ -505,9 +505,7 @@ window.parseDeck = async function parseDeck() {
         return;
 
     document.getElementById("loadDeck").disabled = true;
-    document.getElementById("convertToScryfallBtn").disabled = false;
-    document.getElementById("convertToMtgPrintBtn").disabled = false;
-    document.getElementById("convertToDeckstatsBtn").disabled = false;
+    view.disabled = true;
 
     var template = document.getElementById("cardTemplate");
     var parent = document.getElementById("cardContainer");
@@ -600,6 +598,11 @@ window.parseDeck = async function parseDeck() {
             card.updateElem();
         }
     }
+
+    document.getElementById("convertToScryfallBtn").disabled = false;
+    document.getElementById("convertToMtgPrintBtn").disabled = false;
+    document.getElementById("convertToDeckstatsBtn").disabled = false;
+    view.disabled = false;
 
     hideToaster();
 
@@ -805,8 +808,6 @@ cleanUpLocalStorage();
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 view.doc.setValue(localStorage.getItem("deck") ?? await(await fetch('placeholder.txt')).text());
-
-console.log(view);
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {

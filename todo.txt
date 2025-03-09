@@ -1,6 +1,1 @@
 - Refactor!!!
-
-- dissable changing format while loading
-
-- dissable text input while loading
-
