@@ -13,7 +13,6 @@ const Format = Object.freeze({
     DECKSTATS: 'deckstats',
     MTGPRINT: 'mtgprint',
     SCRYFALL: 'scryfall',
-    UNDEFINED: 'undefined'
 });
 
 const Frame = Object.freeze({
@@ -59,48 +58,66 @@ class Card {
 
     getDescription() {
         switch (this.format) {
-            case Format.UNDEFINED:
-                return `${this.count} ${this.searchName}`;
             case Format.MTGPRINT:
+                if (this.isUndefined)
+                    return `${this.count} ${this.name}`;
                 return `${this.count} ${this.name} (${this.set.toUpperCase()}) ${this.nr}`;
             case Format.SCRYFALL:
                 return `${this.count} ${this.scryfall_uri}`;
             default:
+                if (this.isUndefined)
+                    return `${this.count} ${this.name}`;
                 return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`;
         }
     }
 
     static async parseCardText(cardText) {
         // Example cardText: "1 [CMR#656] Vampiric Tutor"
-        const regex = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+.+$/;
-        let match = cardText.match(regex);
+        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+.+$/;
+        let match = cardText.match(regexDeckstats);
         let format = Format.DECKSTATS;
 
         if (!match) {
             // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
-            const regex2 = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-]+)$/;
+            const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-]+)$/;
             format = Format.MTGPRINT;
-            match = cardText.match(regex2);
+            match = cardText.match(regexMtgPrint);
         }
         if (!match) {
             // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
-            const regex3 = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-%]+)\/[\w\-%()\/]+)/;
+            const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-%]+)\/[\w\-%()\/]+)/;
             format = Format.SCRYFALL;
-            match = cardText.match(regex3);
+            match = cardText.match(regexScryfall);
         }
 
+        //Search for card
         if (!match) {
-            // Example cardText: "1 Vampiric Tutor"
-            const regex3 = /^(?<count>\d+)\s+(?<name>.+)$/;
-            format = Format.UNDEFINED;
-            match = cardText.match(regex3);
+            // Example cardText: "1 [CMR] Vampiric Tutor"
+            const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)\]\s+(?<name>.+)$/;
+            let match = cardText.match(regexDeckstats);
+            let format = Format.DECKSTATS;
 
-            const { count, name } = match.groups;
+            if (!match) {
+                // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC)"
+                const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+$/;
+                format = Format.MTGPRINT;
+                match = cardText.match(regexMtgPrint);
+            }
+
+            if (!match) {
+                // Example cardText: "1 Vampiric Tutor"
+                const regexUndefined = /^(?<count>\d+)\s+(?<name>.+)$/;
+                format = Format.DECKSTATS;
+                match = cardText.match(regexUndefined);
+            }
+
+            const { count, name, set } = match.groups;
 
             var card = new Card(parseInt(count, 10), format);
-            await card.search(name);
+            await card.searchByName(name, set);
             return card;
         }
+
         if (!match) {
             throw new Error("Invalid card text format");
         }
@@ -108,17 +125,25 @@ class Card {
         const { count, set, nr } = match.groups;
 
         var card = new Card(parseInt(count, 10), format);
-        await card.update(false, set, nr);
+        await card.updateBySetNr(set, nr);
+        card.isUndefined = false;
         return card;
     }
 
-    async update(isRevert, setOrCardId, nr) {
-        setOrCardId = setOrCardId.toUpperCase();
+    async updateById(cardId) {
+        await this.update(false, cardId, undefined, undefined);
+    }
+    async updateBySetNr(set, nr, isRevert) {
+        await this.update(isRevert || false, undefined, set, nr);
+    }
+    async update(isRevert, cardId, set, nr) {
+        set = set?.toUpperCase();
 
-        if (nr) {
-            if (this.set == setOrCardId && this.nr == nr)
-                return;
-        } else if (this.cardId == setOrCardId)
+        if (set) {
+            if (this.set === set && this.nr === nr)
+                return
+        }
+        else if (this.cardId === cardId)
             return;
 
         const now = Date.now();
@@ -137,8 +162,8 @@ class Card {
 
         try {
             if (nr) {
-                url = `https://api.scryfall.com/cards/${setOrCardId}/${nr}`;
-                const cacheKey = `card_${setOrCardId}_${nr}`;
+                url = `https://api.scryfall.com/cards/${set}/${nr}`;
+                const cacheKey = `card_${set}_${nr}`;
                 const cachedCard = localStorage.getItem(cacheKey);
 
                 if (cachedCard) {
@@ -146,8 +171,9 @@ class Card {
                     this.applyCardData(cachedData.data);
                     return;
                 }
-            } else {
-                url = `https://api.scryfall.com/cards/${setOrCardId}`;
+            }
+            else {
+                url = `https://api.scryfall.com/cards/${cardId}`;
             }
 
             try {
@@ -175,39 +201,49 @@ class Card {
             this.elem.classList.remove("updating");
     }
 
-    async search(name) {
-
+    async searchByName(name, set) {
         const now = Date.now();
         let url;
 
-        url = `https://api.scryfall.com/cards/search?order=name&q=%21\"${name}\"&include_extras=true`;
-
+        url = set ? `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" (set:${set} or set:t${set}) -is:art_series`)}&include_extras=true` :
+            `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" -is:art_series`)}&include_extras=true`;
         try {
-            const cacheSearchKey = `card_${name}`;
+            const cacheSearchKey = set ? `card_${name}_${set}` : `card_${name}`;
             const cachedCard = localStorage.getItem(cacheSearchKey);
 
             this.searchName = name;
 
             if (cachedCard) {
                 const cachedData = JSON.parse(cachedCard);
-                await this.update(false, cachedData.set, cachedData.nr);
+                await this.updateBySetNr(cachedData.set, cachedData.nr);
+                this.isUndefined = cachedData.isUndefined;
+                console.log(this);
                 return;
             }
 
             await delayScryfallCall();
 
             const response = await fetch(url);
-            const data = await response.json();
 
-            if (data.total_cards.length < 1) {
-                console.log(data);
-                return;
+            if (response.ok) {
+                const data = await response.json();
+
+                if (data.total_cards < 1) {
+                    console.log(data);
+                    return;
+                }
+
+                this.isUndefined = data.total_cards > 1;
+                this.applyCardData(data.data[0]);
+
+                localStorage.setItem(cacheSearchKey, JSON.stringify({ timestamp: now, set: this.set, nr: this.nr, isUndefined: this.isUndefined }));
+                localStorage.setItem(`card_${this.set}_${this.nr}`, JSON.stringify({ timestamp: now, data: data.data[0] }));
+            } else {
+                this.imageUri = "img/undefinedCard.svg";
+                this.name = name;
+                this.isUndefined = true;
+                this.updateElem();
             }
-
-            this.applyCardData(data.data[0]);
-
-            localStorage.setItem(cacheSearchKey, JSON.stringify({ timestamp: now, set: this.set, nr: this.nr }));
-            localStorage.setItem(`card_${this.set}_${this.nr}`, JSON.stringify({ timestamp: now, data: data.data[0] }));
         } catch (error) {
             console.error("Error updating card:", error);
         }
@@ -246,9 +282,7 @@ class Card {
         this.elem.classList.toggle("revertable", this.history?.length > 0);
         this.elem.classList.toggle("forwardable", this.future?.length > 0);
 
-        this.elem.querySelector("img").src = this.imageUri;
-        this.elem.setAttribute("identifier", this.getDescription());
-        this.elem.id = "card" + this.cardId;
+        this.elem.id = "card" + this.order;
 
         if (!this.elem.style.zIndex)
             this.elem.style.zIndex = 9000 - this.order;
@@ -286,7 +320,7 @@ class Card {
 
         const lastState = this.history.pop();
         this.future.push({ set: this.set, nr: this.nr });
-        this.update(true, lastState.set, lastState.nr);
+        this.updateBySetNr(lastState.set, lastState.nr, true);
 
         this.elem.classList.toggle("revertable", this.history?.length > 0);
         this.elem.classList.add("forwardable");
@@ -303,7 +337,7 @@ class Card {
 
         const nextState = this.future.pop();
         this.history.push({ set: this.set, nr: this.nr });
-        this.update(true, nextState.set, nextState.nr);
+        this.updateBySetNr(nextState.set, nextState.nr, true);
 
         this.elem.classList.add("revertable");
         this.elem.classList.toggle("forwardable", this.future?.length > 0);
@@ -332,9 +366,9 @@ class Card {
                 searchParameter += ` (${frames.map(f => `frame:${f}`).join(' or ')})`;
         }
 
-        var src = this.format === Format.UNDEFINED ?
-            `https://scryfall.com/search?order=name&q=%21\"${this.searchName}\"&include_extras=true` :
-            "https://scryfall.com/search?q=oracleid%3A" + oracleId;
+        var src = this.isUndefined ?
+            `https://scryfall.com/search?order=name&q=${encodeURIComponent(`!"${this.searchName}" -is:art_series`)}&include_extras=true` :
+            `https://scryfall.com/search?q=oracleid%3A${oracleId}`;
 
         src += encodeURIComponent(searchParameter) + querryParameters;
 
@@ -432,17 +466,13 @@ window.onDrop = async function onDrop(e) {
             if (/^https:\/\/scryfall\.com\/card\/\w+\/[\w\-%]+\/[\w\-%()\/]+$/.test(text)) {
                 const urlParts = text.split('/');
 
-                await openedCard.update(false, urlParts[4], urlParts[5]);
-                if (openedCard.format === Format.UNDEFINED)
-                    openedCard.format = Format.DECKSTATS;
+                await openedCard.updateBySetNr(urlParts[4], urlParts[5]);
                 updateList();
 
             } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/[\w-]+\/[\w-]+\.jpg\?\d+$/.test(text)) {
                 const id = text.split('/')[7].split('.')[0];
 
-                await openedCard.update(false, id);
-                if (openedCard.format === Format.UNDEFINED)
-                    openedCard.format = Format.DECKSTATS;
+                await openedCard.updateById(id);
                 updateList();
             }
         }
@@ -491,28 +521,26 @@ window.parseDeck = async function parseDeck() {
                 localStorage.setItem('deckstatSets', JSON.stringify(sets));
             }
 
-            deckText = deckData.sections.map(s => ((s.name && s.name != "Main") ? `\n// ${s.name}\n` : "") + s.cards.map(c => {
-                if (c.set_id)
-                    return `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`;
-                return `${c.amount} ${c.name}`;
-            }).join('\n')).join('\n');
+            function getCardText(card) {
+                if (card.set_id) {
+                    if (card.collector_number)
+                        return `${card.amount} [${sets[card.set_id].abbreviation}#${card.collector_number}] ${card.name}`;
+                    return `${card.amount} [${sets[card.set_id].abbreviation}] ${card.name}`;
+                }
+                return `${card.amount} ${card.name}`;
+            }
+
+            deckText = deckData.sections.map(s => ((s.name && s.name != "Main") ? `\n// ${s.name}\n` : "")
+                + s.cards.map(getCardText).join('\n')).join('\n');
 
             if (deckData?.sideboard?.length > 0) {
                 deckText += '\n\n// Sideboard\n';
-                deckText += deckData.sideboard.map(c => {
-                    if (c.set_id)
-                        return `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`;
-                    return `${c.amount} ${c.name}`;
-                }).join('\n');
+                deckText += deckData.sideboard.map(getCardText).join('\n');
             }
 
             if (deckData?.tokens?.length > 0) {
                 deckText += '\n\n// Tokens\n';
-                deckText += deckData.tokens.map(c => {
-                    if (c.set_id)
-                        return `${c.amount} [${sets[c.set_id].abbreviation}#${c.collector_number}] ${c.name}`;
-                    return `${c.amount} ${c.name}`;
-                }).join('\n');
+                deckText += deckData.tokens.map(getCardText).join('\n');
             }
 
             view.doc.setValue(deckText);
@@ -732,6 +760,26 @@ function cleanUpLocalStorage() {
             }
         }
     }
+
+    let version = localStorage.getItem("version");
+    if (!version) {
+        for (const key in localStorage) {
+            if (key.startsWith('card_')) {
+                localStorage.removeItem(key);
+            }
+        }
+    } else {
+        version = parseFloat(version, 10);
+        if(version<2){
+            for (const key in localStorage) {
+                if (key.startsWith('card_')) {
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+    }
+
+    localStorage.setItem("version", 2);
 }
 
 cleanUpLocalStorage();
