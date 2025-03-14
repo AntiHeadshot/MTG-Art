@@ -6,6 +6,7 @@
         integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" type="text/css" href="styles.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/pdfkit@0.12.1/js/pdfkit.standalone.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"
         integrity="sha512-8RnEqURPUc5aqFEN04aQEiPlSAdE0jlFS/9iGgUyNtwFnSKCXhmB6ZTNl7LnDtDWKabJIASzXrzD0K+LYexU9g=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -20,6 +21,7 @@
             draggable="false">
         </replacedSvg>
     </div>
+    <img id="pdfButton" src="img/mode.svg" class="clickable gray border" onclick="showPdf(); event.stopPropagation();">
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
             <div class="card" id="cardTemplate" style="display: none;" onclick="this.card.openScryfall(event)"

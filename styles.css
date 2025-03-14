@@ -332,6 +332,14 @@ button {
     z-index: 10001;
 }
 
+#pdfButton {
+    position: absolute;
+    height: 28px;
+    top: 48px;
+    right: 4px;
+    z-index: 10001;
+}
+
 .artView #modeButton {
     right: 4px;
 }

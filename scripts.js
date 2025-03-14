@@ -1,3 +1,5 @@
+import * as ImageDocument from '/pdfCreation.js'
+
 let openedCard;
 let popupWindow;
 let cards = [];
@@ -7,6 +9,7 @@ let hoverOn = false;
 const Mode = Object.freeze({
     INPUT: 'input',
     ARTVIEW: 'artview',
+    PDF: 'pdf',
 });
 
 const Format = Object.freeze({
@@ -54,6 +57,7 @@ class Card {
         this.cardId = cardId;
         this.oracleId = oracleId;
         this.imageUri = imageUri;
+        this.highResImageUris = [];
     }
 
     getDescription() {
@@ -222,7 +226,6 @@ class Card {
                 const cachedData = JSON.parse(cachedCard);
                 await this.updateBySetNr(cachedData.set, cachedData.nr);
                 this.isUndefined = cachedData.isUndefined;
-                console.log(this);
                 return;
             }
 
@@ -257,12 +260,16 @@ class Card {
     applyCardData(data) {
         this.cardId = data.id;
         this.oracleId = data.oracle_id;
+        this.highResImageUris = [];
         if (!data.image_uris) {
             this.twoFaced = true;
             this.imageUris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
             this.imageUri = this.imageUris[0];
+            this.highResImageUris.push(data.card_faces[0].image_uris.large);
+            this.highResImageUris.push(data.card_faces[1].image_uris.large);
         } else {
             this.imageUri = data.image_uris.normal;
+            this.highResImageUris.push(data.image_uris.large);
         }
         this.set = data.set.toUpperCase();
         this.nr = data.collector_number;
@@ -705,13 +712,13 @@ window.swapMode = function swapMode() {
     let selectedCard;
     switch (mode) {
         case Mode.ARTVIEW:
-            selectedCard = cards.filter(c => c.elem).find(c => c.elem.getBoundingClientRect().top > 0);
+            selectedCard = cards.filter(c => c instanceof Card).find(c => c.elem.getBoundingClientRect().top > 0);
 
             document.body.classList.remove('artView');
             mode = Mode.INPUT;
             break;
         case Mode.INPUT:
-            selectedCard = cards.filter(c => c.elem).find(c => {
+            selectedCard = cards.filter(c => c instanceof Card).find(c => {
                 let rect = c.elem.getBoundingClientRect();
                 return rect.top <= (window.innerHeight / 2 + 10) && rect.bottom >= (window.innerHeight / 2 - 10);
             });
@@ -719,10 +726,34 @@ window.swapMode = function swapMode() {
             document.body.classList.add('artView');
             mode = Mode.ARTVIEW;
             break;
+        case Mode.PDF:
+            document.body.classList.remove('pdfView');
+            mode = Mode.INPUT;
+            break;
     }
 
-    selectedCard?.scrollTo("instant");
+    selectedCard?.scrollTo?.call("instant");
 };
+
+window.showPdf = async function showPdf() {
+    if (!cards.length)
+        return;
+
+    showToast("generating PDF");
+
+    var imageDocument = new ImageDocument.ImageDocument({ scaling: 1, crossShape: ImageDocument.CrossShape.STAR, crossSize: 2 });
+
+    for (const card of cards) {
+        if (card instanceof Card)
+            for (var img of card.highResImageUris)
+                imageDocument.addImage(img);
+    }
+
+    await imageDocument.create("output.pdf");
+
+    document.body.classList.add('pdfView');
+    //mode = Mode.PDF;
+}
 
 var allArtElem = document.getElementById("allArt");
 var extendedArtElem = document.getElementById("extendedArt");
@@ -807,7 +838,7 @@ function cleanUpLocalStorage() {
 cleanUpLocalStorage();
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
-view.doc.setValue(localStorage.getItem("deck") ?? await(await fetch('placeholder.txt')).text());
+view.doc.setValue(localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text());
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {
@@ -820,7 +851,7 @@ async function scrollToSelectedCard(_, obj) {
 for (let elem of document.querySelectorAll("replacedSvg")) {
     var parent = elem.parentElement;
     var attributes = elem.attributes;
-    parent.innerHTML = await(await fetch(elem.getAttribute('data'))).text();
+    parent.innerHTML = await (await fetch(elem.getAttribute('data'))).text();
     let newElement = parent.lastChild;
 
     for (let attr of attributes) {
