@@ -35,11 +35,22 @@ svg {
     flex-direction: column;
 }
 
+#pdfInputs {
+    z-index: 1;
+    pointer-events: none;
+}
+
 #pdfInputs div {
     display: flex;
     justify-content: center;
     align-items: center;
+    pointer-events: none;
+
     margin: 4px;
+}
+
+#pdfInputs>div>* {
+    pointer-events: all;
 }
 
 #pdfInputs label {
@@ -48,6 +59,14 @@ svg {
 
 #pdfInputs input {
     width: 64px;
+}
+
+#templateDisplay {
+    display: block;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 150px;
 }
 
 #deckContainer {

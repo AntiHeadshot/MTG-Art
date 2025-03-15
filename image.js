@@ -8,9 +8,6 @@ class Image {
         let context = this.context = canvas.getContext("2d");
         context.drawImage(image, 0, 0);
 
-        let dpi = (this.canvas.width / (63.5 / 25.4));
-        console.log(dpi);
-
         this.cornerSize = this.canvas.width / 21;
     }
 
@@ -68,7 +65,6 @@ class Image {
         }
 
         return [Math.floor(r / count), Math.floor(g / count), Math.floor(b / count), Math.floor(a / count)];
-        canvasData.data
     }
 
     colorPixel(pixelPos, canvasData, color) {

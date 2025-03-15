@@ -102,9 +102,6 @@
     <div id="pdfContainer">
         <div id="pdfInputs">
             <div>
-                <label for="paperFormat">These controlls are TODO and not functional. </label>
-            </div>
-            <div>
                 <label for="paperFormat">Paper format: </label>
                 <select id="paperFormat" onchange="updatePdfCreation({pageFormat: this.value});">
                     <option selected>A4</option>
@@ -154,6 +151,7 @@
         <div class="update">
             <img src="img/update.svg" class="updateSvg" focusable="false" draggable="false" aria-hidden="true">
         </div>
+        <img id="templateDisplay">
         <embed id="pdfView" type="application/pdf">
     </div>
     <div id="toaster">

@@ -35,21 +35,24 @@ class ImageDocument {
 
         const mmToPt = 2.8346456693;
 
-        const crossLength = this.crossSize * .5 * mmToPt;
+        const cropMarkSize = this.cropMarkSize * .5 * mmToPt;
 
         const pageHeight = doc.page.height;
         const pageWidth = doc.page.width;
 
         const margin = this.borderMargin * mmToPt;
+        const cardMargin = this.cardMargin * mmToPt;
 
         const mtgWidth = 63.5 * this.scaling * mmToPt;
         const mtgHeight = 88.9 * this.scaling * mmToPt;
 
-        const xCnt = Math.floor((pageWidth - 2 * margin) / mtgWidth);
-        const yCnt = Math.floor((pageHeight - 2 * margin) / mtgHeight);
+        const adjustedMtgWidth = mtgWidth + cardMargin;
+        const adjustedMtgHeight = mtgHeight + cardMargin;
+        const xCnt = Math.floor((pageWidth - 2 * margin - mtgWidth) / adjustedMtgWidth) + 1;
+        const yCnt = Math.floor((pageHeight - 2 * margin - mtgHeight) / adjustedMtgHeight) + 1;
 
-        const marginX = (pageWidth - xCnt * mtgWidth) / 2;
-        const marginY = (pageHeight - yCnt * mtgHeight) / 2;
+        const marginX = (pageWidth - xCnt * adjustedMtgWidth + cardMargin) / 2;
+        const marginY = (pageHeight - yCnt * adjustedMtgHeight + cardMargin) / 2;
 
         return new Promise(async resolve => {
             const stream = doc.pipe(blobStream());
@@ -69,8 +72,8 @@ class ImageDocument {
                 if (imgNr > 0)
                     doc.addPage(pageOptions);
 
-                for (let y = 0, yPos = marginY; y < yCnt && imgNr < this.images.length; y++, yPos += mtgHeight) {
-                    for (let x = 0, xPos = marginX; x < xCnt && imgNr < this.images.length; x++, xPos += mtgWidth, imgNr++) {
+                for (let y = 0, yPos = marginY; y < yCnt && imgNr < this.images.length; y++, yPos += adjustedMtgHeight) {
+                    for (let x = 0, xPos = marginX; x < xCnt && imgNr < this.images.length; x++, xPos += adjustedMtgWidth, imgNr++) {
                         var image = new Image(await loadImage(this.images[imgNr]));
                         image.removeBackground();
                         var dataUrl = image.getDataUrl();
@@ -79,11 +82,11 @@ class ImageDocument {
                     }
                 }
 
-                let cl_2 = crossLength / 2;
+                let cl_2 = cropMarkSize / 2;
 
                 if (this.cropMarkShape != CropMark.NONE)
-                    for (let y = 0, yPos = marginY; y <= yCnt; y++, yPos += mtgHeight) {
-                        for (let x = 0, xPos = marginX; x <= xCnt; x++, xPos += mtgWidth) {
+                    for (let y = 0, yPos = marginY; y <= yCnt; y++, yPos += adjustedMtgHeight) {
+                        for (let x = 0, xPos = marginX; x <= xCnt; x++, xPos += adjustedMtgWidth) {
                             {
                                 switch (this.cropMarkShape) {
                                     case CropMark.STAR:
@@ -103,8 +106,8 @@ class ImageDocument {
                                     default:
                                         doc.lineCap('round')
                                             .lineWidth(this.cropMarkWidth)
-                                            .moveTo(xPos, yPos - crossLength).lineTo(xPos, yPos + crossLength)
-                                            .moveTo(xPos - crossLength, yPos).lineTo(xPos + crossLength, yPos)
+                                            .moveTo(xPos, yPos - cropMarkSize).lineTo(xPos, yPos + cropMarkSize)
+                                            .moveTo(xPos - cropMarkSize, yPos).lineTo(xPos + cropMarkSize, yPos)
                                             .stroke(this.cropMarkColor);
                                         break;
                                 }

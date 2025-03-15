@@ -1,4 +1,5 @@
 import { ImageDocument, CropMark } from './pdfCreation.js';
+import { ImageDocumentTemplate } from './templateCreation.js';
 
 let openedCard;
 let popupWindow;
@@ -788,6 +789,9 @@ window.updatePdfCreation = function updatePdfCreation(targetOptions) {
     }
 
     localStorage.setItem('printOptions', JSON.stringify(printOptions));
+
+    var svg = ImageDocumentTemplate.create(printOptions);
+    document.getElementById("templateDisplay").src = "data:image/svg+xml," + encodeURI(svg.replace("\n"," "));
 }
 
 window.savePdf = function savePdf() {
