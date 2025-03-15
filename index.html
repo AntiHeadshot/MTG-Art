@@ -106,32 +106,45 @@
             </div>
             <div>
                 <label for="paperFormat">Paper format: </label>
-                <select id="paperFormat">
+                <select id="paperFormat" onchange="updatePdfCreation({pageFormat: this.value});">
                     <option selected>A4</option>
                     <option>A3</option>
                     <option>Letter</option>
                 </select>
             </div>
             <div>
-                <label for="borderMargin">Border Margin: </label>
-                <input type="number" id="borderMargin" value="5">
+                <label for="borderMargin">Border Margin in mm: </label>
+                <input type="number" id="borderMargin" value="5"
+                    onchange="updatePdfCreation({borderMargin: Number(this.value)});">
             </div>
             <div>
+                <label for="cardSize">Card Size in %: </label>
+                <input type="number" id="cardSize" value="100" min="10" max="150"
+                    onchange="updatePdfCreation({scaling: Number(this.value)/100});">
+            </div>
+            <div id="cropMarkShapes">
                 <label>Cropmark: </label>
-                <img src="img/1997Frame.svg" width="24" class="gray border clickable" draggable="false"
-                    title="show 1997 frames" onclick="selectFrameType(this, Frame._1997);">
-                <img src="img/2003Frame.svg" width="24" class="gray border clickable" draggable="false"
-                    title="show 2003 frames" onclick="selectFrameType(this, Frame._2003);">
-                <img src="img/2015Frame.svg" width="24" class="gray border clickable" draggable="false"
-                    title="show 2015 frames" onclick="selectFrameType(this, Frame._2015);">
+                <img src="img/empty.svg" width="24" class="gray border clickable" draggable="false"
+                    title="no crop marks"  data-value="none" onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+                <img src="img/plus.svg" width="24" class="gray border clickable" draggable="false"
+                    title="simple crop marks"  data-value="lines" onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+                <img src="img/star.svg" width="24" class="gray border clickable" draggable="false"
+                    title="star shaped crop marks"  data-value="star" onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
             </div>
             <div>
-                <label for="cropmarkSize">Cropmark size: </label>
-                <input type="number" id="cropmarkSize" value="5">
+                <label for="cropmarkSize">Cropmark size in mm: </label>
+                <input type="number" id="cropmarkSize" value="5"
+                    onchange="updatePdfCreation({cropMarkSize: Number(this.value)});">
             </div>
             <div>
-                <label for="cardMargin">Card Margin: </label>
-                <input type="number" id="cardMargin" value="0">
+                <label for="cropMarkWidth">Cropmark line width in mm: </label>
+                <input type="number" id="cropMarkWidth" value=".5" step=".1"
+                    onchange="updatePdfCreation({cropMarkWidth: Number(this.value)});">
+            </div>
+            <div>
+                <label for="cardMargin">Card Margin in mm: </label>
+                <input type="number" id="cardMargin" value="0"
+                    onchange="updatePdfCreation({cardMargin: Number(this.value)});">
             </div>
             <div>
                 <button onclick="generatePdf(); event.stopPropagation()">create</button>

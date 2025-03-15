@@ -1,4 +1,4 @@
-import * as ImageDocument from '/pdfCreation.js'
+import { ImageDocument, CropMark } from './pdfCreation.js';
 
 let openedCard;
 let popupWindow;
@@ -33,9 +33,26 @@ let mode = Mode.INPUT;
 let isExtendedArt = false;
 let isFullArt = false;
 
+let printOptions = {
+    scaling: 1,
+    cardMargin: 0,
+    borderMargin: 5,
+    pageFormat: "A4",
+    cropMarkShape: CropMark.STAR,
+    cropMarkColor: "white",
+    cropMarkSize: 5,
+    cropMarkWidth: 0.5
+};
+
+let storedPrintOptions = localStorage.getItem('printOptions');
+if (storedPrintOptions) {
+    Object.apply(printOptions, JSON.parse(storedPrintOptions));
+}
+
 window.Mode = Mode;
 window.Format = Format;
 window.Frame = Frame;
+window.CropMark = CropMark;
 
 window.addEventListener("error", function (event) {
     print(`\nError: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
@@ -748,7 +765,7 @@ window.swapTo = function swapTo(target) {
 window.generatePdf = async function generatePdf() {
     showToast("generating PDF");
 
-    var imageDocument = new ImageDocument.ImageDocument({ scaling: 1, crossShape: ImageDocument.CrossShape.STAR, crossSize: 2 });
+    var imageDocument = new ImageDocument(printOptions);
 
     for (const card of cards)
         if (card instanceof Card)
@@ -761,6 +778,16 @@ window.generatePdf = async function generatePdf() {
         document.getElementById("pdfView").src = url;
         document.getElementById("pdfContainer").classList.remove("updating");
     });
+}
+
+window.updatePdfCreation = function updatePdfCreation(targetOptions) {
+    Object.assign(printOptions, targetOptions);
+
+    for (let img of document.getElementById("cropMarkShapes").querySelectorAll("img")) {
+        img.classList.toggle("selected", img.dataset.value == printOptions.cropMarkShape);
+    }
+
+    localStorage.setItem('printOptions', JSON.stringify(printOptions));
 }
 
 window.savePdf = function savePdf() {
@@ -864,6 +891,8 @@ function cleanUpLocalStorage() {
 }
 
 cleanUpLocalStorage();
+
+updatePdfCreation({});
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 view.doc.setValue(localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text());

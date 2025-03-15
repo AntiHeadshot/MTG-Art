@@ -4,9 +4,10 @@ import Image from '/image.js';
 
 let lastUrl;
 
-let CrossShape = Object.freeze({
+let CropMark = Object.freeze({
     LINES: 'lines',
     STAR: 'star',
+    NONE: 'none',
 });
 
 class ImageDocument {
@@ -15,18 +16,11 @@ class ImageDocument {
         this.cardMargin = options?.cardMargin || 0;
         this.borderMargin = options?.borderMargin || 5;
         this.pageFormat = options?.pageFormat || "A4";
-        this.withCrosses = options?.withCrosses === undefined ? true : options.withCrosses;
-        this.crossShape = options?.crossShape || CrossShape.LINES;
-        this.crossColor = options?.crossColor || 'white';
-        switch (options.crossShape) {
-            default:
-            case CrossShape.LINES:
-                this.crossSize = options?.crossSize || 5;
-                break;
-            case CrossShape.STAR:
-                this.crossSize = options?.crossSize || 5;
-                break;
-        }
+        this.cropMarkShape = options?.cropMarkShape || CropMark.LINES;
+        this.cropMarkColor = options?.cropMarkColor || 'white';
+        this.cropMarkSize = options?.cropMarkSize || 5;
+        this.cropMarkWidth = options?.cropMarkWidth || .5;
+
         this.images = [];
     }
 
@@ -87,31 +81,31 @@ class ImageDocument {
 
                 let cl_2 = crossLength / 2;
 
-                if (this.withCrosses)
+                if (this.cropMarkShape != CropMark.NONE)
                     for (let y = 0, yPos = marginY; y <= yCnt; y++, yPos += mtgHeight) {
                         for (let x = 0, xPos = marginX; x <= xCnt; x++, xPos += mtgWidth) {
                             {
-                                switch (this.crossShape) {
-                                    case CrossShape.STAR:
-                                        let inset = .9;
-                                        let insetO = cl_2 * (1 - inset);
+                                switch (this.cropMarkShape) {
+                                    case CropMark.STAR:
+                                        let inset = cl_2 * .9;
+                                        let insetO = cl_2 - inset;
                                         doc.path(`M ${xPos - cl_2},${yPos} `
-                                            + `c ${cl_2 * inset},${insetO} ${cl_2 * inset},${insetO} ${cl_2},${cl_2} `
-                                            + `c ${insetO},-${cl_2 * inset} ${insetO},-${cl_2 * inset} ${cl_2},-${cl_2} `
-                                            + `c -${cl_2 * inset},${-insetO} -${cl_2 * inset},${-insetO} -${cl_2},-${cl_2} `
-                                            + `c ${-insetO},${cl_2 * inset} ${-insetO},${cl_2 * inset} -${cl_2},${cl_2} `
+                                            + `c ${inset},${insetO} ${inset},${insetO} ${cl_2},${cl_2} `
+                                            + `c ${insetO},-${inset} ${insetO},-${inset} ${cl_2},-${cl_2} `
+                                            + `c -${inset},-${insetO} -${inset},-${insetO} -${cl_2},-${cl_2} `
+                                            + `c -${insetO},${inset} -${insetO},${inset} -${cl_2},${cl_2} `
                                         )
                                             .lineWidth(0)
-                                            .fillColor(this.crossColor)
+                                            .fillColor(this.cropMarkColor)
                                         doc.fill();
                                         break;
-                                    case CrossShape.LINES:
+                                    case CropMark.LINES:
                                     default:
                                         doc.lineCap('round')
-                                            .lineWidth(.5)
+                                            .lineWidth(this.cropMarkWidth)
                                             .moveTo(xPos, yPos - crossLength).lineTo(xPos, yPos + crossLength)
                                             .moveTo(xPos - crossLength, yPos).lineTo(xPos + crossLength, yPos)
-                                            .stroke(this.crossColor);
+                                            .stroke(this.cropMarkColor);
                                         break;
                                 }
                             }
@@ -133,6 +127,6 @@ function loadImage(src) {
     });
 }
 
-export { ImageDocument, CrossShape };
+export { ImageDocument, CropMark };
 
 export default ImageDocument;

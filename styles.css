@@ -95,6 +95,7 @@ svg {
 }
 
 .searchButtons img.selected,
+#cropMarkShapes img.selected,
 #defaultViewButton,
 .artView #artViewButton,
 .pdfView #pdfButton {
