@@ -2,6 +2,8 @@ import * as _ from 'https://cdn.jsdelivr.net/npm/pdfkit@0.16.0/js/pdfkit.standal
 import * as _1 from 'https://cdn.jsdelivr.net/npm/blob-stream-browserify@0.1.3/index.js';
 import Image from '/image.js';
 
+let lastUrl;
+
 let CrossShape = Object.freeze({
     LINES: 'lines',
     STAR: 'star',
@@ -32,7 +34,7 @@ class ImageDocument {
         this.images.push(image);
     }
 
-    async create(outputPath) {
+    async create() {
         const pageOptions = { size: this.pageFormat };
 
         const doc = new PDFDocument(pageOptions);
@@ -55,66 +57,69 @@ class ImageDocument {
         const marginX = (pageWidth - xCnt * mtgWidth) / 2;
         const marginY = (pageHeight - yCnt * mtgHeight) / 2;
 
-        const stream = doc.pipe(blobStream());
-        stream.on('finish', function () {
-            const blob = stream.toBlob('application/pdf');
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = outputPath;
-            a.click();
-            URL.revokeObjectURL(url);
-        });
+        return new Promise(async resolve => {
+            const stream = doc.pipe(blobStream());
+            stream.on('finish', function () {
+                const blob = stream.toBlob('application/pdf');
+                const url = URL.createObjectURL(blob);
 
-        var imgNr = 0;
-        while (imgNr < this.images.length) {
-            if (imgNr > 0)
-                doc.addPage(pageOptions);
+                if (lastUrl)
+                    URL.revokeObjectURL(lastUrl);
+                lastUrl = url;
 
-            for (let y = 0, yPos = marginY; y < yCnt && imgNr < this.images.length; y++, yPos += mtgHeight) {
-                for (let x = 0, xPos = marginX; x < xCnt && imgNr < this.images.length; x++, xPos += mtgWidth, imgNr++) {
-                    var image = new Image(await loadImage(this.images[imgNr]));
-                    image.removeBackground();
-                    var dataUrl = image.getDataUrl();
+                resolve(url);
+            });
 
-                    doc.image(dataUrl, xPos, yPos, { width: mtgWidth, height: mtgHeight });
+            var imgNr = 0;
+            while (imgNr < this.images.length) {
+                if (imgNr > 0)
+                    doc.addPage(pageOptions);
+
+                for (let y = 0, yPos = marginY; y < yCnt && imgNr < this.images.length; y++, yPos += mtgHeight) {
+                    for (let x = 0, xPos = marginX; x < xCnt && imgNr < this.images.length; x++, xPos += mtgWidth, imgNr++) {
+                        var image = new Image(await loadImage(this.images[imgNr]));
+                        image.removeBackground();
+                        var dataUrl = image.getDataUrl();
+
+                        doc.image(dataUrl, xPos, yPos, { width: mtgWidth, height: mtgHeight });
+                    }
                 }
-            }
 
-            let cl_2 = crossLength / 2;
+                let cl_2 = crossLength / 2;
 
-            if (this.withCrosses)
-                for (let y = 0, yPos = marginY; y <= yCnt; y++, yPos += mtgHeight) {
-                    for (let x = 0, xPos = marginX; x <= xCnt; x++, xPos += mtgWidth) {
-                        {
-                            switch (this.crossShape) {
-                                case CrossShape.STAR:
-                                    let inset = .9;
-                                    let insetO = cl_2 * (1 - inset);
-                                    doc.path(`M ${xPos - cl_2},${yPos} `
-                                        + `c ${cl_2 * inset},${insetO} ${cl_2 * inset},${insetO} ${cl_2},${cl_2} `
-                                        + `c ${insetO},-${cl_2 * inset} ${insetO},-${cl_2 * inset} ${cl_2},-${cl_2} `
-                                        + `c -${cl_2 * inset},${-insetO} -${cl_2 * inset},${-insetO} -${cl_2},-${cl_2} `
-                                        + `c ${-insetO},${cl_2 * inset} ${-insetO},${cl_2 * inset} -${cl_2},${cl_2} `
-                                    )
-                                        .lineWidth(0)
-                                        .fillColor(this.crossColor)
-                                    doc.fill();
-                                    break;
-                                case CrossShape.LINES:
-                                default:
-                                    doc.lineCap('round')
-                                        .lineWidth(.5)
-                                        .moveTo(xPos, yPos - crossLength).lineTo(xPos, yPos + crossLength)
-                                        .moveTo(xPos - crossLength, yPos).lineTo(xPos + crossLength, yPos)
-                                        .stroke(this.crossColor);
-                                    break;
+                if (this.withCrosses)
+                    for (let y = 0, yPos = marginY; y <= yCnt; y++, yPos += mtgHeight) {
+                        for (let x = 0, xPos = marginX; x <= xCnt; x++, xPos += mtgWidth) {
+                            {
+                                switch (this.crossShape) {
+                                    case CrossShape.STAR:
+                                        let inset = .9;
+                                        let insetO = cl_2 * (1 - inset);
+                                        doc.path(`M ${xPos - cl_2},${yPos} `
+                                            + `c ${cl_2 * inset},${insetO} ${cl_2 * inset},${insetO} ${cl_2},${cl_2} `
+                                            + `c ${insetO},-${cl_2 * inset} ${insetO},-${cl_2 * inset} ${cl_2},-${cl_2} `
+                                            + `c -${cl_2 * inset},${-insetO} -${cl_2 * inset},${-insetO} -${cl_2},-${cl_2} `
+                                            + `c ${-insetO},${cl_2 * inset} ${-insetO},${cl_2 * inset} -${cl_2},${cl_2} `
+                                        )
+                                            .lineWidth(0)
+                                            .fillColor(this.crossColor)
+                                        doc.fill();
+                                        break;
+                                    case CrossShape.LINES:
+                                    default:
+                                        doc.lineCap('round')
+                                            .lineWidth(.5)
+                                            .moveTo(xPos, yPos - crossLength).lineTo(xPos, yPos + crossLength)
+                                            .moveTo(xPos - crossLength, yPos).lineTo(xPos + crossLength, yPos)
+                                            .stroke(this.crossColor);
+                                        break;
+                                }
                             }
                         }
                     }
-                }
-        }
-        doc.end();
+            }
+            doc.end();
+        });
     }
 }
 

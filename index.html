@@ -16,12 +16,14 @@
 </head>
 
 <body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
-    <div id="modeButton" class="clickable" onclick="swapMode(); event.stopPropagation(); parseDeck();">
-        <replacedSvg data="img/mode.svg" class="gray border" style="height: 100%;pointer-events: none;"
-            draggable="false">
-        </replacedSvg>
-    </div>
-    <img id="pdfButton" src="img/mode.svg" class="clickable gray border" onclick="showPdf(); event.stopPropagation();">
+    <img id="defaultViewButton" src="img/input.svg" class="clickable gray border"
+        onclick="swapTo(Mode.INPUT); event.stopPropagation();">
+    <img id="artViewButton" src="img/artView.svg" class="clickable gray border"
+        onclick="swapTo(Mode.ARTVIEW); event.stopPropagation(); parseDeck();">
+    <img id="pdfButton" src="img/pdf.svg" class="clickable gray border"
+        onclick="swapTo(Mode.PDF); event.stopPropagation();">
+
+
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
             <div class="card" id="cardTemplate" style="display: none;" onclick="this.card.openScryfall(event)"
@@ -96,6 +98,50 @@
             <img src="img/futureFrame.svg" width="24" class="gray border clickable" draggable="false"
                 title="show future frames" onclick="selectFrameType(this, Frame.FUTURE);">
         </div>
+    </div>
+    <div id="pdfContainer">
+        <div id="pdfInputs">
+            <div>
+                <label for="paperFormat">These controlls are TODO and not functional. </label>
+            </div>
+            <div>
+                <label for="paperFormat">Paper format: </label>
+                <select id="paperFormat">
+                    <option selected>A4</option>
+                    <option>A3</option>
+                    <option>Letter</option>
+                </select>
+            </div>
+            <div>
+                <label for="borderMargin">Border Margin: </label>
+                <input type="number" id="borderMargin" value="5">
+            </div>
+            <div>
+                <label>Cropmark: </label>
+                <img src="img/1997Frame.svg" width="24" class="gray border clickable" draggable="false"
+                    title="show 1997 frames" onclick="selectFrameType(this, Frame._1997);">
+                <img src="img/2003Frame.svg" width="24" class="gray border clickable" draggable="false"
+                    title="show 2003 frames" onclick="selectFrameType(this, Frame._2003);">
+                <img src="img/2015Frame.svg" width="24" class="gray border clickable" draggable="false"
+                    title="show 2015 frames" onclick="selectFrameType(this, Frame._2015);">
+            </div>
+            <div>
+                <label for="cropmarkSize">Cropmark size: </label>
+                <input type="number" id="cropmarkSize" value="5">
+            </div>
+            <div>
+                <label for="cardMargin">Card Margin: </label>
+                <input type="number" id="cardMargin" value="0">
+            </div>
+            <div>
+                <button onclick="generatePdf(); event.stopPropagation()">create</button>
+                <button onclick="savePdf(); event.stopPropagation()">save</button>
+            </div>
+        </div>
+        <div class="update">
+            <img src="img/update.svg" class="updateSvg" focusable="false" draggable="false" aria-hidden="true">
+        </div>
+        <embed id="pdfView" type="application/pdf">
     </div>
     <div id="toaster">
         <div id="toasterMessage"></div>

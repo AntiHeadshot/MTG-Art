@@ -8,7 +8,8 @@ class Image {
         let context = this.context = canvas.getContext("2d");
         context.drawImage(image, 0, 0);
 
-        console.log(canvas.width / 63.5 * 25.4);
+        let dpi = (this.canvas.width / (63.5 / 25.4));
+        console.log(dpi);
 
         this.cornerSize = this.canvas.width / 21;
     }

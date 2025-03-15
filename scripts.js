@@ -33,8 +33,27 @@ let mode = Mode.INPUT;
 let isExtendedArt = false;
 let isFullArt = false;
 
+window.Mode = Mode;
 window.Format = Format;
 window.Frame = Frame;
+
+window.addEventListener("error", function (event) {
+    print(`\nError: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
+});
+
+window.addEventListener("unhandledrejection", function (event) {
+    print(`\nUnhandled rejection: ${event.reason}`);
+});
+
+function print(text) {
+    let lastHoverOn = hoverOn;
+    hoverOn = false;
+    console.log("printing: " + text);
+    const scrollInfo = view.getScrollInfo();
+    view.doc.setValue(view.doc.getValue() + '\n' + text);
+    view.scrollTo(scrollInfo.left, scrollInfo.top);
+    hoverOn = lastHoverOn;
+}
 
 async function delayScryfallCall() {
     if (delayScryfallCall.lastCall) {
@@ -634,24 +653,6 @@ function insertCardInOrder(parent, card, elem) {
     }
 }
 
-window.addEventListener("error", function (event) {
-    print(`\nError: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
-});
-
-window.addEventListener("unhandledrejection", function (event) {
-    print(`\nUnhandled rejection: ${event.reason}`);
-});
-
-function print(text) {
-    let lastHoverOn = hoverOn;
-    hoverOn = false;
-    console.log("printing: " + text);
-    const scrollInfo = view.getScrollInfo();
-    view.doc.setValue(view.doc.getValue() + '\n' + text);
-    view.scrollTo(scrollInfo.left, scrollInfo.top);
-    hoverOn = lastHoverOn;
-}
-
 window.copyToClipboard = async function copyToClipboard() {
     var textToCopy = cards.filter(c => c.scryfall_uri).map(c => `${c.count} ${c.scryfall_uri}`).join("\n");
     try {
@@ -708,51 +709,78 @@ window.removeHighlightDeckInput = function removeHighlightDeckInput(card) {
     hoverOn = lastHoverOn;
 }
 
-window.swapMode = function swapMode() {
+window.swapTo = function swapTo(target) {
+    if (target == Mode.PDF && !cards.length)
+        return;
+
     let selectedCard;
     switch (mode) {
         case Mode.ARTVIEW:
             selectedCard = cards.filter(c => c instanceof Card).find(c => c.elem.getBoundingClientRect().top > 0);
-
             document.body.classList.remove('artView');
-            mode = Mode.INPUT;
             break;
         case Mode.INPUT:
             selectedCard = cards.filter(c => c instanceof Card).find(c => {
                 let rect = c.elem.getBoundingClientRect();
                 return rect.top <= (window.innerHeight / 2 + 10) && rect.bottom >= (window.innerHeight / 2 - 10);
             });
-
-            document.body.classList.add('artView');
-            mode = Mode.ARTVIEW;
             break;
         case Mode.PDF:
             document.body.classList.remove('pdfView');
-            mode = Mode.INPUT;
+            break;
+    }
+
+    switch (mode = target) {
+        case Mode.ARTVIEW:
+            document.body.classList.add('artView');
+            break;
+        case Mode.PDF:
+            document.body.classList.add('pdfView');
+            selectedCard = null;
+            break;
+        case Mode.INPUT:
             break;
     }
 
     selectedCard?.scrollTo?.call("instant");
 };
 
-window.showPdf = async function showPdf() {
-    if (!cards.length)
-        return;
-
+window.generatePdf = async function generatePdf() {
     showToast("generating PDF");
 
     var imageDocument = new ImageDocument.ImageDocument({ scaling: 1, crossShape: ImageDocument.CrossShape.STAR, crossSize: 2 });
 
-    for (const card of cards) {
+    for (const card of cards)
         if (card instanceof Card)
             for (var img of card.highResImageUris)
                 imageDocument.addImage(img);
+
+    document.getElementById("pdfContainer").classList.add("updating");
+
+    return imageDocument.create().then(url => {
+        document.getElementById("pdfView").src = url;
+        document.getElementById("pdfContainer").classList.remove("updating");
+    });
+}
+
+window.savePdf = function savePdf() {
+    var pdfView = document.getElementById("pdfView");
+
+    function downloadPdf() {
+        const a = document.createElement('a');
+        a.href = pdfView.src;
+        a.download = cards.filter(c => c instanceof Card)[0].name + ".pdf";
+        a.click();
     }
-
-    await imageDocument.create("output.pdf");
-
-    document.body.classList.add('pdfView');
-    //mode = Mode.PDF;
+    if (pdfView.src) {
+        downloadPdf();
+    }
+    else {
+        generatePdf().then(_ => {
+            console.log("opening");
+            downloadPdf()
+        });
+    }
 }
 
 var allArtElem = document.getElementById("allArt");
