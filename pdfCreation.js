@@ -28,7 +28,7 @@ class ImageDocument {
         this.images.push(image);
     }
 
-    async create() {
+    async create(updateCallback) {
         const pageOptions = { size: this.pageFormat };
 
         const doc = new PDFDocument(pageOptions);
@@ -68,17 +68,23 @@ class ImageDocument {
             });
 
             var imgNr = 0;
+            var maxStep = this.images.length * 3;
+
             while (imgNr < this.images.length) {
                 if (imgNr > 0)
                     doc.addPage(pageOptions);
 
                 for (let y = 0, yPos = marginY; y < yCnt && imgNr < this.images.length; y++, yPos += adjustedMtgHeight) {
                     for (let x = 0, xPos = marginX; x < xCnt && imgNr < this.images.length; x++, xPos += adjustedMtgWidth, imgNr++) {
+                        updateCallback((imgNr * 3) / maxStep);
                         var image = new Image(await loadImage(this.images[imgNr]));
+                        updateCallback((imgNr * 3 + 1) / maxStep);
                         image.removeBackground();
                         var dataUrl = image.getDataUrl();
+                        updateCallback((imgNr * 3 + 2) / maxStep);
 
                         doc.image(dataUrl, xPos, yPos, { width: mtgWidth, height: mtgHeight });
+
                     }
                 }
 
@@ -115,6 +121,8 @@ class ImageDocument {
                         }
                     }
             }
+
+            updateCallback(1);
             doc.end();
         });
     }

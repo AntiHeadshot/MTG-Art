@@ -364,12 +364,29 @@ button {
     transition: opacity 1s ease-in-out;
 }
 
+#toaster.show {
+    opacity: 1;
+}
+
 #toasterMessage {
     margin: 0;
 }
 
-#toaster.show {
-    opacity: 1;
+.progress-bar {
+    width: 100%;
+    height: 5px;
+    background-color: #555;
+    margin-top: 5px;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-inner {
+    height: 100%;
+    width: 0;
+    background-color: purple;
+    transition: width 1s ease;
 }
 
 #defaultViewButton {

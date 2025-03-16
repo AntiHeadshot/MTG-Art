@@ -47,8 +47,15 @@ let printOptions = {
 
 let storedPrintOptions = localStorage.getItem('printOptions');
 if (storedPrintOptions) {
-    Object.apply(printOptions, JSON.parse(storedPrintOptions));
+    Object.assign(printOptions, JSON.parse(storedPrintOptions));
 }
+
+document.getElementById('cardSize').value = printOptions.scaling;
+document.getElementById('cardMargin').value = printOptions.cardMargin;
+document.getElementById('borderMargin').value = printOptions.borderMargin;
+document.getElementById('paperFormat').value = printOptions.pageFormat;
+document.getElementById('cropmarkSize').value = printOptions.cropMarkSize;
+document.getElementById('cropMarkWidth').value = printOptions.cropMarkWidth;
 
 window.Mode = Mode;
 window.Format = Format;
@@ -611,7 +618,7 @@ window.parseDeck = async function parseDeck() {
     let cardNr = 0;
 
     for (let i = 0; i < deckLines.length; i++) {
-        showToast(`Parsing card ${i + 1} of ${deckLines.length}...`);
+        showToast(`Parsing card ${i + 1} of ${deckLines.length}...`, (i / deckLines.length));
         const cardText = deckLines[i];
         if (cardText.trim() === "" || cardText.startsWith("//")) {
             cards.push(cardText);
@@ -692,15 +699,17 @@ window.convertToFormat = function convertToFormat(format) {
 
 let toastTimeout;
 
-function showToast(message) {
+function showToast(message, progress) {
     var toaster = document.getElementById('toaster');
-    var toasterMessage = document.getElementById('toasterMessage');
-    toasterMessage.textContent = message;
+    document.getElementById('toasterMessage').textContent = message;
     toaster.classList.add("show");
 
     if (toastTimeout) {
         clearTimeout(toastTimeout);
     }
+
+    if (progress !== undefined)
+        document.getElementById('toasterProgressBar').style.width = (progress * 100) + '%';
 
     toastTimeout = setTimeout(function () {
         toaster.classList.remove("show");
@@ -775,7 +784,7 @@ window.generatePdf = async function generatePdf() {
 
     document.getElementById("pdfContainer").classList.add("updating");
 
-    return imageDocument.create().then(url => {
+    return imageDocument.create((p) => showToast("generating PDF", p)).then(url => {
         document.getElementById("pdfView").src = url;
         document.getElementById("pdfContainer").classList.remove("updating");
     });
@@ -791,7 +800,7 @@ window.updatePdfCreation = function updatePdfCreation(targetOptions) {
     localStorage.setItem('printOptions', JSON.stringify(printOptions));
 
     var svg = ImageDocumentTemplate.create(printOptions);
-    document.getElementById("templateDisplay").src = "data:image/svg+xml," + encodeURI(svg.replace("\n"," "));
+    document.getElementById("templateDisplay").src = "data:image/svg+xml," + encodeURI(svg.replace("\n", " "));
 }
 
 window.savePdf = function savePdf() {
