@@ -799,8 +799,17 @@ window.updatePdfCreation = function updatePdfCreation(targetOptions) {
 
     localStorage.setItem('printOptions', JSON.stringify(printOptions));
 
-    var svg = ImageDocumentTemplate.create(printOptions);
-    document.getElementById("templateDisplay").src = "data:image/svg+xml," + encodeURI(svg.replace("\n", " "));
+    let template = ImageDocumentTemplate.create(printOptions);
+    let dataUri = "data:image/svg+xml," + encodeURI(template.svg.replace("\n", " "));
+
+    document.getElementById("templateDisplay").src = dataUri;
+
+    let templateElem = document.getElementById("templateDisplayDetail");
+
+    templateElem.src = dataUri;
+    templateElem.style.setProperty("--zoom", 1 / template.scale);
+    templateElem.style.setProperty("--x", template.corner.x * 100 + "%");
+    templateElem.style.setProperty("--y", template.corner.y * 100 + "%");
 }
 
 window.savePdf = function savePdf() {

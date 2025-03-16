@@ -1,4 +1,4 @@
-import CropMark from '/pdfCreation.js';
+import { CropMark } from '/pdfCreation.js';
 
 class ImageDocumentTemplate {
 
@@ -37,8 +37,8 @@ class ImageDocumentTemplate {
         const xCnt = Math.floor((pageWidth - 2 * margin - mtgWidth) / adjustedMtgWidth) + 1;
         const yCnt = Math.floor((pageHeight - 2 * margin - mtgHeight) / adjustedMtgHeight) + 1;
 
-        const marginX = (pageWidth - xCnt * adjustedMtgWidth + cardMargin) / 2;
-        const marginY = (pageHeight - yCnt * adjustedMtgHeight + cardMargin) / 2;
+        const marginX = (pageWidth - (xCnt * adjustedMtgWidth - cardMargin)) / 2;
+        const marginY = (pageHeight - (yCnt * adjustedMtgHeight - cardMargin)) / 2;
 
         let svg = [];
         svg.push(`<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">`);
@@ -72,7 +72,7 @@ class ImageDocumentTemplate {
                             case CropMark.LINES:
                             default:
                                 svg.push(`<path stroke-width="${_cropMarkWidth}" stroke="${_cropMarkColor}" stroke-linecap="round" fill="transparent" `
-                                    + `d="M${xPos},${yPos - cl_2} h${cropMarkSize} M${xPos - cl_2},${yPos} v${cropMarkSize}"></path>`);
+                                    + `d="M${xPos},${yPos - cl_2} v${cropMarkSize} M${xPos - cl_2},${yPos} h${cropMarkSize}"></path>`);
                                 break;
                         }
                     }
@@ -80,7 +80,11 @@ class ImageDocumentTemplate {
             }
 
         svg.push("</svg>");
-        return svg.join("\n");
+        return {
+            svg: svg.join("\n")
+            , corner: { x: (marginX + mtgWidth + .5 * cardMargin) / pageWidth, y: (marginY + mtgHeight + .5 * cardMargin) / pageHeight }
+            , scale: (cardMargin + cornerRadius * 4) / pageWidth
+        };
     }
 }
 
