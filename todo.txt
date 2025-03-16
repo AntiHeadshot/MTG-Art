@@ -1,5 +1,4 @@
 - Refactor!!!
 
-- add Progress of pdf generation
 - add close up of Card Corners as Template
 - add Caching of Highres Card Images

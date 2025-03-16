@@ -50,7 +50,7 @@ if (storedPrintOptions) {
     Object.assign(printOptions, JSON.parse(storedPrintOptions));
 }
 
-document.getElementById('cardSize').value = printOptions.scaling;
+document.getElementById('cardSize').value = printOptions.scaling * 100;
 document.getElementById('cardMargin').value = printOptions.cardMargin;
 document.getElementById('borderMargin').value = printOptions.borderMargin;
 document.getElementById('paperFormat').value = printOptions.pageFormat;
@@ -463,7 +463,6 @@ class Card {
         behavior ||= "smooth";
         if (this.elem) {
             var cardsContainer = document.getElementById("cards");
-
             if (mode == Mode.INPUT) {
                 var adjustedHeight = this.getAdjustedHeight()
 
@@ -769,7 +768,8 @@ window.swapTo = function swapTo(target) {
             break;
     }
 
-    selectedCard?.scrollTo?.call("instant");
+    if (selectedCard)
+        selectedCard.scrollTo("instant");
 };
 
 window.generatePdf = async function generatePdf() {
