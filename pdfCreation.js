@@ -1,6 +1,7 @@
 import * as _ from 'https://cdn.jsdelivr.net/npm/pdfkit@0.16.0/js/pdfkit.standalone.js';
 import * as _1 from 'https://cdn.jsdelivr.net/npm/blob-stream-browserify@0.1.3/index.js';
 import Image from '/image.js';
+import ImageCache from '/imageCache.js';
 
 let lastUrl;
 
@@ -10,22 +11,14 @@ let CropMark = Object.freeze({
     NONE: 'none',
 });
 
-let imageCache = {};
-async function getDataUrl(src, session) {
-    let cached = imageCache[src];
-    let dataUrl;
-    if (cached === undefined) {
+async function getDataUrl(src) {
+    let dataUrl = await ImageCache.getImage(src);
+    if (dataUrl == null) {
         let imageElem = await loadImage(src);
         let image = new Image(imageElem);
         image.removeBackground();
         dataUrl = image.getDataUrl();
-        let size = dataUrl.length * 2;
-        imageCache[src] = { dataUrl, size, session, timestamp: Date.now() };
-    } else {
-        await new Promise(resolve => setTimeout(resolve, 10));
-        dataUrl = cached.dataUrl;
-        cached.session = session;
-        cached.timestamp = Date.now();
+        await ImageCache.storeImage(src,dataUrl);
     }
 
     return dataUrl;
@@ -41,8 +34,6 @@ function loadImage(src) {
     });
 }
 
-let session = 0;
-
 class ImageDocument {
     constructor(options) {
         this.scaling = options?.scaling || 1;
@@ -54,7 +45,6 @@ class ImageDocument {
         this.cropMarkSize = options?.cropMarkSize || 5;
         this.cropMarkWidth = options?.cropMarkWidth || .5;
 
-        this.session = session++;
         this.images = [];
     }
 
