@@ -107,13 +107,13 @@ class Card {
     getDescription() {
         switch (this.format) {
             case Format.MTGPRINT:
-                if (this.isUndefined)
-                    return `${this.count} ${this.name}`;
+                if (this.isUndefined && (!this.nr))
+                        return `${this.count} ${this.name}`;
                 return `${this.count} ${this.name} (${this.set.toUpperCase()}) ${this.nr}`;
             case Format.SCRYFALL:
                 return `${this.count} ${this.scryfall_uri}`;
             default:
-                if (this.isUndefined)
+                if (this.isUndefined && (!this.nr))
                     return `${this.count} ${this.name}`;
                 return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`;
         }
@@ -174,7 +174,8 @@ class Card {
 
         var card = new Card(parseInt(count, 10), format);
         await card.updateBySetNr(set, nr);
-        card.isUndefined = false;
+        if (card.isUndefined === undefined)
+            card.isUndefined = false;
         return card;
     }
 
@@ -232,10 +233,19 @@ class Card {
             try {
                 await delayScryfallCall();
                 const response = await fetch(url);
-                const data = await response.json();
-                this.applyCardData(data);
-                const cacheKey = `card_${this.set}_${this.nr}`;
-                localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
+                if (response.status == 200) {
+                    const data = await response.json();
+                    this.applyCardData(data);
+                    const cacheKey = `card_${this.set}_${this.nr}`;
+                    localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
+                } else {
+                    this.isUndefined = true;
+                    this.set = set;
+                    this.nr = nr;
+                    this.imageUri = "img/undefinedCard.svg";
+                    this.name = "undefined";
+                    this.updateElem();
+                }
             } catch (error) {
                 console.error("Error updating card:", error);
             }
