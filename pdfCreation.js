@@ -10,6 +10,39 @@ let CropMark = Object.freeze({
     NONE: 'none',
 });
 
+let imageCache = {};
+async function getDataUrl(src, session) {
+    let cached = imageCache[src];
+    let dataUrl;
+    if (cached === undefined) {
+        let imageElem = await loadImage(src);
+        let image = new Image(imageElem);
+        image.removeBackground();
+        dataUrl = image.getDataUrl();
+        let size = dataUrl.length * 2;
+        imageCache[src] = { dataUrl, size, session, timestamp: Date.now() };
+    } else {
+        await new Promise(resolve => setTimeout(resolve, 10));
+        dataUrl = cached.dataUrl;
+        cached.session = session;
+        cached.timestamp = Date.now();
+    }
+
+    return dataUrl;
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = document.createElement('img');
+        img.crossOrigin = "Anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+let session = 0;
+
 class ImageDocument {
     constructor(options) {
         this.scaling = options?.scaling || 1;
@@ -21,6 +54,7 @@ class ImageDocument {
         this.cropMarkSize = options?.cropMarkSize || 5;
         this.cropMarkWidth = options?.cropMarkWidth || .5;
 
+        this.session = session++;
         this.images = [];
     }
 
@@ -68,7 +102,7 @@ class ImageDocument {
             });
 
             var imgNr = 0;
-            var maxStep = this.images.length * 3;
+            var maxStep = this.images.length;
 
             while (imgNr < this.images.length) {
                 if (imgNr > 0)
@@ -76,15 +110,11 @@ class ImageDocument {
 
                 for (let y = 0, yPos = marginY; y < yCnt && imgNr < this.images.length; y++, yPos += adjustedMtgHeight) {
                     for (let x = 0, xPos = marginX; x < xCnt && imgNr < this.images.length; x++, xPos += adjustedMtgWidth, imgNr++) {
-                        updateCallback((imgNr * 3) / maxStep);
-                        var image = new Image(await loadImage(this.images[imgNr]));
-                        updateCallback((imgNr * 3 + 1) / maxStep);
-                        image.removeBackground();
-                        var dataUrl = image.getDataUrl();
-                        updateCallback((imgNr * 3 + 2) / maxStep);
+                        updateCallback((imgNr) / maxStep);
+
+                        var dataUrl = await getDataUrl(this.images[imgNr]);
 
                         doc.image(dataUrl, xPos, yPos, { width: mtgWidth, height: mtgHeight });
-
                     }
                 }
 
@@ -126,16 +156,6 @@ class ImageDocument {
             doc.end();
         });
     }
-}
-
-function loadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = document.createElement('img');
-        img.crossOrigin = "Anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-    });
 }
 
 export { ImageDocument, CropMark };
