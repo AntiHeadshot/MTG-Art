@@ -11,14 +11,16 @@ let CropMark = Object.freeze({
     NONE: 'none',
 });
 
+let session = Date.now();
+
 async function getDataUrl(src) {
-    let dataUrl = await ImageCache.getImage(src);
+    let dataUrl = await ImageCache.getImage(src, session);
     if (dataUrl == null) {
         let imageElem = await loadImage(src);
         let image = new Image(imageElem);
         image.removeBackground();
         dataUrl = image.getDataUrl();
-        await ImageCache.storeImage(src,dataUrl);
+        await ImageCache.storeImage(src, dataUrl, session);
     }
 
     return dataUrl;
