@@ -13,6 +13,13 @@ let CropMark = Object.freeze({
 
 let session = Date.now();
 
+if (sessionStorage.getItem("sessionId"))
+    session = Number(sessionStorage.getItem("sessionId"));
+else
+    sessionStorage.setItem("sessionId", session);
+
+await ImageCache.clearOldSessions(session);
+
 async function getDataUrl(src) {
     let dataUrl = await ImageCache.getImage(src, session);
     if (dataUrl == null) {

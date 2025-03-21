@@ -54,11 +54,20 @@ class ImageCache {
 
         let cursor = await objectStore.index('timestamp').openCursor();
         while (cursor) {
-            console.log(cursor.key);
             const imageDate = new Date(cursor.value.timestamp);
-            if (imageDate < cutoffDate) {
+            if (imageDate < cutoffDate)
                 await objectStore.delete(cursor.primaryKey);
-            }
+            cursor = await cursor.continue();
+        }
+    }
+
+    static async clearOldSessions(session) {
+        const objectStore = db.transaction('images', 'readwrite').objectStore('images');
+
+        let cursor = await objectStore.index('session').openCursor();
+        while (cursor) {
+            if (cursor.value.session < session)
+                await objectStore.delete(cursor.primaryKey);
             cursor = await cursor.continue();
         }
     }
