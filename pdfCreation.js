@@ -1,7 +1,7 @@
 import * as _ from 'https://cdn.jsdelivr.net/npm/pdfkit@0.16.0/js/pdfkit.standalone.js';
 import * as _1 from 'https://cdn.jsdelivr.net/npm/blob-stream-browserify@0.1.3/index.js';
-import Image from '/image.js';
-import ImageCache from '/imageCache.js';
+import Image from './image.js';
+import ImageCache from './imageCache.js';
 
 let lastUrl;
 
@@ -17,8 +17,6 @@ if (sessionStorage.getItem("sessionId"))
     session = Number(sessionStorage.getItem("sessionId"));
 else
     sessionStorage.setItem("sessionId", session);
-
-await ImageCache.clearOldSessions(session);
 
 async function getDataUrl(src) {
     let dataUrl = await ImageCache.getImage(src, session);

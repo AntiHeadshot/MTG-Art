@@ -499,3 +499,29 @@ button {
 .isUndefined {
     color: tomato !important;
 }
+
+.circular-display {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 90px;
+    height: 60px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10100;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.circular-display-inner {
+    text-align: center;
+    font-size: 12px;
+}
+
+#storeSizeValue {
+    font-size: 18px;
+    font-weight: bold;
+}

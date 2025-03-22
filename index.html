@@ -26,7 +26,7 @@
 
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
-            <div class="card" id="cardTemplate" style="display: none;" onclick="this.card.openScryfall(event)"
+            <div class="card" id="cardTemplate" style="display: none;" onclick="openScryfall(this.card, event)"
                 draggable="false" focusable="false" onmouseover="highlightDeckInput(this.card)"
                 onmouseout="removeHighlightDeckInput(this.card)">
                 <div class="cardFace">
@@ -122,11 +122,14 @@
             <div id="cropMarkShapes">
                 <label>Cropmark: </label>
                 <img src="img/empty.svg" width="24" class="gray border clickable" draggable="false"
-                    title="no crop marks"  data-value="none" onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+                    title="no crop marks" data-value="none"
+                    onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
                 <img src="img/plus.svg" width="24" class="gray border clickable" draggable="false"
-                    title="simple crop marks"  data-value="lines" onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+                    title="simple crop marks" data-value="lines"
+                    onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
                 <img src="img/star.svg" width="24" class="gray border clickable" draggable="false"
-                    title="star shaped crop marks"  data-value="star" onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+                    title="star shaped crop marks" data-value="star"
+                    onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
             </div>
             <div>
                 <label for="cropmarkSize">Cropmark size in mm: </label>
@@ -154,6 +157,13 @@
         <img id="templateDisplay">
         <img id="templateDisplayDetail">
         <embed id="pdfView" type="application/pdf">
+    </div>
+    <div id="storeSizeDisplay" class="circular-display">
+        <div class="circular-display-inner">
+            Used Storage<br />
+            <span id="storeSizeValue"></span>
+            MB
+        </div>
     </div>
     <div id="toaster">
         <div id="toasterMessage"></div>
