@@ -148,7 +148,8 @@
             </div>
             <div>
                 <label for="skipBasicLands">Skip Basic Lands: </label>
-                <input type="checkbox" id="skipBasicLands" onchange="updatePdfCreation({skipBasicLands: this.checked});">
+                <input type="checkbox" id="skipBasicLands"
+                    onchange="updatePdfCreation({skipBasicLands: this.checked});">
             </div>
             <div>
                 <button onclick="generatePdf(); event.stopPropagation()">create</button>
@@ -176,13 +177,26 @@
         </div>
     </div>
     <div id="customContextMenu" class="context-menu">
-        On PC the generated Images from which the PDF <br/>is created are saved locally. You can clear this <br/>data to free up
-        space, which is recomended, when <br/>you are done with a deck. <br/>(There is no detection for when you are editing
-        <br/>multiple decks at the same time.)
+        On PC the generated Images from which the PDF <br />is created are saved locally. You can clear this <br />data
+        to free up
+        space, which is recomended, when <br />you are done with a deck. <br />(There is no detection for when you are
+        editing
+        <br />multiple decks at the same time.)
         <ul>
             <li onclick="cacheClearAll()">Clear all</li>
             <li onclick="cacheClearOld()">Clear old</li>
         </ul>
+    </div>
+    <div id="tutorialOverlay" class="tutorial-overlay">
+        <div id="tutorialFrame" class="tutorial-frame"></div>
+    </div>
+    <div id="tutorialContentContainer" class="tutorial-content-container">
+        <div id="tutorialContent" class="tutorial-content">
+            <p id="tutorialText"></p>
+            <button id="prevButton" onclick="Tutorial.prevStep()">Previous</button>
+            <button id="nextButton" onclick="Tutorial.nextStep()">Next</button>
+            <button id="endButton" onclick="Tutorial.end()">End Tutorial</button>
+        </div>
     </div>
 </body>
 

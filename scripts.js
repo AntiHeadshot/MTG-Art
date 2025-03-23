@@ -2,6 +2,7 @@ import { ImageDocument, CropMark } from './pdfCreation.js';
 import { ImageDocumentTemplate } from './templateCreation.js';
 import { ImageCache, onStorageSizeChanged } from './imageCache.js';
 import { Card, Format, Frame, onCardChanged } from './card.js';
+import Tutorial from './tutorial.js';
 
 let cards = [];
 let hoverOn = false;
@@ -99,8 +100,10 @@ function updateList() {
 
     hoverOn = lastHoverOn;
 
-    localStorage.setItem('deck', deck);
-    sessionStorage.setItem('deck', deck);
+    if (!Tutorial.isOpen) {
+        localStorage.setItem('deck', deck);
+        sessionStorage.setItem('deck', deck);
+    }
 }
 onCardChanged(updateList);
 
@@ -511,10 +514,12 @@ updatePdfCreation({});
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 
-(async function initDeck() {
+async function initDeck() {
     let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text()
     view.doc.setValue(deckText);
-})();
+};
+
+initDeck();
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {
@@ -593,3 +598,7 @@ window.cacheClearAll = function cacheClearAll() {
 window.cacheClearOld = function cacheClearOld() {
     ImageCache.clearOldSessions();
 }
+
+if (localStorage.getItem('finishedTutorial') == null)
+    Tutorial.start();
+window.Tutorial = Tutorial;
