@@ -1,3 +1,1 @@
 - Refactor!!!
-
-- add Caching of Highres Card Images

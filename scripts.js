@@ -43,6 +43,7 @@ document.getElementById('borderMargin').value = printOptions.borderMargin;
 document.getElementById('paperFormat').value = printOptions.pageFormat;
 document.getElementById('cropmarkSize').value = printOptions.cropMarkSize;
 document.getElementById('cropMarkWidth').value = printOptions.cropMarkWidth;
+document.getElementById('skipBasicLands').checked = printOptions.skipBasicLands;
 
 window.Mode = Mode;
 window.Format = Format;
