@@ -1,6 +1,6 @@
 import { ImageDocument, CropMark } from './pdfCreation.js';
 import { ImageDocumentTemplate } from './templateCreation.js';
-import ImageCache from './imageCache.js';
+import { ImageCache, onStorageSizeChanged } from './imageCache.js';
 import { Card, Format, Frame, onCardChanged } from './card.js';
 
 let cards = [];
@@ -28,7 +28,8 @@ let printOptions = {
     cropMarkShape: CropMark.STAR,
     cropMarkColor: "white",
     cropMarkSize: 5,
-    cropMarkWidth: 0.5
+    cropMarkWidth: 0.5,
+    skipBasicLands: true,
 };
 
 let storedPrintOptions = localStorage.getItem('printOptions');
@@ -66,10 +67,17 @@ function print(text) {
     hoverOn = lastHoverOn;
 }
 
-let storeSize = Math.round((await ImageCache.getObjectStoreSize()) / 1048576 * 10) / 10;
-document.getElementById('storeSizeValue').textContent = storeSize;
-if (storeSize < 10)
-    document.getElementById("storeSizeDisplay").style.display = "none";
+function updateStorageSize(size) {
+    let storeSize = Math.round(size / 1048576 * 10) / 10;
+    document.getElementById('storeSizeValue').textContent = storeSize;
+    if (storeSize > 10)
+        document.getElementById("storeSizeDisplay").style.display = "flex";
+    else
+        document.getElementById("storeSizeDisplay").style.display = "none";
+}
+
+updateStorageSize(ImageCache.getObjectStoreSize());
+onStorageSizeChanged(v => updateStorageSize(v.totalSize));
 
 function updateList() {
     let lastHoverOn = hoverOn;
@@ -91,6 +99,7 @@ function updateList() {
     hoverOn = lastHoverOn;
 
     localStorage.setItem('deck', deck);
+    sessionStorage.setItem('deck', deck);
 }
 onCardChanged(updateList);
 
@@ -357,8 +366,9 @@ window.generatePdf = async function generatePdf() {
 
     for (const card of cards)
         if (card instanceof Card)
-            for (var img of card.highResImageUris)
-                imageDocument.addImage(img);
+            if (!(card.isBasicLand && printOptions.skipBasicLands))
+                for (var img of card.highResImageUris)
+                    imageDocument.addImage(card.count, img);
 
     document.getElementById("pdfContainer").classList.add("updating");
 
@@ -499,7 +509,11 @@ cleanUpLocalStorage();
 updatePdfCreation({});
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
-view.doc.setValue(localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text());
+
+(async function initDeck() {
+    let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text()
+    view.doc.setValue(deckText);
+})();
 
 async function scrollToSelectedCard(_, obj) {
     if (hoverOn && cards?.length > 0) {
@@ -553,4 +567,28 @@ for (let elem of document.querySelectorAll("replacedSvg")) {
     for (let attr of attributes) {
         newElement.setAttribute(attr.name, attr.value);
     }
+}
+
+const storeSizeDisplay = document.getElementById('storeSizeDisplay');
+const customContextMenu = document.getElementById('customContextMenu');
+
+storeSizeDisplay.addEventListener('contextmenu', function (event) {
+    event.preventDefault();
+    let size = customContextMenu.getBoundingClientRect();
+    customContextMenu.style.opacity = 1;
+    customContextMenu.style.pointerEvents = "all";
+    customContextMenu.style.left = `${event.pageX - size.width}px`;
+    customContextMenu.style.top = `${event.pageY - size.height}px`;
+});
+
+document.addEventListener('click', function () {
+    customContextMenu.style.opacity = 0;
+    customContextMenu.style.pointerEvents = "none";
+});
+
+window.cacheClearAll = function cacheClearAll() {
+    ImageCache.clearAllSessions();
+}
+window.cacheClearOld = function cacheClearOld() {
+    ImageCache.clearOldSessions();
 }

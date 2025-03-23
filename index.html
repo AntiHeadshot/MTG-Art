@@ -147,6 +147,10 @@
                     onchange="updatePdfCreation({cardMargin: Number(this.value)});">
             </div>
             <div>
+                <label for="skipBasicLands">Skip Basic Lands: </label>
+                <input type="checkbox" id="skipBasicLands" onchange="updatePdfCreation({skipBasicLands: this.checked});">
+            </div>
+            <div>
                 <button onclick="generatePdf(); event.stopPropagation()">create</button>
                 <button onclick="savePdf(); event.stopPropagation()">save</button>
             </div>
@@ -158,7 +162,7 @@
         <img id="templateDisplayDetail">
         <embed id="pdfView" type="application/pdf">
     </div>
-    <div id="storeSizeDisplay" class="circular-display">
+    <div id="storeSizeDisplay" style="display: none;" class="circular-display">
         <div class="circular-display-inner">
             Used Storage<br />
             <span id="storeSizeValue"></span>
@@ -170,6 +174,15 @@
         <div id="toasterProgress" class="progress-bar">
             <div id="toasterProgressBar" class="progress-bar-inner"></div>
         </div>
+    </div>
+    <div id="customContextMenu" class="context-menu">
+        On PC the generated Images from which the PDF <br/>is created are saved locally. You can clear this <br/>data to free up
+        space, which is recomended, when <br/>you are done with a deck. <br/>(There is no detection for when you are editing
+        <br/>multiple decks at the same time.)
+        <ul>
+            <li onclick="cacheClearAll()">Clear all</li>
+            <li onclick="cacheClearOld()">Clear old</li>
+        </ul>
     </div>
 </body>
 

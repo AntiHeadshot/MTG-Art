@@ -11,21 +11,14 @@ let CropMark = Object.freeze({
     NONE: 'none',
 });
 
-let session = Date.now();
-
-if (sessionStorage.getItem("sessionId"))
-    session = Number(sessionStorage.getItem("sessionId"));
-else
-    sessionStorage.setItem("sessionId", session);
-
 async function getDataUrl(src) {
-    let dataUrl = await ImageCache.getImage(src, session);
+    let dataUrl = await ImageCache.getImage(src);
     if (dataUrl == null) {
         let imageElem = await loadImage(src);
         let image = new Image(imageElem);
         image.removeBackground();
         dataUrl = image.getDataUrl();
-        await ImageCache.storeImage(src, dataUrl, session);
+        await ImageCache.storeImage(src, dataUrl);
     }
 
     return dataUrl;
@@ -55,8 +48,8 @@ class ImageDocument {
         this.images = [];
     }
 
-    addImage(image) {
-        this.images.push(image);
+    addImage(count, image) {
+        this.images.push({ count, image });
     }
 
     async create(updateCallback) {
@@ -99,18 +92,26 @@ class ImageDocument {
             });
 
             var imgNr = 0;
-            var maxStep = this.images.length;
 
-            while (imgNr < this.images.length) {
+            let imageIds = this.images.flatMap(img => Array(img.count).fill(img.image));
+            var maxStep = imageIds.length;
+            
+            let lastImage = "";
+            let dataUrl;
+
+            while (imgNr < imageIds.length) {
                 if (imgNr > 0)
                     doc.addPage(pageOptions);
 
-                for (let y = 0, yPos = marginY; y < yCnt && imgNr < this.images.length; y++, yPos += adjustedMtgHeight) {
-                    for (let x = 0, xPos = marginX; x < xCnt && imgNr < this.images.length; x++, xPos += adjustedMtgWidth, imgNr++) {
+                for (let y = 0, yPos = marginY; y < yCnt && imgNr < imageIds.length; y++, yPos += adjustedMtgHeight) {
+                    for (let x = 0, xPos = marginX; x < xCnt && imgNr < imageIds.length; x++, xPos += adjustedMtgWidth, imgNr++) {
                         updateCallback((imgNr) / maxStep);
 
-                        var dataUrl = await getDataUrl(this.images[imgNr]);
-
+                        let image = imageIds[imgNr];
+                        if (lastImage != image) {
+                            dataUrl = await getDataUrl(image);
+                            lastImage = image;
+                        }
                         doc.image(dataUrl, xPos, yPos, { width: mtgWidth, height: mtgHeight });
                     }
                 }

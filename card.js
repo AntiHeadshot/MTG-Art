@@ -53,11 +53,12 @@ class Card {
         this.cardId = cardId;
         this.oracleId = oracleId;
         this.imageUri = imageUri;
+        this.isBasicLand = false;
         this.highResImageUris = [];
     }
 
     static getOpenedCard() { return openedCard; }
-    static focusPopupWindow() { popupWindow.focus(); }
+    static focusPopupWindow() { popupWindow?.focus(); }
 
     getDescription() {
         switch (this.format) {
@@ -76,19 +77,19 @@ class Card {
 
     static async parseCardText(cardText) {
         // Example cardText: "1 [CMR#656] Vampiric Tutor"
-        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-]+)\]\s+.+$/;
+        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\]\s+.+$/;
         let match = cardText.match(regexDeckstats);
         let format = Format.DECKSTATS;
 
         if (!match) {
             // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
-            const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-]+)$/;
+            const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-★]+)$/;
             format = Format.MTGPRINT;
             match = cardText.match(regexMtgPrint);
         }
         if (!match) {
             // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
-            const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-%]+)\/[\w\-%()\/]+)/;
+            const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-★]+)\/[\w\-%()\/]+)/;
             format = Format.SCRYFALL;
             match = cardText.match(regexScryfall);
         }
@@ -284,6 +285,7 @@ class Card {
         this.nr = data.collector_number;
         this.name = data.name;
         this.scryfall_uri = data.scryfall_uri;
+        this.isBasicLand = data.type_line.startsWith("Basic Land ");
         this.updateElem();
     }
 
