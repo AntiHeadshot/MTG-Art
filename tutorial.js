@@ -29,6 +29,12 @@ function waitForEvent(eventType, callback, callBeforeWait) {
 let tutorialSteps = [
     {
         getElement: () => document.querySelector('.CodeMirror'),
+        text: `Welcome
+<br>
+<br>You can start the tutorial again any time, if you want.`,
+    },
+    {
+        getElement: () => document.querySelector('.CodeMirror'),
         text: `Input your deck here. You can type or paste your deck list into this field. Each card should be on a new line and if no count is given a single card is assumed.
 <br>
 <br>Your deck will be <b>automatically saved</b> and loaded again, when you reload or revisit this site.
