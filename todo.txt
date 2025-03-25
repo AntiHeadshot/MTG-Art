@@ -1,1 +1,5 @@
 - Refactor!!!
+
+- finish tutorial
+- add icon to tutorial
+- add hover text to View buttons

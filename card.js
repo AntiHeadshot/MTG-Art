@@ -292,8 +292,10 @@ class Card {
             this.elem.classList.add("twoFaced");
             this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];
         }
-        else
+        else{
             this.elem.classList.remove("twoFaced");
+            this.elem.classList.remove("flipped");
+        }
 
         this.elem.classList.toggle("revertable", this.history?.length > 0);
         this.elem.classList.toggle("forwardable", this.future?.length > 0);
