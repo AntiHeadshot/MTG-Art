@@ -1,19 +1,14 @@
 import { ImageDocument, CropMark } from './pdfCreation.js';
 import { ImageDocumentTemplate } from './templateCreation.js';
 import { ImageCache, onStorageSizeChanged } from './imageCache.js';
-import { Card, Format, Frame, onCardChanged } from './card.js';
+import { Card, Format, Frame } from './card.js';
 import Tutorial from './tutorial.js';
+import Events from './events.js';
+import {scrollTo} from './scroll.js';
+import {View, Mode} from './view.js';
 
 let cards = [];
 let hoverOn = false;
-
-const Mode = Object.freeze({
-    INPUT: 'input',
-    ARTVIEW: 'artview',
-    PDF: 'pdf',
-});
-
-let mode = Mode.INPUT;
 
 let searchOptions = window.searchOptions = {
     frames: [],
@@ -105,7 +100,6 @@ function updateList() {
         sessionStorage.setItem('deck', deck);
     }
 }
-onCardChanged(updateList);
 
 window.onDrop = async function onDrop(e) {
     e.preventDefault();
@@ -139,6 +133,8 @@ window.onDrop = async function onDrop(e) {
 
 window.parseDeck = async function parseDeck() {
     var deckText = view.doc.getValue();
+
+    Events.dispatch(Events.Type.DeckLoading);
 
     if (deckText.trim() === "")
         return;
@@ -240,6 +236,8 @@ window.parseDeck = async function parseDeck() {
         }
     }
 
+    Events.dispatch(Events.Type.DeckLoaded);
+
     document.getElementById("convertToScryfallBtn").disabled = false;
     document.getElementById("convertToMtgPrintBtn").disabled = false;
     document.getElementById("convertToDeckstatsBtn").disabled = false;
@@ -248,9 +246,10 @@ window.parseDeck = async function parseDeck() {
     hideToaster();
 
     updateList();
+    Events.on(Events.Type.CardChanged, updateList);
 
     hoverOn = true;
-    view.on("beforeSelectionChange", scrollToSelectedCard);
+    view.on("beforeSelectionChange", (_, selection) => scrollToSelectedCard(cards, selection));
 }
 
 function insertCardInOrder(parent, card, elem) {
@@ -331,7 +330,7 @@ window.swapTo = function swapTo(target) {
         return;
 
     let selectedCard;
-    switch (mode) {
+    switch (View.mode) {
         case Mode.ARTVIEW:
             selectedCard = cards.filter(c => c instanceof Card).find(c => c.elem.getBoundingClientRect().top > 0);
             document.body.classList.remove('artView');
@@ -347,7 +346,7 @@ window.swapTo = function swapTo(target) {
             break;
     }
 
-    switch (mode = target) {
+    switch (View.mode = target) {
         case Mode.ARTVIEW:
             document.body.classList.add('artView');
             break;
@@ -521,48 +520,14 @@ async function initDeck() {
 
 initDeck();
 
-async function scrollToSelectedCard(_, obj) {
+async function scrollToSelectedCard(cards, selection) {
     if (hoverOn && cards?.length > 0) {
-        const line = Math.min(obj.ranges[0].anchor.line, obj.ranges[0].head.line);
+        const line = Math.min(selection.ranges[0].anchor.line, selection.ranges[0].head.line);
         let closestCard = cards.find(card => card.lineNr >= line) || cards[cards.length - 1];
         scrollTo(closestCard);
+        Events.dispatch(Events.Type.ScrollingToCard, closestCard);
     }
 }
-function scrollTo(card, behavior) {
-    behavior ||= "smooth";
-    if (card.elem) {
-        var cardsContainer = document.getElementById("cards");
-        if (mode == Mode.INPUT) {
-            var adjustedHeight = getAdjustedHeight(card)
-
-            cardsContainer.scrollTo({
-                top: Math.max(0, card.order
-                    * (adjustedHeight + 10)
-                    - cardsContainer.getBoundingClientRect().height / 2),
-                behavior: behavior,
-            });
-        } else if (mode == Mode.ARTVIEW) {
-            card.elem.scrollIntoView({
-                block: "start",
-                behavior: behavior,
-            });
-        }
-    }
-}
-
-function getAdjustedHeight(card) {
-    var cardRect = card.elem.getBoundingClientRect();
-    var cardHeight = cardRect.height;
-    var cardWidth = cardRect.width;
-    var radians = Math.abs(card.rotation * (Math.PI / 180));
-
-    let sin = Math.sin(radians);
-    let cos = Math.cos(radians);
-
-    return (cardWidth * sin - cardHeight * cos)
-        / (sin * sin - cos * cos);
-};
-
 
 for (let elem of document.querySelectorAll("replacedSvg")) {
     var parent = elem.parentElement;
@@ -599,6 +564,6 @@ window.cacheClearOld = function cacheClearOld() {
     ImageCache.clearOldSessions();
 }
 
+window.Tutorial = Tutorial;
 if (localStorage.getItem('finishedTutorial') == null)
     Tutorial.start();
-window.Tutorial = Tutorial;

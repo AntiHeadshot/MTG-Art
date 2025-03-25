@@ -1,7 +1,19 @@
+import Events from "./events.js";
+import { scrollTo } from "./scroll.js";
+
+let isDeckLoaded = false;
+let selectedCard = null;
+let changedCard = false;
+let popup = null;
+
 let tutorialSteps = [
     {
         getElement: () => document.querySelector('.CodeMirror'),
-        text: `Input your deck here. You can type or paste your deck list into this field. Each card should be on a new line and if no count is given a single card is assumed.<br><br>Possible Inputs are
+        text: `Input your deck here. You can type or paste your deck list into this field. Each card should be on a new line and if no count is given a single card is assumed.
+<br>
+<br>Your deck will be <b>automatically saved</b> and loaded again, when you reload or revisit this site.
+<br>
+<br>Possible Inputs are
 <br>
 <br> // Comments with leading "//"
 <br>
@@ -26,50 +38,159 @@ let tutorialSteps = [
     },
     {
         getElement: async () => {
-            console.log(document.querySelector('.CodeMirror'));
-
             let template = await fetch('placeholder.txt');
             document.querySelector('.CodeMirror').CodeMirror.doc.setValue(await template.text());
 
             return document.querySelector('#loadDeck')
         },
-        text: 'Followed by loading the deck. This will try to recognize every card and prioritize set and the number of the card over the name.<br><br>Entries like "1 Vampire" will be treated as unspecified as long as you do not change the card. Be careful to select the correct card you want.<br><br>While loading you can see the progress in the text field and the toaster in the bottom right corner.<br><br><br>Click "Load Deck" to continue.',
-        continueAfter: async () => {
-            return new Promise(() => {
-                
-                resolve();
-            }
-            );
+        text: `You then continue with loading the deck. This will try to recognize every card.
+<br>Set and the number of the card will be prioritized over the name.
+<br>
+<br>Entries like "1 Vampire" will be treated as unspecified as long as you do not change the card. Be careful to select the correct card you want.
+<br>
+<br>While loading you can see the progress in the text field and the toaster in the bottom right corner.
+<br>
+<br>You can load the deck once. If you want to load another deck press F5.
+<br>
+<br>Click "Load Deck" to continue.`,
+        continueAfter: () => {//todo abort this Promise if "previous" is pressed
+            return new Promise(resolve => {
+
+                function resolveThis() {
+                    resolve();
+                    isDeckLoaded = true;
+                    Events.remove(Events.Type.DeckLoaded, resolveThis);
+                }
+
+                Events.on(Events.Type.DeckLoaded, resolveThis);
+            })
+        },
+        canSkip: () => isDeckLoaded,
+    },
+    {
+        getElement: () => document.querySelector('#cards'),
+        text: `In this view all the cards are displayed on the left.
+<br>You can scroll through them and see which card you are hovering over in the input field.
+<br>
+<br>You can also scroll to a card by clicking on its entry in the input field.
+<br>Try this next.`,
+    },
+    {
+        getElement: () => document.querySelector('.CodeMirror'),
+        text: 'Click on a entry for a card.',
+        continueAfter: () => {
+            return new Promise(resolve => {
+
+                function resolveThis(evt) {
+                    selectedCard = evt.data;
+                    resolve();
+                    Events.remove(Events.Type.ScrollingToCard, resolveThis);
+                }
+
+                Events.on(Events.Type.ScrollingToCard, resolveThis);
+            })
+        },
+        canSkip: () => selectedCard != null,
+    },
+    {
+        getElement: () => document.querySelector('#' + selectedCard.elem.id),
+        text: `You can edit a card by clicking on it.
+<br>This will open Scryfall with a matching search result.
+<br>
+<br>Try Opening it now. Close the popup afterwards.
+        `,
+        continueAfter: () => {
+            return new Promise(resolve => {
+                function resolveThis(evt) {
+                    popup = evt.data;
+
+                    let timer = setInterval(()=>{
+                        if(popup.closed)
+                        {
+                            changedCard = true;
+                            clearInterval(timer);
+                            resolve();
+                            Events.remove(Events.Type.ScryfallOpened, resolveThis);
+                        }
+                    },100);
+                }
+
+                Events.on(Events.Type.ScryfallOpened, resolveThis);
+            })
+        },
+        canSkip: () => changedCard,
+    },
+    {
+        getElement: () => document.querySelector('#card1'),
+        text: `When a card is selected you can drag an image from Scryfall on this page to change the currently selected card.
+<br>
+<br>You can drag an image directly from the search result or the details page of a card.
+<br>
+<br>Click on the card and change it afterwards.
+    `,
+        continueAfter: () => {
+            return new Promise(resolve => {
+                scrollTo(document.querySelector('#card1').card);
+
+                function grabPopup(evt){
+                    popup = evt.data;
+                }
+
+                function resolveThis() {
+                    popup.location = this.location;
+                    popup.close();
+                    
+                    resolve();
+                    Events.remove(Events.Type.CardChanged, resolveThis);
+                    Events.remove(Events.Type.ScryfallOpened, grabPopup);
+                }
+
+                Events.on(Events.Type.ScryfallOpened, grabPopup);
+                Events.on(Events.Type.CardChanged, resolveThis);
+            })
         }
     },
     {
-        getElement: () => document.querySelector('#artViewButton'),
-        text: 'This is the art view button. Click here to switch to the art view.',
+        getElement: () => document.querySelector('#searchButtons'),
+        text: `Next you can try the Filters.
+<br>
+<br>Here you can change the preffered frame type and/or the style of the artwork (full or extended art).
+<br>The filters are only as good as the data of Scryfall, so there are often some cards in the wrong catrgory.
+`,
     },
+    //
+    //
+    //
+    //
+    //
+    //
+    //
     {
-        getElement: () => document.querySelector('#pdfButton'),
-        text: 'This is the PDF button. Click here to switch to the PDF view.',
-    },
-    {
-        getElement: () => document.querySelector('#deckContainer'),
-        text: 'This is the deck container. Here you can load and manage your deck.',
+        getElement: () => document.querySelector('#pdfContainer'),
+        text: 'END 3',
     },
     {
         getElement: () => document.querySelector('#pdfContainer'),
-        text: 'This is the PDF container. Here you can configure and generate your PDF.',
+        text: 'END 2',
+    },
+    {
+        getElement: () => document.querySelector('#pdfContainer'),
+        text: 'END 1',
     },
 ];
 
 let currentStep = 0;
 let lastTarget = null;
+let lastTargetZ = 0;
 let isOpen = false;
+let observerTimer = null;
 
 class Tutorial {
-    static async start() {
+    static start() {
         document.getElementById('tutorialOverlay').style.display = 'flex';
         document.getElementById('tutorialContentContainer').style.display = 'flex';
         isOpen = true;
-        await this.showStep(currentStep);
+        this.showStep(currentStep);
     }
 
     static get isOpen() {
@@ -77,23 +198,46 @@ class Tutorial {
     }
 
     static async showStep(step) {
-        const { getElement, text, condition } = tutorialSteps[step];
+        console.log("showing " + step);
+
+        const { getElement, text, continueAfter, canSkip } = tutorialSteps[step];
         const targetElement = await getElement();
         const tutorialFrame = document.getElementById('tutorialFrame');
         const tutorialText = document.getElementById('tutorialText');
 
         if (lastTarget)
-            lastTarget.style.zIndex = "";
+            lastTarget.style.zIndex = lastTargetZ;
 
         if (targetElement) {
-            const rect = targetElement.getBoundingClientRect();
             tutorialText.innerHTML = text;
-            tutorialFrame.style.top = `${rect.top + window.scrollY}px`;
-            tutorialFrame.style.left = `${rect.left + window.scrollX}px`;
-            tutorialFrame.style.width = `${rect.width}px`;
-            tutorialFrame.style.height = `${rect.height}px`;
+
+            lastTargetZ = targetElement.style.zIndex;
             targetElement.style.zIndex = 20001;
             lastTarget = targetElement;
+
+            function updateFramePosition() {
+                if (targetElement.style.zIndex != 20001)
+                    lastTargetZ = targetElement.style.zIndex;
+                targetElement.style.zIndex = 20001;
+
+                const rect = targetElement.getBoundingClientRect();
+                tutorialFrame.style.top = `${rect.top + window.scrollY}px`;
+                tutorialFrame.style.left = `${rect.left + window.scrollX}px`;
+                tutorialFrame.style.width = `${rect.width}px`;
+                tutorialFrame.style.height = `${rect.height}px`;
+            }
+
+            if (observerTimer)
+                clearInterval(observerTimer);
+            observerTimer = setInterval(updateFramePosition, 200);
+
+            if (continueAfter != null && (canSkip == null || !canSkip())) {
+                document.getElementById('nextButton').disabled = true;
+                await continueAfter();
+                await this.nextStep();
+            }
+            else
+                document.getElementById('nextButton').disabled = false;
         }
     }
 
@@ -116,6 +260,10 @@ class Tutorial {
         document.getElementById('tutorialOverlay').style.display = 'none';
         document.getElementById('tutorialContentContainer').style.display = 'none';
         currentStep = 0;
+
+        if (observerTimer)
+            clearInterval(observerTimer);
+
         if (lastTarget)
             lastTarget.style.zIndex = "";
         localStorage.setItem('finishedTutorial', true);

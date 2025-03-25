@@ -22,7 +22,8 @@
         onclick="swapTo(Mode.ARTVIEW); event.stopPropagation(); parseDeck();">
     <img id="pdfButton" src="img/pdf.svg" class="clickable gray border"
         onclick="swapTo(Mode.PDF); event.stopPropagation();">
-
+    <img id="tutorialButton" src="img/pdf.svg" class="clickable gray border"
+        onclick="localStorage.removeItem('finishedTutorial'); window.location.reload(); event.stopPropagation();">
 
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
@@ -30,8 +31,8 @@
                 draggable="false" focusable="false" onmouseover="highlightDeckInput(this.card)"
                 onmouseout="removeHighlightDeckInput(this.card)">
                 <div class="cardFace">
-                    <img class="cardImg" focusable="false" draggable="false" src="">
-                    <img class="cardFlipImg" focusable="false" draggable="false" src="">
+                    <img class="cardImg face" focusable="false" draggable="false" src="">
+                    <img class="cardFlipImg face" focusable="false" draggable="false" src="">
                 </div>
                 <img src="img/flip.svg" class="flipSvg gray border round clickable" draggable="false"
                     onclick="this.parentElement.classList.toggle('flipped'); event.stopPropagation();">

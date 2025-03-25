@@ -1,5 +1,8 @@
+import Events from "./events.js";
+
 let openedCard;
 let popupWindow;
+let timer;
 let cardCnt = 0;
 
 const Format = Object.freeze({
@@ -25,21 +28,6 @@ async function delayScryfallCall() {
         }
     }
     delayScryfallCall.lastCall = Date.now();
-}
-
-const eventListeners = {};
-
-function onCardChanged(callback) {
-    if (!eventListeners.cardChanged) {
-        eventListeners.cardChanged = [];
-    }
-    eventListeners.cardChanged.push(callback);
-}
-
-function triggerCardChanged(card) {
-    if (eventListeners.cardChanged) {
-        eventListeners.cardChanged.forEach(callback => callback(card));
-    }
 }
 
 class Card {
@@ -179,6 +167,8 @@ class Card {
                 if (cachedCard) {
                     const cachedData = JSON.parse(cachedCard);
                     this.applyCardData(cachedData.data);
+
+                    Events.dispatch(Events.Type.CardChanged, this);
                     return;
                 }
             }
@@ -202,6 +192,7 @@ class Card {
                     this.name = "undefined";
                     this.updateElem();
                 }
+                Events.dispatch(Events.Type.CardChanged, this);
             } catch (error) {
                 console.error("Error updating card:", error);
             }
@@ -349,7 +340,7 @@ class Card {
         this.elem.classList.toggle("revertable", this.history?.length > 0);
         this.elem.classList.add("forwardable");
 
-        triggerCardChanged(this);
+        Events.dispatch(Events.Type.CardChanged, this);
     }
 
     forward() {
@@ -367,7 +358,7 @@ class Card {
         this.elem.classList.add("revertable");
         this.elem.classList.toggle("forwardable", this.future?.length > 0);
 
-        triggerCardChanged(this);
+        Events.dispatch(Events.Type.CardChanged, this);
     }
 
     openScryfall(evt, searchOptions, position) {
@@ -416,15 +407,17 @@ class Card {
                 `top=${position.top + dy}`);
         }
 
-        var timer = setInterval(function () {
+        timer = setInterval(function () {
             if (popupWindow.closed) {
                 clearInterval(timer);
                 openedCard?.elem?.classList?.remove("selected");
                 openedCard = null;
             }
         }, 500);
+
+        Events.dispatch(Events.Type.ScryfallOpened, popupWindow);
     }
 }
 
-export {Card, Format, Frame, onCardChanged};
+export { Card, Format, Frame };
 export default Card;
