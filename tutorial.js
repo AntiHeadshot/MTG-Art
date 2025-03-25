@@ -3,8 +3,28 @@ import { scrollTo } from "./scroll.js";
 
 let isDeckLoaded = false;
 let selectedCard = null;
+let scryfallViewed = false;
 let changedCard = false;
+let triedFilters = false;
 let popup = null;
+let rejectLast = null;
+
+function waitForEvent(eventType, callback, callBeforeWait) {
+    return new Promise((resolve, reject) => {
+        rejectLast = reject;
+        function resolveThis(evt) {
+            Events.remove(eventType, resolveThis);
+            rejectLast = null;
+            if (callback)
+                callback(evt?.data);
+            resolve();
+        }
+
+        Events.on(eventType, resolveThis);
+        if (callBeforeWait)
+            callBeforeWait();
+    })
+}
 
 let tutorialSteps = [
     {
@@ -53,18 +73,7 @@ let tutorialSteps = [
 <br>You can load the deck once. If you want to load another deck press F5.
 <br>
 <br>Click "Load Deck" to continue.`,
-        continueAfter: () => {//todo abort this Promise if "previous" is pressed
-            return new Promise(resolve => {
-
-                function resolveThis() {
-                    resolve();
-                    isDeckLoaded = true;
-                    Events.remove(Events.Type.DeckLoaded, resolveThis);
-                }
-
-                Events.on(Events.Type.DeckLoaded, resolveThis);
-            })
-        },
+        continueAfter: () => waitForEvent(Events.Type.DeckLoaded, () => isDeckLoaded = true),
         canSkip: () => isDeckLoaded,
     },
     {
@@ -78,18 +87,7 @@ let tutorialSteps = [
     {
         getElement: () => document.querySelector('.CodeMirror'),
         text: 'Click on a entry for a card.',
-        continueAfter: () => {
-            return new Promise(resolve => {
-
-                function resolveThis(evt) {
-                    selectedCard = evt.data;
-                    resolve();
-                    Events.remove(Events.Type.ScrollingToCard, resolveThis);
-                }
-
-                Events.on(Events.Type.ScrollingToCard, resolveThis);
-            })
-        },
+        continueAfter: () => waitForEvent(Events.Type.ScrollingToCard, c => selectedCard = c),
         canSkip: () => selectedCard != null,
     },
     {
@@ -99,26 +97,8 @@ let tutorialSteps = [
 <br>
 <br>Try Opening it now. Close the popup afterwards.
         `,
-        continueAfter: () => {
-            return new Promise(resolve => {
-                function resolveThis(evt) {
-                    popup = evt.data;
-
-                    let timer = setInterval(()=>{
-                        if(popup.closed)
-                        {
-                            changedCard = true;
-                            clearInterval(timer);
-                            resolve();
-                            Events.remove(Events.Type.ScryfallOpened, resolveThis);
-                        }
-                    },100);
-                }
-
-                Events.on(Events.Type.ScryfallOpened, resolveThis);
-            })
-        },
-        canSkip: () => changedCard,
+        continueAfter: () => waitForEvent(Events.Type.ScryfallClosed, () => scryfallViewed = true),
+        canSkip: () => scryfallViewed,
     },
     {
         getElement: () => document.querySelector('#card1'),
@@ -128,40 +108,46 @@ let tutorialSteps = [
 <br>
 <br>Click on the card and change it afterwards.
     `,
-        continueAfter: () => {
-            return new Promise(resolve => {
-                scrollTo(document.querySelector('#card1').card);
-
-                function grabPopup(evt){
-                    popup = evt.data;
-                }
-
-                function resolveThis() {
-                    popup.location = this.location;
-                    popup.close();
-                    
-                    resolve();
-                    Events.remove(Events.Type.CardChanged, resolveThis);
-                    Events.remove(Events.Type.ScryfallOpened, grabPopup);
-                }
-
-                Events.on(Events.Type.ScryfallOpened, grabPopup);
-                Events.on(Events.Type.CardChanged, resolveThis);
+        continueAfter: async () => {
+            scrollTo(document.querySelector('#card1').card);
+            await waitForEvent(Events.Type.ScryfallOpened, p => popup = p)
+            await waitForEvent(Events.Type.CardChanged, () => {
+                popup.location = window.location;
+                popup.close();
+                changedCard = true;
             })
-        }
+        },
+        canSkip: () => changedCard
     },
+    // back and forwards buttons
     {
         getElement: () => document.querySelector('#searchButtons'),
         text: `Next you can try the Filters.
 <br>
-<br>Here you can change the preffered frame type and/or the style of the artwork (full or extended art).
-<br>The filters are only as good as the data of Scryfall, so there are often some cards in the wrong catrgory.
+<br>Here you can change the prefered frame type and/or 
+<br>the style of the artwork (full or extended art).
+<br>The filters are only as good as the data of Scryfall, 
+<br>so there are often some cards in the wrong catrgory.
 `,
     },
+    {
+        getElement: () => document.querySelector('#searchButtons'),
+        text: `
+<br>Close the popup when you are done trying.
+    `,
+        continueAfter: async () => {
+            let cardElem = document.querySelector('#card1');
+            scrollTo(cardElem.card);
+            await waitForEvent(Events.Type.ScryfallOpened, p => popup = p, () => cardElem.click());
+            await waitForEvent(Events.Type.ScryfallClosed, () => triedFilters = true);
+        },
+        canSkip: () => triedFilters
+    },
+    // two sided artworks flip
+    // ArtView
+    // Pdf Options
     //
-    //
-    //
-    //
+    // Pdf creation
     //
     //
     //
@@ -198,8 +184,10 @@ class Tutorial {
     }
 
     static async showStep(step) {
-        console.log("showing " + step);
-
+        if (rejectLast) {
+            rejectLast();
+            rejectLast = null;
+        }
         const { getElement, text, continueAfter, canSkip } = tutorialSteps[step];
         const targetElement = await getElement();
         const tutorialFrame = document.getElementById('tutorialFrame');
@@ -231,10 +219,16 @@ class Tutorial {
                 clearInterval(observerTimer);
             observerTimer = setInterval(updateFramePosition, 200);
 
-            if (continueAfter != null && (canSkip == null || !canSkip())) {
-                document.getElementById('nextButton').disabled = true;
-                await continueAfter();
-                await this.nextStep();
+            if (continueAfter != null) {
+                document.getElementById('nextButton').disabled = canSkip == null || !canSkip();
+
+                try {
+                    await continueAfter();
+                    await this.nextStep();
+                }
+                catch (error) { /*common if cancled*/
+                    console.log(error)
+                }
             }
             else
                 document.getElementById('nextButton').disabled = false;

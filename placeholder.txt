@@ -1,4 +1,4 @@
-1 Plains
+1 Command Tower
 2 [TMH3#2] Eldrazi Spawn
 
 //https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en

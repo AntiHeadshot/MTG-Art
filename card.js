@@ -269,7 +269,9 @@ class Card {
             this.highResImageUris.push(data.card_faces[0].image_uris.large);
             this.highResImageUris.push(data.card_faces[1].image_uris.large);
         } else {
+            this.twoFaced = false;
             this.imageUri = data.image_uris.normal;
+            this.imageUris = [];
             this.highResImageUris.push(data.image_uris.large);
         }
         this.set = data.set.toUpperCase();
@@ -412,6 +414,7 @@ class Card {
                 clearInterval(timer);
                 openedCard?.elem?.classList?.remove("selected");
                 openedCard = null;
+                Events.dispatch(Events.Type.ScryfallClosed, this);
             }
         }, 500);
 

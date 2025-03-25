@@ -7,6 +7,7 @@ let EventsType = Object.freeze({
     PdfCreating: "pdfCreating",
     StorageChanged: "storageChanged",
     ScryfallOpened: "scryfallOpened",
+    ScryfallClosed: "scryfallClosed",
     CardFlipped: "cardFlipped",
     CardChanged: "cardChanged",
     ScrollingToCard: "scrollingToCard",
