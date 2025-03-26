@@ -404,36 +404,15 @@ button {
     transition: width 1s ease;
 }
 
-#defaultViewButton {
+#viewButtons {
     position: absolute;
-    height: 28px;
     top: 4px;
     right: 4px;
+    width: 42px;
     z-index: 10001;
-}
-
-#artViewButton {
-    position: absolute;
-    height: 28px;
-    top: 48px;
-    right: 4px;
-    z-index: 10001;
-}
-
-#pdfButton {
-    position: absolute;
-    height: 28px;
-    top: 92px;
-    right: 4px;
-    z-index: 10001;
-}
-
-#tutorialButton {
-    position: absolute;
-    height: 28px;
-    top: 136px;
-    right: 4px;
-    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .artView #deckContainer,
