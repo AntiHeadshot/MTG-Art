@@ -28,7 +28,7 @@ function waitForEvent(eventType, callback, callBeforeWait) {
 
 let tutorialSteps = [
     {
-        getElement: () => document.querySelector('.CodeMirror'),
+        getElement: () => document.querySelector('#tutorialContent'),
         text: `Welcome
 <br>
 <br>You can start the tutorial again any time, if you want.`,
