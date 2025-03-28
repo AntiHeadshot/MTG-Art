@@ -1,12 +1,14 @@
 import Events from "./events.js";
 import { scrollTo } from "./scroll.js";
 
+let popup;
+function scrapeScryfall(evt) { popup = evt.data; scryfallViewed = true; };
+
 let isDeckLoaded = false;
 let selectedCard = null;
 let scryfallViewed = false;
 let changedCard = false;
 let triedFilters = false;
-let popup = null;
 let rejectLast = null;
 
 function waitForEvent(eventType, callback, callBeforeWait) {
@@ -69,7 +71,7 @@ let tutorialSteps = [
 
             return document.querySelector('#loadDeck')
         },
-        text: `You then continue with loading the deck. This will try to recognize every card.
+        text: `You then continue with loading the deck. We try to recognize every card.
 <br>Set and the number of the card will be prioritized over the name.
 <br>
 <br>Entries like "1 Vampire" will be treated as unspecified as long as you do not change the card. Be careful to select the correct card you want.
@@ -101,22 +103,15 @@ let tutorialSteps = [
         text: `You can edit a card by clicking on it.
 <br>This will open Scryfall with a matching search result.
 <br>
-<br>Try Opening it now. Close the popup afterwards.
-        `,
-        continueAfter: () => waitForEvent(Events.Type.ScryfallClosed, () => scryfallViewed = true),
-        canSkip: () => scryfallViewed,
-    },
-    {
-        getElement: () => document.querySelector('#card1'),
-        text: `When a card is selected you can drag an image from Scryfall on this page to change the currently selected card.
+<br>When a card is selected you can drag an image from Scryfall on this page to change the currently selected card.
 <br>
 <br>You can drag an image directly from the search result or the details page of a card.
 <br>
 <br>Click on the card and change it afterwards.
     `,
         continueAfter: async () => {
-            scrollTo(document.querySelector('#card1').card);
-            await waitForEvent(Events.Type.ScryfallOpened, p => popup = p)
+            scrollTo(document.querySelector('#' + selectedCard.elem.id).card);
+
             await waitForEvent(Events.Type.CardChanged, () => {
                 popup.location = window.location;
                 popup.close();
@@ -144,7 +139,7 @@ let tutorialSteps = [
         continueAfter: async () => {
             let cardElem = document.querySelector('#card1');
             scrollTo(cardElem.card);
-            await waitForEvent(Events.Type.ScryfallOpened, p => popup = p, () => cardElem.click());
+            cardElem.click();
             await waitForEvent(Events.Type.ScryfallClosed, () => triedFilters = true);
         },
         canSkip: () => triedFilters
@@ -158,17 +153,9 @@ let tutorialSteps = [
     //
     //
     {
-        getElement: () => document.querySelector('#pdfContainer'),
-        text: 'END 3',
-    },
-    {
-        getElement: () => document.querySelector('#pdfContainer'),
-        text: 'END 2',
-    },
-    {
-        getElement: () => document.querySelector('#pdfContainer'),
-        text: 'END 1',
-    },
+        getElement: () => document.querySelector('#tutorialContent'),
+        text: 'Thank you!<br>Now have fun choosing artworts 😄',
+    }
 ];
 
 let currentStep = 0;
@@ -177,11 +164,18 @@ let lastTargetZ = 0;
 let isOpen = false;
 let observerTimer = null;
 
+let prevButton = document.getElementById("prevButton");
+let nextButton = document.getElementById("nextButton");
+
 class Tutorial {
     static start() {
         document.getElementById('tutorialOverlay').style.display = 'flex';
         document.getElementById('tutorialContentContainer').style.display = 'flex';
         isOpen = true;
+
+        Events.on(Events.Type.ScryfallOpened, scrapeScryfall);
+
+        currentStep = 0;
         this.showStep(currentStep);
     }
 
@@ -198,6 +192,10 @@ class Tutorial {
         const targetElement = await getElement();
         const tutorialFrame = document.getElementById('tutorialFrame');
         const tutorialText = document.getElementById('tutorialText');
+
+        nextButton.disabled = false;
+        prevButton.disabled = currentStep < 1;
+        console.log(prevButton.disabled);
 
         if (lastTarget)
             lastTarget.style.zIndex = lastTargetZ;
@@ -257,6 +255,8 @@ class Tutorial {
     }
 
     static end() {
+        Events.remove(Events.Type.ScryfallOpened, scrapeScryfall);
+
         document.getElementById('tutorialOverlay').style.display = 'none';
         document.getElementById('tutorialContentContainer').style.display = 'none';
         currentStep = 0;

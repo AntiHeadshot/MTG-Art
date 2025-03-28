@@ -4,11 +4,12 @@ import { ImageCache, onStorageSizeChanged } from './imageCache.js';
 import { Card, Format, Frame } from './card.js';
 import Tutorial from './tutorial.js';
 import Events from './events.js';
-import {scrollTo} from './scroll.js';
-import {View, Mode} from './view.js';
+import { scrollTo } from './scroll.js';
+import { View, Mode } from './view.js';
+import { Toaster } from './toaster.js';
 
-let cards = [];
-let hoverOn = false;
+let cards = window.cards = [];
+let hoverOn = true;
 
 let searchOptions = window.searchOptions = {
     frames: [],
@@ -205,7 +206,7 @@ window.parseDeck = async function parseDeck() {
     let cardNr = 0;
 
     for (let i = 0; i < deckLines.length; i++) {
-        showToast(`Parsing card ${i + 1} of ${deckLines.length}...`, (i / deckLines.length));
+        Toaster.show(`Parsing card ${i + 1} of ${deckLines.length}...`, (i / deckLines.length));
         const cardText = deckLines[i];
         if (cardText.trim() === "" || cardText.startsWith("//")) {
             cards.push(cardText);
@@ -243,12 +244,11 @@ window.parseDeck = async function parseDeck() {
     document.getElementById("convertToDeckstatsBtn").disabled = false;
     view.disabled = false;
 
-    hideToaster();
+    Toaster.hide();
 
     updateList();
     Events.on(Events.Type.CardChanged, updateList);
 
-    hoverOn = true;
     view.on("beforeSelectionChange", (_, selection) => scrollToSelectedCard(cards, selection));
 }
 
@@ -267,16 +267,6 @@ function insertCardInOrder(parent, card, elem) {
     }
 }
 
-window.copyToClipboard = async function copyToClipboard() {
-    var textToCopy = cards.filter(c => c.scryfall_uri).map(c => `${c.count} ${c.scryfall_uri}`).join("\n");
-    try {
-        await navigator.clipboard.writeText(textToCopy);
-        showToast("copied to clipboard");
-    } catch (err) {
-        console.error('Could not copy text: ', err);
-    }
-}
-
 window.convertToFormat = function convertToFormat(format) {
     for (const card of cards) {
         if (card instanceof Card)
@@ -286,28 +276,6 @@ window.convertToFormat = function convertToFormat(format) {
     updateList();
 }
 
-let toastTimeout;
-
-function showToast(message, progress) {
-    var toaster = document.getElementById('toaster');
-    document.getElementById('toasterMessage').textContent = message;
-    toaster.classList.add("show");
-
-    if (toastTimeout) {
-        clearTimeout(toastTimeout);
-    }
-
-    if (progress !== undefined)
-        document.getElementById('toasterProgressBar').style.width = (progress * 100) + '%';
-
-    toastTimeout = setTimeout(function () {
-        toaster.classList.remove("show");
-    }, 3000);
-}
-
-function hideToaster() {
-    document.getElementById('toaster').classList.remove("show");
-}
 
 window.highlightDeckInput = function highlightDeckInput(card) {
     const cardText = card.getDescription();
@@ -363,7 +331,7 @@ window.swapTo = function swapTo(target) {
 };
 
 window.generatePdf = async function generatePdf() {
-    showToast("generating PDF");
+    Toaster.show("generating PDF");
 
     var imageDocument = new ImageDocument(printOptions);
 
@@ -375,8 +343,9 @@ window.generatePdf = async function generatePdf() {
 
     document.getElementById("pdfContainer").classList.add("updating");
 
-    return imageDocument.create((p) => showToast("generating PDF", p)).then(url => {
+    return imageDocument.create((p) => Toaster.show("generating PDF", p)).then(url => {
         document.getElementById("pdfView").src = url;
+        document.getElementById("downloadPdf").disabled = false;
         document.getElementById("pdfContainer").classList.remove("updating");
     });
 }
@@ -403,23 +372,12 @@ window.updatePdfCreation = function updatePdfCreation(targetOptions) {
     templateElem.style.setProperty("--y", template.corner.y * 100 + "%");
 }
 
-window.savePdf = function savePdf() {
-    var pdfView = document.getElementById("pdfView");
-
-    function downloadPdf() {
+window.saveFile = function saveFile(src, fileName) {
+    if (src) {
         const a = document.createElement('a');
-        a.href = pdfView.src;
-        a.download = cards.filter(c => c instanceof Card)[0].name + ".pdf";
+        a.href = src;
+        a.download = fileName;
         a.click();
-    }
-    if (pdfView.src) {
-        downloadPdf();
-    }
-    else {
-        generatePdf().then(_ => {
-            console.log("opening");
-            downloadPdf()
-        });
     }
 }
 
@@ -467,7 +425,6 @@ window.openScryfall = function openScryfall(card, evt) {
 };
 
 function updateArtButtons() {
-
     fullArtElem.classList.toggle("selected", searchOptions.isFullArt);
     extendedArtElem.classList.toggle("selected", searchOptions.isExtendedArt);
     allArtElem.classList.toggle("selected", !(searchOptions.isFullArt || searchOptions.isExtendedArt));
@@ -529,17 +486,6 @@ async function scrollToSelectedCard(cards, selection) {
     }
 }
 
-for (let elem of document.querySelectorAll("replacedSvg")) {
-    var parent = elem.parentElement;
-    var attributes = elem.attributes;
-    parent.innerHTML = await (await fetch(elem.getAttribute('data'))).text();
-    let newElement = parent.lastChild;
-
-    for (let attr of attributes) {
-        newElement.setAttribute(attr.name, attr.value);
-    }
-}
-
 const storeSizeDisplay = document.getElementById('storeSizeDisplay');
 const customContextMenu = document.getElementById('customContextMenu');
 
@@ -557,13 +503,10 @@ document.addEventListener('click', function () {
     customContextMenu.style.pointerEvents = "none";
 });
 
-window.cacheClearAll = function cacheClearAll() {
-    ImageCache.clearAllSessions();
-}
-window.cacheClearOld = function cacheClearOld() {
-    ImageCache.clearOldSessions();
-}
+window.cacheClearAll = ImageCache.clearAllSessions();
+window.cacheClearOld = ImageCache.clearOldSessions();
 
 window.Tutorial = Tutorial;
+
 if (localStorage.getItem('finishedTutorial') == null)
     Tutorial.start();

@@ -156,7 +156,7 @@
             </div>
             <div>
                 <button onclick="generatePdf(); event.stopPropagation()">create</button>
-                <button onclick="savePdf(); event.stopPropagation()">save</button>
+                <button id="downloadPdf" disabled onclick="saveFile(document.getElementById('pdfView').src, cards.filter(c => c instanceof Card)[0].name + '.pdf'); event.stopPropagation()">save</button>
             </div>
         </div>
         <div class="update">
@@ -198,7 +198,7 @@
             <p id="tutorialText"></p>
             <button id="prevButton" onclick="Tutorial.prevStep()">Previous</button>
             <button id="nextButton" onclick="Tutorial.nextStep()">Next</button>
-            <button id="endButton" onclick="Tutorial.end()">End Tutorial</button>
+            <button id="endButton" onclick="Tutorial.end()">X</button>
         </div>
     </div>
 </body>

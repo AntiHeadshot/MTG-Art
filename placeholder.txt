@@ -9,5 +9,5 @@
 1 https://scryfall.com/card/cmr/656/vampiric-tutor
 2 https://scryfall.com/card/totc/10/zombie?utm_source=api
 
-1 Zombie
-2 Eldrazi Spawn
+1 Vampire
+2 Food

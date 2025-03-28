@@ -598,3 +598,10 @@ button {
 .tutorial-content button {
     margin: 5px;
 }
+
+.tutorial-content #endButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 4px 8px;
+}
