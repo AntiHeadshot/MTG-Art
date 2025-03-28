@@ -1,6 +1,6 @@
 import Events from "./events.js";
+import Scryfall from "./scryfall.js";
 
-let openedCard;
 let popupWindow;
 let timer;
 let cardCnt = 0;
@@ -19,6 +19,12 @@ const Frame = Object.freeze({
     FUTURE: 'future',
 });
 
+let openedCard;
+Events.on(Events.Type.ScryfallClosed, () => {
+    openedCard?.elem?.classList?.remove("selected");
+    openedCard = null;
+});
+
 async function delayScryfallCall() {
     if (delayScryfallCall.lastCall) {
         const now = Date.now();
@@ -29,6 +35,9 @@ async function delayScryfallCall() {
     }
     delayScryfallCall.lastCall = Date.now();
 }
+let neededTokens = [];
+
+let cards = [];
 
 class Card {
     constructor(count, format, set, nr, name, cardId, oracleId, imageUri) {
@@ -43,6 +52,10 @@ class Card {
         this.imageUri = imageUri;
         this.isBasicLand = false;
         this.highResImageUris = [];
+        this.history = [];
+        this.future = [];
+
+        cards.push(this);
     }
 
     static getOpenedCard() { return openedCard; }
@@ -53,19 +66,23 @@ class Card {
             case Format.MTGPRINT:
                 if (this.isUndefined && (!this.nr))
                     return `${this.count} ${this.name}`;
+                if (this.isUndefined)
+                    return `${this.count} ${this.searchName} (${this.set.toUpperCase()}) ${this.nr}`;
                 return `${this.count} ${this.name} (${this.set.toUpperCase()}) ${this.nr}`;
             case Format.SCRYFALL:
                 return `${this.count} ${this.scryfall_uri}`;
             default:
                 if (this.isUndefined && (!this.nr))
                     return `${this.count} ${this.name}`;
+                if (this.isUndefined)
+                    return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.searchName}`;
                 return `${this.count} [${this.set.toUpperCase()}#${this.nr}] ${this.name}`;
         }
     }
 
     static async parseCardText(cardText) {
         // Example cardText: "1 [CMR#656] Vampiric Tutor"
-        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\]\s+.+$/;
+        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\]\s+(?<name>.+)$/;
         let match = cardText.match(regexDeckstats);
         let format = Format.DECKSTATS;
 
@@ -114,10 +131,10 @@ class Card {
             throw new Error("Invalid card text format");
         }
 
-        const { count, set, nr } = match.groups;
+        const { count, set, nr, name } = match.groups;
 
         var card = new Card(parseInt(count, 10), format);
-        await card.updateBySetNr(set, nr);
+        await card.update(false, null, set, nr, name);
         if (card.isUndefined === undefined)
             card.isUndefined = false;
         return card;
@@ -129,12 +146,12 @@ class Card {
     async updateBySetNr(set, nr, isRevert) {
         await this.update(isRevert || false, undefined, set, nr);
     }
-    async update(isRevert, cardId, set, nr) {
+    async update(isRevert, cardId, set, nr, name) {
         set = set?.toUpperCase();
 
         if (set) {
             if (this.set === set && this.nr === nr) {
-                if (this.history?.length && this.history[this.history.length - 1].isUndefined) {
+                if (this.history.length && this.history[this.history.length - 1].isUndefined) {
                     this.history.pop();
                     this.history.push({ set: this.set, nr: this.nr, isUndefined: false });
                 }
@@ -144,59 +161,31 @@ class Card {
         else if (this.cardId === cardId)
             return;
 
-        const now = Date.now();
-        let url;
-
         this.startUpdate();
-
-        if (!this.history)
-            this.history = [];
 
         if (!isRevert) {
             this.future = [];
             if (this.set && this.nr)
                 this.history.push({ set: this.set, nr: this.nr, isUndefined: this.isUndefined });
         }
-
         try {
-            if (nr) {
-                url = `https://api.scryfall.com/cards/${set}/${nr}`;
-                const cacheKey = `card_${set}_${nr}`;
-                const cachedCard = localStorage.getItem(cacheKey);
+            var data = await Scryfall.get(cardId, set, nr);
 
-                if (cachedCard) {
-                    const cachedData = JSON.parse(cachedCard);
-                    this.applyCardData(cachedData.data);
-
-                    Events.dispatch(Events.Type.CardChanged, this);
-                    return;
-                }
-            }
+            if (data)
+                this.applyCardData(data);
             else {
-                url = `https://api.scryfall.com/cards/${cardId}`;
+                this.isUndefined = true;
+                this.set = set;
+                this.nr = nr;
+                this.imageUri = "img/undefinedCard.svg";
+                this.name = "undefined";
+                this.searchName = name;
+                this.updateElem();
             }
 
-            try {
-                await delayScryfallCall();
-                const response = await fetch(url);
-                if (response.status == 200) {
-                    const data = await response.json();
-                    this.applyCardData(data);
-                    const cacheKey = `card_${this.set}_${this.nr}`;
-                    localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
-                } else {
-                    this.isUndefined = true;
-                    this.set = set;
-                    this.nr = nr;
-                    this.imageUri = "img/undefinedCard.svg";
-                    this.name = "undefined";
-                    this.updateElem();
-                }
-                Events.dispatch(Events.Type.CardChanged, this);
-            } catch (error) {
-                console.error("Error updating card:", error);
-            }
-        } finally {
+            Events.dispatch(Events.Type.CardChanged, this);
+        }
+        finally {
             this.endUpdate();
         }
     }
@@ -212,41 +201,14 @@ class Card {
     }
 
     async searchByName(name, set) {
-        const now = Date.now();
-        let url;
-
-        url = set ? `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" (set:${set} or set:t${set}) -is:art_series`)}&include_extras=true` :
-            `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" -is:art_series`)}&include_extras=true`;
         try {
-            const cacheSearchKey = set ? `card_${name}_${set}` : `card_${name}`;
-            const cachedCard = localStorage.getItem(cacheSearchKey);
-
             this.searchName = name;
 
-            if (cachedCard) {
-                const cachedData = JSON.parse(cachedCard);
-                await this.updateBySetNr(cachedData.set, cachedData.nr);
-                this.isUndefined = cachedData.isUndefined;
-                return;
-            }
+            let card = await Scryfall.search(name, set);
 
-            await delayScryfallCall();
-
-            const response = await fetch(url);
-
-            if (response.ok) {
-                const data = await response.json();
-
-                if (data.total_cards < 1) {
-                    console.log(data);
-                    return;
-                }
-
-                this.isUndefined = data.total_cards > 1;
-                this.applyCardData(data.data[0]);
-
-                localStorage.setItem(cacheSearchKey, JSON.stringify({ timestamp: now, set: this.set, nr: this.nr, isUndefined: this.isUndefined }));
-                localStorage.setItem(`card_${this.set}_${this.nr}`, JSON.stringify({ timestamp: now, data: data.data[0] }));
+            if (card) {
+                this.isUndefined = card.isUndefined;
+                this.applyCardData(card);
             } else {
                 this.imageUri = "img/undefinedCard.svg";
                 this.name = name;
@@ -279,6 +241,10 @@ class Card {
         this.name = data.name;
         this.scryfall_uri = data.scryfall_uri;
         this.isBasicLand = data.type_line.startsWith("Basic Land ");
+
+        if (data.all_parts)
+            data.all_parts.filter(p => p.type_line.startsWith("Token")).forEach(t => neededTokens.push({ card: this, tokenId: t.id }));
+
         this.updateElem();
     }
 
@@ -292,13 +258,13 @@ class Card {
             this.elem.classList.add("twoFaced");
             this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];
         }
-        else{
+        else {
             this.elem.classList.remove("twoFaced");
             this.elem.classList.remove("flipped");
         }
 
-        this.elem.classList.toggle("revertable", this.history?.length > 0);
-        this.elem.classList.toggle("forwardable", this.future?.length > 0);
+        this.elem.classList.toggle("revertable", this.history.length > 0);
+        this.elem.classList.toggle("forwardable", this.future.length > 0);
 
         this.elem.id = "card" + this.order;
 
@@ -330,29 +296,23 @@ class Card {
     }
 
     rollback() {
-        if (!this.history?.length)
+        if (!this.history.length)
             return;
-
-        if (!this.future)
-            this.future = [];
 
         const lastState = this.history.pop();
         this.future.push({ set: this.set, nr: this.nr, isUndefined: this.isUndefined });
         this.updateBySetNr(lastState.set, lastState.nr, true);
         this.isUndefined = lastState.isUndefined;
 
-        this.elem.classList.toggle("revertable", this.history?.length > 0);
+        this.elem.classList.toggle("revertable", this.history.length > 0);
         this.elem.classList.add("forwardable");
 
         Events.dispatch(Events.Type.CardChanged, this);
     }
 
     forward() {
-        if (!this.future?.length)
+        if (!this.future.length)
             return;
-
-        if (!this.history)
-            this.history = [];
 
         const nextState = this.future.pop();
         this.history.push({ set: this.set, nr: this.nr, isUndefined: this.isUndefined });
@@ -360,15 +320,18 @@ class Card {
         this.isUndefined = nextState.isUndefined;
 
         this.elem.classList.add("revertable");
-        this.elem.classList.toggle("forwardable", this.future?.length > 0);
+        this.elem.classList.toggle("forwardable", this.future.length > 0);
 
         Events.dispatch(Events.Type.CardChanged, this);
     }
 
     openScryfall(evt, searchOptions, position) {
-        var oracleId = this.oracleId;
 
-        var querryParameters = "&unique=prints&as=grid&order=released";
+        if (openedCard != null)
+            openedCard.elem.classList.remove("selected");
+        openedCard = this;
+        openedCard.elem.classList.add("selected");
+
         var searchParameter = "";
 
         if (searchOptions.isExtendedArt && searchOptions.isFullArt)
@@ -387,14 +350,9 @@ class Card {
 
         var src = this.isUndefined ?
             `https://scryfall.com/search?order=name&q=${encodeURIComponent(`!"${this.searchName}" -is:art_series`)}&include_extras=true` :
-            `https://scryfall.com/search?q=oracleid%3A${oracleId}`;
+            `https://scryfall.com/search?q=oracleid%3A${this.oracleId}`;
 
-        src += encodeURIComponent(searchParameter) + querryParameters;
-
-        if (openedCard != null)
-            openedCard.elem.classList.remove("selected");
-        openedCard = this;
-        openedCard.elem.classList.add("selected");
+        src += encodeURIComponent(searchParameter) + "&unique=prints&as=grid&order=released";
 
         clearInterval(timer);
         if (popupWindow && !popupWindow.closed) {
@@ -414,9 +372,7 @@ class Card {
         timer = setInterval(function () {
             if (popupWindow.closed) {
                 clearInterval(timer);
-                openedCard?.elem?.classList?.remove("selected");
-                openedCard = null;
-                Events.dispatch(Events.Type.ScryfallClosed, this);
+                Events.dispatch(Events.Type.ScryfallClosed);
             }
         }, 500);
 
