@@ -1,8 +1,6 @@
 import Events from "./events.js";
 import Scryfall from "./scryfall.js";
 
-let popupWindow;
-let timer;
 let cardCnt = 0;
 
 const Format = Object.freeze({
@@ -25,16 +23,6 @@ Events.on(Events.Type.ScryfallClosed, () => {
     openedCard = null;
 });
 
-async function delayScryfallCall() {
-    if (delayScryfallCall.lastCall) {
-        const now = Date.now();
-        const timeSinceLastCall = now - delayScryfallCall.lastCall;
-        if (timeSinceLastCall < 100) {
-            await new Promise(resolve => setTimeout(resolve, 100 - timeSinceLastCall));
-        }
-    }
-    delayScryfallCall.lastCall = Date.now();
-}
 let neededTokens = [];
 
 let cards = [];
@@ -332,51 +320,7 @@ class Card {
         openedCard = this;
         openedCard.elem.classList.add("selected");
 
-        var searchParameter = "";
-
-        if (searchOptions.isExtendedArt && searchOptions.isFullArt)
-            searchParameter += " (is:extendedart or is:full)";
-        else if (searchOptions.isExtendedArt)
-            searchParameter += " is:extendedart";
-        else if (searchOptions.isFullArt)
-            searchParameter += " is:full";
-
-        if (searchOptions.frames.length) {
-            if (searchOptions.frames.length == 1)
-                searchParameter += " frame:" + searchOptions.frames[0];
-            else
-                searchParameter += ` (${searchOptions.frames.map(f => `frame:${f}`).join(' or ')})`;
-        }
-
-        var src = this.isUndefined ?
-            `https://scryfall.com/search?order=name&q=${encodeURIComponent(`!"${this.searchName}" -is:art_series`)}&include_extras=true` :
-            `https://scryfall.com/search?q=oracleid%3A${this.oracleId}`;
-
-        src += encodeURIComponent(searchParameter) + "&unique=prints&as=grid&order=released";
-
-        clearInterval(timer);
-        if (popupWindow && !popupWindow.closed) {
-            popupWindow.location = src;
-            popupWindow.focus();
-        } else {
-            var dx = evt.screenX - evt.clientX;
-            var dy = evt.screenY - evt.clientY;
-
-            popupWindow = window.open(src, "_blank", `popup=true,` +
-                `width=${position.width},` +
-                `height=${position.height},` +
-                `left=${position.left + dx},` +
-                `top=${position.top + dy}`);
-        }
-
-        timer = setInterval(function () {
-            if (popupWindow.closed) {
-                clearInterval(timer);
-                Events.dispatch(Events.Type.ScryfallClosed);
-            }
-        }, 500);
-
-        Events.dispatch(Events.Type.ScryfallOpened, popupWindow);
+        Scryfall.open(evt, searchOptions, position, this);
     }
 }
 

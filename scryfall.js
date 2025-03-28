@@ -10,6 +10,9 @@ async function delayScryfallCall() {
     delayScryfallCall.lastCall = Date.now();
 }
 
+let popupWindow;
+let timer;
+
 class Scryfall {
     static async get(cardId, set, nr) {
         let url;
@@ -48,7 +51,7 @@ class Scryfall {
     }
 
     static async search(name, set) {
-        
+
         let url = set ? `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" (set:${set} or set:t${set}) -is:art_series`)}&include_extras=true` :
             `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" -is:art_series`)}&include_extras=true`;
 
@@ -83,6 +86,54 @@ class Scryfall {
             return card;
         }
         return null;
+    }
+
+    static open(evt, searchOptions, position, card) {
+        var searchParameter = "";
+
+        if (searchOptions.isExtendedArt && searchOptions.isFullArt)
+            searchParameter += " (is:extendedart or is:full)";
+        else if (searchOptions.isExtendedArt)
+            searchParameter += " is:extendedart";
+        else if (searchOptions.isFullArt)
+            searchParameter += " is:full";
+
+        if (searchOptions.frames.length) {
+            if (searchOptions.frames.length == 1)
+                searchParameter += " frame:" + searchOptions.frames[0];
+            else
+                searchParameter += ` (${searchOptions.frames.map(f => `frame:${f}`).join(' or ')})`;
+        }
+
+        var src = card.isUndefined ?
+            `https://scryfall.com/search?order=name&q=${encodeURIComponent(`!"${card.searchName}" -is:art_series`)}&include_extras=true` :
+            `https://scryfall.com/search?q=oracleid%3A${card.oracleId}`;
+
+        src += encodeURIComponent(searchParameter) + "&unique=prints&as=grid&order=released";
+
+        clearInterval(timer);
+        if (popupWindow && !popupWindow.closed) {
+            popupWindow.location = src;
+            popupWindow.focus();
+        } else {
+            var dx = evt.screenX - evt.clientX;
+            var dy = evt.screenY - evt.clientY;
+
+            popupWindow = window.open(src, "_blank", `popup=true,` +
+                `width=${position.width},` +
+                `height=${position.height},` +
+                `left=${position.left + dx},` +
+                `top=${position.top + dy}`);
+        }
+
+        timer = setInterval(function () {
+            if (popupWindow.closed) {
+                clearInterval(timer);
+                Events.dispatch(Events.Type.ScryfallClosed);
+            }
+        }, 500);
+
+        Events.dispatch(Events.Type.ScryfallOpened, popupWindow);
     }
 }
 
