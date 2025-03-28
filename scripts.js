@@ -249,6 +249,8 @@ window.parseDeck = async function parseDeck() {
     updateList();
     Events.on(Events.Type.CardChanged, updateList);
 
+    console.log(Card.tokens);
+
     view.on("beforeSelectionChange", (_, selection) => scrollToSelectedCard(cards, selection));
 }
 

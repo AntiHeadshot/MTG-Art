@@ -46,6 +46,15 @@ class Card {
         cards.push(this);
     }
 
+    static async handleTokens() {
+        let missing = [];
+        for (let tokenId of new Set(neededTokens.map(t => t.tokenId))) {
+            if (!cards.find(c => c.cardId = tokenId)) {
+                let oracleId = "";
+            }
+        }
+    }
+
     static getOpenedCard() { return openedCard; }
     static focusPopupWindow() { popupWindow?.focus(); }
 
