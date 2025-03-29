@@ -1,5 +1,5 @@
-- Refactor!!!
+- Refactor more!!!
 
-- finish tutorial
-- add icon to tutorial
-- add hover text to View buttons
+- add tutorial for PDF Creation
+
+- add Tokens handling with ability to add them or ignore ... dont be obstrusive
