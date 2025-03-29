@@ -36,15 +36,15 @@ let tutorialSteps = [
         getElement: () => document.querySelector('#tutorialContent'),
         text: `Welcome
 <br>
-<br>You can start the tutorial again any time, if you want.`,
+<br>You can start the tutorial again anytime, if you want.`,
     },
     {
         getElement: () => document.querySelector('.CodeMirror'),
-        text: `Input your deck here. You can type or paste your deck list into this field. Each card should be on a new line and if no count is given a single card is assumed.
+        text: `Input your deck here. You can type or paste your deck list into this field. Each card should be on a new line and if no count is given, a single card is assumed.
 <br>
-<br>Your deck will be <b>automatically saved</b> and loaded again, when you reload or revisit this site.
+<br>Your deck will be <b>automatically saved</b> and loaded again when you reload or revisit this site.
 <br>
-<br>Possible Inputs are
+<br>Possible Inputs are:
 <br>
 <br> // Comments with leading "//"
 <br>
@@ -59,11 +59,11 @@ let tutorialSteps = [
 <br>1 Legion's Landing // Adanto, the First Fort (PXTC) 22
 <br>2 Vampiric Tutor (CMR) 656
 <br>
-<br> Alink to a card on scryfall.com
+<br> A link to a card on scryfall.com
 <br>1 https://scryfall.com/card/cmr/656/vampiric-tutor
 <br>2 https://scryfall.com/card/totc/10/zombie?utm_source=api
 <br>
-<br> Card names and count without set names. Be carefull to select the correct card when the name is red. 
+<br> Card names and count without set names. Be careful to select the correct card when the name is red. 
 <br>1 Vampiric Tutor
 <br>2 Eldrazi Spawn`,
     },
@@ -79,17 +79,17 @@ let tutorialSteps = [
 <br>
 <br>Entries like "1 Vampire" will be treated as unspecified as long as you do not change the card. Be careful to select the correct card you want.
 <br>
-<br>While loading you can see the progress in the text field and the toaster in the bottom right corner.
+<br>While loading, you can see the progress in the text field and the toaster in the bottom right corner.
 <br>
-<br>You can load the deck once. If you want to load another deck press F5.
+<br>You can load the deck once. If you want to load another deck, press F5.
 <br>
-<br>To continue, click "Load Deck" and wait untill it has finished.`,
+<br>To continue, click "Load Deck" and wait until it has finished.`,
         continueAfter: () => waitForEvent(Events.Type.DeckLoaded, () => isDeckLoaded = true),
         canSkip: () => isDeckLoaded,
     },
     {
         getElement: () => document.querySelector('#cards'),
-        text: `In this view all the cards are displayed on the left.
+        text: `In this view, all the cards are displayed on the left.
 <br>You can scroll through them and see which card you are hovering over in the input field.
 <br>
 <br>You can also scroll to a card by clicking on its entry in the input field.
@@ -97,7 +97,7 @@ let tutorialSteps = [
     },
     {
         getElement: () => document.querySelector('.CodeMirror'),
-        text: 'Click on a entry for a card to scroll to its position',
+        text: 'Click on an entry for a card to scroll to its position',
         continueAfter: () => waitForEvent(Events.Type.ScrollingToCard, c => selectedCard = c),
         canSkip: () => selectedCard != null,
     },
@@ -106,11 +106,11 @@ let tutorialSteps = [
         text: `You can edit a card by clicking on it.
 <br>This will open Scryfall with a matching search result.
 <br>
-<br>When a card is selected you can drag an image from Scryfall on this page to change the currently selected card.
+<br>When a card is selected, you can drag an image from Scryfall on this page to change the currently selected card.
 <br>
 <br>You can drag an image directly from the search result or the details page of a card.
 <br>
-<br>Click on the card and change it afterwards.
+<br>Click on the card and change it afterward.
     `,
         continueAfter: async () => {
             scrollTo(document.querySelector('#' + selectedCard.elem.id).card);
@@ -151,7 +151,7 @@ let tutorialSteps = [
     {
         getElement: () => document.querySelector('#card3'),
         getFrameElement: () => document.querySelector('#card3 .flipSvg'),
-        text: `You can also flip two sided cards by clicking on this arrow.`,
+        text: `You can also flip two-sided cards by clicking on this arrow.`,
         continueAfter: async () => {
             scrollTo(document.querySelector('#card3').card);
 
@@ -171,13 +171,13 @@ let tutorialSteps = [
     },
     {
         getElement: () => document.querySelector('#searchButtons'),
-        text: `Next you can try the Filters.
+        text: `Next, you can try the Filters.
 <br>
-<br>Here you can change the prefered frame type and/or 
+<br>Here you can change the preferred frame type and/or 
 <br>the style of the artwork (full or extended art).
 <br>
 <br>The filters are only as good as the data of Scryfall, 
-<br>so there are often some cards in the wrong catrgory.
+<br>so there are often some cards in the wrong category.
 `,
     },
     {
@@ -196,11 +196,11 @@ let tutorialSteps = [
     },
     {
         getElement: () => document.querySelector('#artViewButton'),
-        text: `Besides the InputView there is the ArtView.
+        text: `Besides the InputView, there is the ArtView.
 <br>
 <br>Here you can see all the cards in a grid view.
 <br>Editing a card works the same way as in the InputView.
-<br>When you didd not already load a deck, it will be loaded automatically.
+<br>When you did not already load a deck, it will be loaded automatically.
 <br>
 <br>Take a look at the ArtView now.
 `,
@@ -210,7 +210,7 @@ let tutorialSteps = [
     {
         getElement: () => document.querySelector('#cards'),
         getFrameElement: () => document.querySelector('#tutorialContent'),
-        text: 'Thank you!<br>Now have fun choosing artworts 😄',
+        text: 'Thank you!<br>Now have fun choosing artworks 😄',
     }
 ];
 

@@ -1,12 +1,12 @@
 1 Command Tower
-2 [TMH3#2] Eldrazi Spawn
+2 [DMR#427] No Mercy
 
 //https://deckstats.net/decks/276918/3990370-rawr-from-the-dead/en
 
 1 Legion's Landing // Adanto, the First Fort (PXTC) 22
 2 Vampiric Tutor (CMR) 656
 
-1 https://scryfall.com/card/cmr/656/vampiric-tutor
+1 https://scryfall.com/card/blb/315/emberheart-challenger
 2 https://scryfall.com/card/totc/10/zombie?utm_source=api
 
 1 Vampire
