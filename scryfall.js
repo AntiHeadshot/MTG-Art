@@ -1,3 +1,4 @@
+import Events from "./events.js";
 
 async function delayScryfallCall() {
     if (delayScryfallCall.lastCall) {
@@ -60,7 +61,7 @@ class Scryfall {
 
         if (cachedCard) {
             const cachedData = JSON.parse(cachedCard);
-            let card = await get(null, cachedData.set, cachedData.nr);
+            let card = await Scryfall.get(null, cachedData.set, cachedData.nr);
             card.isUndefined = cachedData.isUndefined;
             return card;
         }
@@ -135,6 +136,8 @@ class Scryfall {
 
         Events.dispatch(Events.Type.ScryfallOpened, popupWindow);
     }
+
+    static focusPopupWindow() { popupWindow?.focus(); }
 }
 
 export default Scryfall;

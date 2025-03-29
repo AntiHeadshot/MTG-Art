@@ -1,5 +1,6 @@
 import Events from "./events.js";
 import { scrollTo } from "./scroll.js";
+import View from "./view.js";
 
 let popup;
 function scrapeScryfall(evt) { popup = evt.data; scryfallViewed = true; };
@@ -8,6 +9,8 @@ let isDeckLoaded = false;
 let selectedCard = null;
 let scryfallViewed = false;
 let changedCard = false;
+let revertedCard = false;
+let flippedCard = false;
 let triedFilters = false;
 let rejectLast = null;
 
@@ -15,10 +18,10 @@ function waitForEvent(eventType, callback, callBeforeWait) {
     return new Promise((resolve, reject) => {
         rejectLast = reject;
         function resolveThis(evt) {
-            Events.remove(eventType, resolveThis);
-            rejectLast = null;
             if (callback)
                 callback(evt?.data);
+            Events.remove(eventType, resolveThis);
+            rejectLast = null;
             resolve();
         }
 
@@ -80,7 +83,7 @@ let tutorialSteps = [
 <br>
 <br>You can load the deck once. If you want to load another deck press F5.
 <br>
-<br>Click "Load Deck" to continue.`,
+<br>To continue, click "Load Deck" and wait untill it has finished.`,
         continueAfter: () => waitForEvent(Events.Type.DeckLoaded, () => isDeckLoaded = true),
         canSkip: () => isDeckLoaded,
     },
@@ -94,7 +97,7 @@ let tutorialSteps = [
     },
     {
         getElement: () => document.querySelector('.CodeMirror'),
-        text: 'Click on a entry for a card.',
+        text: 'Click on a entry for a card to scroll to its position',
         continueAfter: () => waitForEvent(Events.Type.ScrollingToCard, c => selectedCard = c),
         canSkip: () => selectedCard != null,
     },
@@ -120,13 +123,59 @@ let tutorialSteps = [
         },
         canSkip: () => changedCard
     },
-    // back and forwards buttons
+    {
+        getElement: () => document.querySelector('#' + selectedCard.elem.id),
+        getFrameElement: () => document.querySelector('#' + selectedCard.elem.id + (selectedCard.history.length ? " .rollbackSvg" : " .forwardSvg")),
+        text: `Now that you changed a card, you can go back to the previous card by using this arrow.
+<br>You can do this in both directions.
+<br>
+<br>Try changing the card this way.
+    `,
+        continueAfter: async () => {
+            scrollTo(document.querySelector('#' + selectedCard.elem.id).card);
+
+            async function closeScryfall(evt) {
+                evt.data.location = window.location;
+                await new Promise(resolve => setTimeout(resolve, 500));
+                evt.data.close();
+            }
+            Events.on(Events.Type.ScryfallOpened, closeScryfall);
+
+            await waitForEvent(Events.Type.CardChanged, () => {
+                Events.remove(Events.Type.ScryfallOpened, closeScryfall);
+                revertedCard = true;
+            })
+        },
+        canSkip: () => revertedCard
+    },
+    {
+        getElement: () => document.querySelector('#card3'),
+        getFrameElement: () => document.querySelector('#card3 .flipSvg'),
+        text: `You can also flip two sided cards by clicking on this arrow.`,
+        continueAfter: async () => {
+            scrollTo(document.querySelector('#card3').card);
+
+            async function closeScryfall(evt) {
+                evt.data.location = window.location;
+                await new Promise(resolve => setTimeout(resolve, 500));
+                evt.data.close();
+            }
+            Events.on(Events.Type.ScryfallOpened, closeScryfall);
+
+            await waitForEvent(Events.Type.CardFlipped, () => {
+                Events.remove(Events.Type.ScryfallOpened, closeScryfall);
+                flippedCard = true;
+            });
+        },
+        canSkip: () => flippedCard,
+    },
     {
         getElement: () => document.querySelector('#searchButtons'),
         text: `Next you can try the Filters.
 <br>
 <br>Here you can change the prefered frame type and/or 
 <br>the style of the artwork (full or extended art).
+<br>
 <br>The filters are only as good as the data of Scryfall, 
 <br>so there are often some cards in the wrong catrgory.
 `,
@@ -136,27 +185,42 @@ let tutorialSteps = [
         text: `
 <br>Close the popup when you are done trying.
     `,
-        continueAfter: async () => {
+        continueAfter: async (evt) => {
             let cardElem = document.querySelector('#card1');
             scrollTo(cardElem.card);
-            cardElem.click();
+
+            window.openScryfall(cardElem.card, evt);
             await waitForEvent(Events.Type.ScryfallClosed, () => triedFilters = true);
         },
         canSkip: () => triedFilters
     },
-    // two sided artworks flip
-    // ArtView
-    // Pdf Options
-    //
-    // Pdf creation
-    //
-    //
-    //
     {
-        getElement: () => document.querySelector('#tutorialContent'),
+        getElement: () => document.querySelector('#artViewButton'),
+        text: `Besides the InputView there is the ArtView.
+<br>
+<br>Here you can see all the cards in a grid view.
+<br>Editing a card works the same way as in the InputView.
+<br>When you didd not already load a deck, it will be loaded automatically.
+<br>
+<br>Take a look at the ArtView now.
+`,
+        continueAfter: () => waitForEvent(Events.Type.ViewChanged, () => { if (View.mode != View.Mode.ARTVIEW) throw new Error("ArtView not opened"); }),
+        canSkip: () => View.mode == View.Mode.ARTVIEW,
+    },
+    {
+        getElement: () => document.querySelector('#cards'),
+        getFrameElement: () => document.querySelector('#tutorialContent'),
         text: 'Thank you!<br>Now have fun choosing artworts 😄',
     }
 ];
+
+// TODO create a tutorial for the PDF creation
+// Pdf Options
+//
+// Pdf creation
+//
+//
+//
 
 let currentStep = 0;
 let lastTarget = null;
@@ -169,8 +233,7 @@ let nextButton = document.getElementById("nextButton");
 
 class Tutorial {
     static start() {
-        document.getElementById('tutorialOverlay').style.display = 'flex';
-        document.getElementById('tutorialContentContainer').style.display = 'flex';
+        document.getElementById('tutorial').style.display = 'inherit';
         isOpen = true;
 
         Events.on(Events.Type.ScryfallOpened, scrapeScryfall);
@@ -183,19 +246,21 @@ class Tutorial {
         return isOpen;
     }
 
-    static async showStep(step) {
+    static async showStep(step, evt) {
         if (rejectLast) {
             rejectLast();
             rejectLast = null;
         }
-        const { getElement, text, continueAfter, canSkip } = tutorialSteps[step];
+        const { getElement, getFrameElement, text, continueAfter, canSkip } = tutorialSteps[step];
         const targetElement = await getElement();
+        const targetFrameElement = getFrameElement ? await getFrameElement() : targetElement;
+
         const tutorialFrame = document.getElementById('tutorialFrame');
         const tutorialText = document.getElementById('tutorialText');
 
         nextButton.disabled = false;
         prevButton.disabled = currentStep < 1;
-        console.log(prevButton.disabled);
+        nextButton.innerText = currentStep < tutorialSteps.length - 1 ? "Next" : "Finish";
 
         if (lastTarget)
             lastTarget.style.zIndex = lastTargetZ;
@@ -207,27 +272,30 @@ class Tutorial {
             targetElement.style.zIndex = 20001;
             lastTarget = targetElement;
 
+            tutorialFrame.style.borderRadius = `${parseFloat(getComputedStyle(targetFrameElement).borderRadius) + 2}px`;
+
             function updateFramePosition() {
                 if (targetElement.style.zIndex != 20001)
                     lastTargetZ = targetElement.style.zIndex;
                 targetElement.style.zIndex = 20001;
 
-                const rect = targetElement.getBoundingClientRect();
+                const rect = targetFrameElement.getBoundingClientRect();
                 tutorialFrame.style.top = `${rect.top + window.scrollY}px`;
                 tutorialFrame.style.left = `${rect.left + window.scrollX}px`;
                 tutorialFrame.style.width = `${rect.width}px`;
                 tutorialFrame.style.height = `${rect.height}px`;
             }
 
-            if (observerTimer)
-                clearInterval(observerTimer);
+            clearInterval(observerTimer);
             observerTimer = setInterval(updateFramePosition, 200);
 
             if (continueAfter != null) {
                 document.getElementById('nextButton').disabled = canSkip == null || !canSkip();
 
                 try {
-                    await continueAfter();
+                    await continueAfter(evt);
+                    clearInterval(observerTimer);
+                    await new Promise(resolve => setTimeout(resolve, 500));
                     await this.nextStep();
                 }
                 catch (error) { /*common if cancled*/
@@ -239,26 +307,25 @@ class Tutorial {
         }
     }
 
-    static async nextStep() {
+    static async nextStep(evt) {
         if (currentStep < tutorialSteps.length - 1) {
             currentStep++;
-            await this.showStep(currentStep);
+            await this.showStep(currentStep, evt);
         } else
             this.end();
     }
 
-    static async prevStep() {
+    static async prevStep(evt) {
         if (currentStep > 0) {
             currentStep--;
-            await this.showStep(currentStep);
+            await this.showStep(currentStep, evt);
         }
     }
 
     static end() {
         Events.remove(Events.Type.ScryfallOpened, scrapeScryfall);
 
-        document.getElementById('tutorialOverlay').style.display = 'none';
-        document.getElementById('tutorialContentContainer').style.display = 'none';
+        document.getElementById('tutorial').style.display = 'none';
         currentStep = 0;
 
         if (observerTimer)
@@ -268,6 +335,7 @@ class Tutorial {
             lastTarget.style.zIndex = "";
         localStorage.setItem('finishedTutorial', true);
         isOpen = false;
+        window.location.reload();
     }
 }
 

@@ -7,10 +7,11 @@ const Mode = Object.freeze({
 let mode = Mode.INPUT;
 
 class View {
+    static get Mode() { return Mode; }
+
     static get mode() { return mode; }
     static set mode(val) { mode = val; }
 }
 
-export {
-    Mode, View
-}
+export default View;
+export { View }

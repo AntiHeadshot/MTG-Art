@@ -1,5 +1,6 @@
 import { openDB, deleteDB } from 'https://cdn.jsdelivr.net/npm/idb@8/+esm';
 import isMobileBrowser from './browserdetection.js';
+import Events from './events.js';
 
 let isMobile = isMobileBrowser(navigator.userAgent || navigator.vendor || window.opera);
 
@@ -10,22 +11,6 @@ if (sessionStorage.getItem("sessionId"))
     session = Number(sessionStorage.getItem("sessionId"));
 else
     sessionStorage.setItem("sessionId", session);
-
-
-const eventListeners = {};
-
-function onStorageSizeChanged(callback) {
-    if (!eventListeners.storageSizeChanged) {
-        eventListeners.storageSizeChanged = [];
-    }
-    eventListeners.storageSizeChanged.push(callback);
-}
-
-function triggerStorageSizeChanged(value) {
-    if (eventListeners.storageSizeChanged) {
-        eventListeners.storageSizeChanged.forEach(callback => callback(value));
-    }
-}
 
 if (isMobile) {
     await deleteDB("imageCacheDB");
@@ -110,7 +95,7 @@ if (isMobile) {
         }
 
         size = { totalSize, sessionSize };
-        triggerStorageSizeChanged(size);
+        Events.dispatch(Events.Type.StorageSizeChanged, size);
     })();
 
     class ImageCache {
@@ -127,7 +112,7 @@ if (isMobile) {
 
             size.sessionSize += blob.length;
             size.totalSize += blob.length;
-            triggerStorageSizeChanged(size);
+            Events.dispatch(Events.Type.StorageSizeChanged, size);
 
             await objectStore.add(data);
         }
@@ -148,20 +133,6 @@ if (isMobile) {
             }
         }
 
-        // static async deleteOldImages(ageInDays) {
-        //     const objectStore = db.transaction('images', 'readwrite').objectStore('images');
-        //     let cutoffDate = new Date();
-        //     cutoffDate.setDate(cutoffDate.getDate() - ageInDays);
-
-        //     let cursor = await objectStore.index('timestamp').openCursor();
-        //     while (cursor) {
-        //         const imageDate = new Date(cursor.value.timestamp);
-        //         if (imageDate < cutoffDate)
-        //             await objectStore.delete(cursor.primaryKey);
-        //         cursor = await cursor.continue();
-        //     }
-        // }
-
         static async clearOldSessions() {
             const objectStore = db.transaction('images', 'readwrite').objectStore('images');
 
@@ -173,7 +144,7 @@ if (isMobile) {
             }
 
             size.totalSize = size.sessionSize;
-            triggerStorageSizeChanged(size);
+            Events.dispatch(Events.Type.StorageSizeChanged, size);
         }
 
         static async clearAllSessions() {
@@ -181,7 +152,7 @@ if (isMobile) {
             await objectStore.clear();
             size.sessionSize = 0;
             size.totalSize = 0;
-            triggerStorageSizeChanged(size);
+            Events.dispatch(Events.Type.StorageSizeChanged, size);
         }
 
         static getObjectStoreSize(session) {
@@ -192,5 +163,5 @@ if (isMobile) {
     imageCache = ImageCache;
 }
 
-export { imageCache as ImageCache, onStorageSizeChanged };
+export { imageCache as ImageCache };
 export default imageCache;

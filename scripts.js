@@ -1,12 +1,13 @@
 import { ImageDocument, CropMark } from './pdfCreation.js';
 import { ImageDocumentTemplate } from './templateCreation.js';
-import { ImageCache, onStorageSizeChanged } from './imageCache.js';
+import ImageCache from './imageCache.js';
 import { Card, Format, Frame } from './card.js';
 import Tutorial from './tutorial.js';
 import Events from './events.js';
 import { scrollTo } from './scroll.js';
-import { View, Mode } from './view.js';
-import { Toaster } from './toaster.js';
+import View from './view.js';
+import Toaster from './toaster.js';
+import Scryfall from './scryfall.js';
 
 let cards = window.cards = [];
 let hoverOn = true;
@@ -42,7 +43,8 @@ document.getElementById('cropmarkSize').value = printOptions.cropMarkSize;
 document.getElementById('cropMarkWidth').value = printOptions.cropMarkWidth;
 document.getElementById('skipBasicLands').checked = printOptions.skipBasicLands;
 
-window.Mode = Mode;
+window.Events = Events;
+window.View = View;
 window.Format = Format;
 window.Frame = Frame;
 window.CropMark = CropMark;
@@ -75,7 +77,7 @@ function updateStorageSize(size) {
 }
 
 updateStorageSize(ImageCache.getObjectStoreSize());
-onStorageSizeChanged(v => updateStorageSize(v.totalSize));
+Events.on(Events.Type.StorageChanged, v => updateStorageSize(v.totalSize));
 
 function updateList() {
     let lastHoverOn = hoverOn;
@@ -104,7 +106,7 @@ function updateList() {
 
 window.onDrop = async function onDrop(e) {
     e.preventDefault();
-    Card.focusPopupWindow();
+    Scryfall.focusPopupWindow();
     print("\ndropped:\n" + e.dataTransfer.getData("text/uri-list"));
 
     let openedCard = Card.getOpenedCard();
@@ -296,40 +298,42 @@ window.removeHighlightDeckInput = function removeHighlightDeckInput(card) {
 }
 
 window.swapTo = function swapTo(target) {
-    if (target == Mode.PDF && !cards.length)
+    if (target == View.Mode.PDF && !cards.length)
         return;
 
     let selectedCard;
     switch (View.mode) {
-        case Mode.ARTVIEW:
+        case View.Mode.ARTVIEW:
             selectedCard = cards.filter(c => c instanceof Card).find(c => c.elem.getBoundingClientRect().top > 0);
             document.body.classList.remove('artView');
             break;
-        case Mode.INPUT:
+        case View.Mode.INPUT:
             selectedCard = cards.filter(c => c instanceof Card).find(c => {
                 let rect = c.elem.getBoundingClientRect();
                 return rect.top <= (window.innerHeight / 2 + 10) && rect.bottom >= (window.innerHeight / 2 - 10);
             });
             break;
-        case Mode.PDF:
+        case View.Mode.PDF:
             document.body.classList.remove('pdfView');
             break;
     }
 
     switch (View.mode = target) {
-        case Mode.ARTVIEW:
+        case View.Mode.ARTVIEW:
             document.body.classList.add('artView');
             break;
-        case Mode.PDF:
+        case View.Mode.PDF:
             document.body.classList.add('pdfView');
             selectedCard = null;
             break;
-        case Mode.INPUT:
+        case View.Mode.INPUT:
             break;
     }
 
     if (selectedCard)
         scrollTo(selectedCard, "instant");
+
+    Events.dispatch(Events.Type.ViewChanged, target);
 };
 
 window.generatePdf = async function generatePdf() {

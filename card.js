@@ -56,7 +56,6 @@ class Card {
     }
 
     static getOpenedCard() { return openedCard; }
-    static focusPopupWindow() { popupWindow?.focus(); }
 
     getDescription() {
         switch (this.format) {

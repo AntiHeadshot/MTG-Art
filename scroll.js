@@ -1,10 +1,10 @@
-import {View, Mode} from './view.js'
+import View from './view.js'
 
 function scrollTo(card, behavior) {
     behavior ||= "smooth";
     if (card.elem) {
         var cardsContainer = document.getElementById("cards");
-        if (View.mode == Mode.INPUT) {
+        if (View.mode == View.Mode.INPUT) {
             var adjustedHeight = getAdjustedHeight(card)
 
             cardsContainer.scrollTo({
@@ -13,7 +13,7 @@ function scrollTo(card, behavior) {
                     - cardsContainer.getBoundingClientRect().height / 2),
                 behavior: behavior,
             });
-        } else if (View.mode == Mode.ARTVIEW) {
+        } else if (View.mode == View.Mode.ARTVIEW) {
             card.elem.scrollIntoView({
                 block: "start",
                 behavior: behavior,

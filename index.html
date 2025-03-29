@@ -18,12 +18,12 @@
 <body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
     <div id="viewButtons">
         <img id="defaultViewButton" title="input" src="img/input.svg" class="clickable gray border"
-            onclick="swapTo(Mode.INPUT); event.stopPropagation();">
+            onclick="swapTo(View.Mode.INPUT); event.stopPropagation();">
         <img id="artViewButton" title="art view" src="img/artView.svg" class="clickable gray border"
-            onclick="swapTo(Mode.ARTVIEW); event.stopPropagation(); parseDeck();">
+            onclick="swapTo(View.Mode.ARTVIEW); event.stopPropagation(); parseDeck();">
         <img id="pdfButton" title="pdf creation" src="img/pdf.svg" class="clickable gray border"
-            onclick="swapTo(Mode.PDF); event.stopPropagation();">
-        <img id="tutorialButton" title="start tutorial" src="img/pdf.svg" class="clickable gray border"
+            onclick="swapTo(View.Mode.PDF); event.stopPropagation();">
+        <img id="tutorialButton" title="start tutorial" src="img/tutorial.svg" class="clickable gray border"
             onclick="localStorage.removeItem('finishedTutorial'); window.location.reload(); event.stopPropagation();">
     </div>
 
@@ -37,7 +37,7 @@
                     <img class="cardFlipImg face" focusable="false" draggable="false" src="">
                 </div>
                 <img src="img/flip.svg" class="flipSvg gray border round clickable" draggable="false"
-                    onclick="this.parentElement.classList.toggle('flipped'); event.stopPropagation();">
+                    onclick="this.parentElement.classList.toggle('flipped'); Events.dispatch(Events.Type.CardFlipped, this.card); event.stopPropagation();">
                 <img src="img/rollback.svg" class="rollbackSvg gray border round clickable" draggable="false"
                     onclick="this.closest('.card').card.rollback(); event.stopPropagation();">
                 <img src="img/forward.svg" class="forwardSvg gray border round clickable" draggable="false"
@@ -156,7 +156,8 @@
             </div>
             <div>
                 <button onclick="generatePdf(); event.stopPropagation()">create</button>
-                <button id="downloadPdf" disabled onclick="saveFile(document.getElementById('pdfView').src, cards.filter(c => c instanceof Card)[0].name + '.pdf'); event.stopPropagation()">save</button>
+                <button id="downloadPdf" disabled
+                    onclick="saveFile(document.getElementById('pdfView').src, cards.filter(c => c instanceof Card)[0].name + '.pdf'); event.stopPropagation()">save</button>
             </div>
         </div>
         <div class="update">
@@ -190,15 +191,16 @@
             <li onclick="cacheClearOld()">Clear old</li>
         </ul>
     </div>
-    <div id="tutorialOverlay" class="tutorial-overlay">
+    <div id="tutorial">
+        <div id="tutorialOverlay" class="tutorial-overlay"></div>
         <div id="tutorialFrame" class="tutorial-frame"></div>
-    </div>
-    <div id="tutorialContentContainer" class="tutorial-content-container">
-        <div id="tutorialContent" class="tutorial-content">
-            <p id="tutorialText"></p>
-            <button id="prevButton" onclick="Tutorial.prevStep()">Previous</button>
-            <button id="nextButton" onclick="Tutorial.nextStep()">Next</button>
-            <button id="endButton" onclick="Tutorial.end()">X</button>
+        <div id="tutorialContentContainer" class="tutorial-content-container">
+            <div id="tutorialContent" class="tutorial-content">
+                <p id="tutorialText"></p>
+                <button id="prevButton" onclick="Tutorial.prevStep(event)">Previous</button>
+                <button id="nextButton" onclick="Tutorial.nextStep(event)">Next</button>
+                <button id="endButton" onclick="Tutorial.end()">X</button>
+            </div>
         </div>
     </div>
 </body>
