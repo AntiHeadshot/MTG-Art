@@ -206,12 +206,16 @@ window.parseDeck = async function parseDeck() {
 
     const deckLines = deckText.split("\n");
     let cardNr = 0;
+    let isMissingTokensText = false;
 
     for (let i = 0; i < deckLines.length; i++) {
         Toaster.show(`Parsing card ${i + 1} of ${deckLines.length}...`, (i / deckLines.length));
         const cardText = deckLines[i];
         if (cardText.trim() === "" || cardText.startsWith("//")) {
-            cards.push(cardText);
+            if (cardText == "// Missing Tokens" || isMissingTokensText)
+                isMissingTokensText = true;
+            else
+                cards.push(cardText);
             continue;
         }
 
@@ -246,12 +250,18 @@ window.parseDeck = async function parseDeck() {
     document.getElementById("convertToDeckstatsBtn").disabled = false;
     view.disabled = false;
 
+    let missingTokens = await Card.handleTokens();
+    if (missingTokens.length > 0) {
+        cards.push();
+        cards.push("// Missing Tokens");
+        for (const token of missingTokens) {
+            cards.push(`//1 [${token.card.set.toUpperCase()}#${token.card.collector_number}] ${token.card.name}`);
+        }
+    }
     Toaster.hide();
 
     updateList();
     Events.on(Events.Type.CardChanged, updateList);
-
-    console.log(Card.tokens);
 
     view.on("beforeSelectionChange", (_, selection) => scrollToSelectedCard(cards, selection));
 }

@@ -36,6 +36,7 @@ class Card {
         this.nr = nr;
         this.name = name;
         this.cardId = cardId;
+        this.isToken = false;
         this.oracleId = oracleId;
         this.imageUri = imageUri;
         this.isBasicLand = false;
@@ -48,11 +49,35 @@ class Card {
 
     static async handleTokens() {
         let missing = [];
+
         for (let tokenId of new Set(neededTokens.map(t => t.tokenId))) {
-            if (!cards.find(c => c.cardId = tokenId)) {
-                let oracleId = "";
+            if (!cards.find(c => c.cardId == tokenId)) {
+                let card = await Scryfall.get(tokenId);
+                if (!cards.find(c => c.oracleId == card.oracle_id)) {
+                    let missingToken = missing.find(t => t.card.oracle_id == card.oracle_id)
+                    if (missingToken) {
+                        missingToken.requiredBy.push(...neededTokens.filter(t => t.tokenId == tokenId).map(t => t.card));
+                    } else
+                        missing.push({ card, requiredBy: neededTokens.filter(t => t.tokenId == tokenId).map(t => t.card) });
+                }
             }
         }
+
+        let undefs = cards.filter(c => c.isUndefined && c.isToken);
+
+        for (let token of missing) {
+            let card = undefs.find(c => c.name == token.card.name);
+            if (card) {
+                card.updateBySetNr(token.card.set, token.card.collector_number, false);
+                card.isUndefined = false;
+                undefs = undefs.filter(c => c != card);
+                missing = missing.filter(t => t != token);
+            }
+        }
+
+        console.log("Missing tokens:", missing.map(t => { return { name: t.card.name, requiredBy: t.requiredBy.map(c => c.name) } }));
+
+        return missing;
     }
 
     static getOpenedCard() { return openedCard; }
@@ -237,8 +262,8 @@ class Card {
         this.name = data.name;
         this.scryfall_uri = data.scryfall_uri;
         this.isBasicLand = data.type_line.startsWith("Basic Land ");
-
-        if (data.all_parts)
+        this.isToken = data.type_line.startsWith("Token");
+        if (!this.isToken && data.all_parts)
             data.all_parts.filter(p => p.type_line.startsWith("Token")).forEach(t => neededTokens.push({ card: this, tokenId: t.id }));
 
         this.updateElem();
