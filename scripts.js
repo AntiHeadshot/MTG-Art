@@ -252,7 +252,7 @@ window.parseDeck = async function parseDeck() {
 
     let missingTokens = await Card.handleTokens();
     if (missingTokens.length > 0) {
-        cards.push();
+        cards.push("");
         cards.push("// Missing Tokens");
         for (const token of missingTokens) {
             cards.push(`//1 [${token.card.set.toUpperCase()}#${token.card.collector_number}] ${token.card.name}`);
