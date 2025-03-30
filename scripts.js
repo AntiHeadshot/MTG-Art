@@ -290,7 +290,6 @@ window.convertToFormat = function convertToFormat(format) {
     updateList();
 }
 
-
 window.highlightDeckInput = function highlightDeckInput(card) {
     const cardText = card.getDescription();
 

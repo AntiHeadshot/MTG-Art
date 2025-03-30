@@ -2,5 +2,4 @@
 
 - add tutorial for PDF Creation
 
-- add Tokens handling with ability to add them or ignore ... dont be obstrusive
 - recognize wrong tokens

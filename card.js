@@ -74,9 +74,7 @@ class Card {
                 missing = missing.filter(t => t != token);
             }
         }
-
-        console.log("Missing tokens:", missing.map(t => { return { name: t.card.name, requiredBy: t.requiredBy.map(c => c.name) } }));
-
+        
         return missing;
     }
 
