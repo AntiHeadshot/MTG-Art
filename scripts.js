@@ -3,6 +3,7 @@ import { ImageDocumentTemplate } from './templateCreation.js';
 import ImageCache from './imageCache.js';
 import { Card, Format, Frame } from './card.js';
 import Tutorial from './tutorial.js';
+import * as _ from './tutorialDefinition.js';
 import Events from './events.js';
 import { scrollTo } from './scroll.js';
 import View from './view.js';
@@ -160,45 +161,8 @@ window.parseDeck = async function parseDeck() {
 
     if (deckUrlMatch) {
         const { userId, deckId } = deckUrlMatch.groups;
-        let apiUrl = `https://deckstats.net/api.php?action=get_deck&id_type=saved&owner_id=${userId}&id=${deckId}&response_type=json`;
         try {
-            const response = await fetch(apiUrl);
-            const deckData = await response.json();
-
-            var sets = localStorage.getItem('deckstatSets');
-
-            if (sets)
-                sets = JSON.parse(sets);
-            else {
-                const setsResponse = await fetch('deckstats_sets.json');
-                const setsData = await setsResponse.json();
-                sets = setsData;
-                localStorage.setItem('deckstatSets', JSON.stringify(sets));
-            }
-
-            function getCardText(card) {
-                if (card.set_id) {
-                    if (card.collector_number)
-                        return `${card.amount} [${sets[card.set_id].abbreviation}#${card.collector_number}] ${card.name}`;
-                    return `${card.amount} [${sets[card.set_id].abbreviation}] ${card.name}`;
-                }
-                return `${card.amount} ${card.name}`;
-            }
-
-            deckText = deckData.sections.map(s => ((s.name && s.name != "Main") ? `\n// ${s.name}\n` : "")
-                + s.cards.map(getCardText).join('\n')).join('\n');
-
-            if (deckData?.sideboard?.length > 0) {
-                deckText += '\n\n// Sideboard\n';
-                deckText += deckData.sideboard.map(getCardText).join('\n');
-            }
-
-            if (deckData?.tokens?.length > 0) {
-                deckText += '\n\n// Tokens\n';
-                deckText += deckData.tokens.map(getCardText).join('\n');
-            }
-
-            view.doc.setValue(deckText);
+            view.doc.setValue(await loadDeckstatDeck(userId, deckId));
         } catch (error) {
             print("Deck could not be loaded; " + JSON.stringify(error.toString()));
         }
@@ -207,13 +171,16 @@ window.parseDeck = async function parseDeck() {
     const deckLines = deckText.split("\n");
     let cardNr = 0;
     let isMissingTokensText = false;
+    let lineOffset = 0;
 
     for (let i = 0; i < deckLines.length; i++) {
         Toaster.show(`Parsing card ${i + 1} of ${deckLines.length}...`, (i / deckLines.length));
         const cardText = deckLines[i];
         if (cardText.trim() === "" || cardText.startsWith("//")) {
-            if (cardText == "// Missing Tokens" || isMissingTokensText)
+            if (cardText == "// Missing Tokens" || isMissingTokensText) {
                 isMissingTokensText = true;
+                lineOffset++;
+            }
             else
                 cards.push(cardText);
             continue;
@@ -221,15 +188,14 @@ window.parseDeck = async function parseDeck() {
 
         var card = await Card.parseCardText(cardText);
         card.order = ++cardNr;
-        card.lineNr = i;
+        card.lineNr = i - lineOffset;
 
         var line = view.getLine(i);
         view.replaceRange(card.getDescription() + "✔️", { line: i, ch: 0 }, { line: i, ch: line.length });
 
         var clone = template.cloneNode(true);
         clone.card = card;
-        card.elem = clone;
-        card.updateElem();
+        card.updateElem(clone);
         clone.style.display = "block";
 
         insertCardInOrder(parent, card, clone)
@@ -264,6 +230,46 @@ window.parseDeck = async function parseDeck() {
     Events.on(Events.Type.CardChanged, updateList);
 
     view.on("beforeSelectionChange", (_, selection) => scrollToSelectedCard(cards, selection));
+}
+
+async function loadDeckstatDeck(userId, deckId) {
+    const response = await fetch(`https://deckstats.net/api.php?action=get_deck&id_type=saved&owner_id=${userId}&id=${deckId}&response_type=json`);
+    const deckData = await response.json();
+
+    var sets = localStorage.getItem('deckstatSets');
+
+    if (sets)
+        sets = JSON.parse(sets);
+    else {
+        const setsResponse = await fetch('deckstats_sets.json');
+        const setsData = await setsResponse.json();
+        sets = setsData;
+        localStorage.setItem('deckstatSets', JSON.stringify(sets));
+    }
+
+    function getCardText(card) {
+        if (card.set_id) {
+            if (card.collector_number)
+                return `${card.amount} [${sets[card.set_id].abbreviation}#${card.collector_number}] ${card.name}`;
+            return `${card.amount} [${sets[card.set_id].abbreviation}] ${card.name}`;
+        }
+        return `${card.amount} ${card.name}`;
+    }
+
+    let deckText = deckData.sections.map(s => ((s.name && s.name != "Main") ? `\n// ${s.name}\n` : "")
+        + s.cards.map(getCardText).join('\n')).join('\n');
+
+    if (deckData?.sideboard?.length > 0) {
+        deckText += '\n\n// Sideboard\n';
+        deckText += deckData.sideboard.map(getCardText).join('\n');
+    }
+
+    if (deckData?.tokens?.length > 0) {
+        deckText += '\n\n// Tokens\n';
+        deckText += deckData.tokens.map(getCardText).join('\n');
+    }
+
+    return deckText;
 }
 
 function insertCardInOrder(parent, card, elem) {

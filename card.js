@@ -74,7 +74,7 @@ class Card {
                 missing = missing.filter(t => t != token);
             }
         }
-        
+
         return missing;
     }
 
@@ -267,39 +267,44 @@ class Card {
         this.updateElem();
     }
 
-    updateElem() {
-        if (this.elem == null)
-            return;
+    updateElem(elem) {
+        elem ||= this.elem;
 
-        this.elem.querySelector(".cardImg").src = this.imageUri;
+        if (elem == null)
+            return;
+        this.elem = elem;
+
+        elem.querySelector(".cardImg").src = this.imageUri;
 
         if (this.twoFaced) {
-            this.elem.classList.add("twoFaced");
-            this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];
+            elem.classList.add("twoFaced");
+            elem.querySelector(".cardFlipImg").src = this.imageUris[1];
         }
         else {
-            this.elem.classList.remove("twoFaced");
-            this.elem.classList.remove("flipped");
+            elem.classList.remove("twoFaced");
+            elem.classList.remove("flipped");
         }
 
-        this.elem.classList.toggle("revertable", this.history.length > 0);
-        this.elem.classList.toggle("forwardable", this.future.length > 0);
+        elem.classList.toggle("revertable", this.history.length > 0);
+        elem.classList.toggle("forwardable", this.future.length > 0);
 
-        this.elem.id = "card" + this.order;
+        elem.id = "card" + this.order;
 
-        if (!this.elem.style.zIndex)
-            this.elem.style.zIndex = 9000 - this.order;
+        if (!elem.style.zIndex)
+            elem.style.zIndex = 9000 - this.order;
 
-        this.elem.style.top = `${this.order * 2 + 4}px`;
-        this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
-        this.elem.style.transition = `bottom 1s ease-in-out`;
+        elem.style.top = `${this.order * 2 + 4}px`;
+        elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
+        elem.style.transition = `bottom 1s ease-in-out`;
 
-        if (!this.elem.style.transform) {
+        if (!elem.style.transform) {
             this.rotation = (Math.random() - 0.5) * 2 * 2;
-            this.elem.style.transform = `rotate(${this.rotation}deg)`;
+            elem.style.transform = `rotate(${this.rotation}deg)`;
         }
 
-        new IntersectionObserver(entries => {
+        if (this.observer)
+            this.observer.disconnect();
+        this.observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.style.zIndex = 9000 - entry.target.card.order;
@@ -311,7 +316,8 @@ class Card {
             root: document,
             rootMargin: `-${this.order * 2 + 5}px 0px 0px 0px`,
             threshold: 1
-        }).observe(this.elem);
+        });
+        this.observer.observe(elem);
     }
 
     rollback() {
