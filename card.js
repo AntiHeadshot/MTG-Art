@@ -101,7 +101,7 @@ class Card {
 
     static async parseCardText(cardText) {
         // Example cardText: "1 [CMR#656] Vampiric Tutor"
-        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\]\s+(?<name>.+)$/;
+        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\](\s+(?<name>.+))?$/;
         let match = cardText.match(regexDeckstats);
         let format = Format.DECKSTATS;
 
@@ -121,7 +121,7 @@ class Card {
         //Search for card
         if (!match) {
             // Example cardText: "1 [CMR] Vampiric Tutor"
-            const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)\]\s+(?<name>.+)$/;
+            const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)\](\s+(?<name>.+))?$/;
             let match = cardText.match(regexDeckstats);
             let format = Format.DECKSTATS;
 
