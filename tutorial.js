@@ -1,27 +1,6 @@
 import Events from "./events.js";
 
-let popup;
-function scrapeScryfall(evt) { popup = evt.data; scryfallViewed = true; };
-
-let scryfallViewed = false;
 let rejectLast = null;
-
-function waitForEvent(eventType, callback, callBeforeWait) {
-    return new Promise((resolve, reject) => {
-        rejectLast = reject;
-        function resolveThis(evt) {
-            if (callback)
-                callback(evt?.data);
-            Events.remove(eventType, resolveThis);
-            rejectLast = null;
-            resolve();
-        }
-
-        Events.on(eventType, resolveThis);
-        if (callBeforeWait)
-            callBeforeWait();
-    })
-}
 
 let tutorialSteps = [];
 
@@ -39,7 +18,7 @@ class Tutorial {
         document.getElementById('tutorial').style.display = 'inherit';
         isOpen = true;
 
-        Events.on(Events.Type.ScryfallOpened, scrapeScryfall);
+        Events.dispatch(Events.Type.TutorialStarted);
 
         currentStep = 0;
         this.showStep(currentStep);
@@ -130,7 +109,7 @@ class Tutorial {
     }
 
     static end() {
-        Events.remove(Events.Type.ScryfallOpened, scrapeScryfall);
+        Events.dispatch(Events.Type.TutorialEnded);
 
         document.getElementById('tutorial').style.display = 'none';
         currentStep = 0;
@@ -143,6 +122,23 @@ class Tutorial {
         localStorage.setItem('finishedTutorial', true);
         isOpen = false;
         window.location.reload();
+    }
+
+    static waitForEvent(eventType, callback, callBeforeWait) {
+        return new Promise((resolve, reject) => {
+            rejectLast = reject;
+            function resolveThis(evt) {
+                if (callback)
+                    callback(evt?.data);
+                Events.remove(eventType, resolveThis);
+                rejectLast = null;
+                resolve();
+            }
+    
+            Events.on(eventType, resolveThis);
+            if (callBeforeWait)
+                callBeforeWait();
+        })
     }
 }
 

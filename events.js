@@ -12,6 +12,8 @@ let EventsType = Object.freeze({
     CardChanged: "cardChanged",
     ScrollingToCard: "scrollingToCard",
     FilterChanged: "filterChanged",
+    TutorialStarted: "tutorialStarted",
+    TutorialEnded: "tutorialEnded",
 });
 
 class Events {
