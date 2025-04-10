@@ -1,4 +1,4 @@
-import { CropMark } from '/pdfCreation.js';
+import { CropMark } from './pdfCreation.js';
 
 class ImageDocumentTemplate {
 
