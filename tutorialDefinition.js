@@ -71,7 +71,7 @@ Tutorial.addStep({
 <br>You can load the deck once. If you want to load another deck, press F5.
 <br>
 <br>To continue, click "Load Deck" and wait until it has finished.`,
-    continueAfter: () => waitForEvent(Events.Type.DeckLoaded, () => isDeckLoaded = true),
+    continueAfter: () => Tutorial.waitForEvent(Events.Type.DeckLoaded, () => isDeckLoaded = true),
     canSkip: () => isDeckLoaded,
 });
 
@@ -87,7 +87,7 @@ Tutorial.addStep({
 Tutorial.addStep({
     getElement: () => document.querySelector('.CodeMirror'),
     text: 'Click on an entry for a card to scroll to its position',
-    continueAfter: () => waitForEvent(Events.Type.ScrollingToCard, c => selectedCard = c),
+    continueAfter: () => Tutorial.waitForEvent(Events.Type.ScrollingToCard, c => selectedCard = c),
     canSkip: () => selectedCard != null,
 });
 
@@ -105,7 +105,7 @@ Tutorial.addStep({
     continueAfter: async () => {
         scrollTo(document.querySelector('#' + selectedCard.elem.id).card);
 
-        await waitForEvent(Events.Type.CardChanged, () => {
+        await Tutorial.waitForEvent(Events.Type.CardChanged, () => {
             popup.location = window.location;
             popup.close();
             changedCard = true;
@@ -132,7 +132,7 @@ Tutorial.addStep({
         }
         Events.on(Events.Type.ScryfallOpened, closeScryfall);
 
-        await waitForEvent(Events.Type.CardChanged, () => {
+        await Tutorial.waitForEvent(Events.Type.CardChanged, () => {
             Events.remove(Events.Type.ScryfallOpened, closeScryfall);
             revertedCard = true;
         })
@@ -154,7 +154,7 @@ Tutorial.addStep({
         }
         Events.on(Events.Type.ScryfallOpened, closeScryfall);
 
-        await waitForEvent(Events.Type.CardFlipped, () => {
+        await Tutorial.waitForEvent(Events.Type.CardFlipped, () => {
             Events.remove(Events.Type.ScryfallOpened, closeScryfall);
             flippedCard = true;
         });
@@ -184,7 +184,7 @@ Tutorial.addStep({
         scrollTo(cardElem.card);
 
         window.openScryfall(cardElem.card, evt);
-        await waitForEvent(Events.Type.ScryfallClosed, () => triedFilters = true);
+        await Tutorial.waitForEvent(Events.Type.ScryfallClosed, () => triedFilters = true);
     },
     canSkip: () => triedFilters
 });
@@ -199,7 +199,7 @@ Tutorial.addStep({
 <br>
 <br>Take a look at the ArtView now.
 `,
-    continueAfter: () => waitForEvent(Events.Type.ViewChanged, () => { if (View.mode != View.Mode.ARTVIEW) throw new Error("ArtView not opened"); }),
+    continueAfter: () => Tutorial.waitForEvent(Events.Type.ViewChanged, () => { if (View.mode != View.Mode.ARTVIEW) throw new Error("ArtView not opened"); }),
     canSkip: () => View.mode == View.Mode.ARTVIEW,
 });
 
