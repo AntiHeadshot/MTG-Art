@@ -9,6 +9,9 @@ import { scrollTo } from './scroll.js';
 import View from './view.js';
 import Toaster from './toaster.js';
 import Scryfall from './scryfall.js';
+import isMobileBrowser from './browserdetection.js';
+
+let isMobile = isMobileBrowser(navigator.userAgent || navigator.vendor || window.opera);
 
 let cards = window.cards = [];
 let hoverOn = true;
@@ -494,6 +497,14 @@ let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 async function initDeck() {
     let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text()
     view.doc.setValue(deckText);
+    if (isMobile)
+        document.getElementById("tutorialButton").style.display = 'none';
+    else {
+        window.Tutorial = Tutorial;
+
+        if (localStorage.getItem('finishedTutorial') == null)
+            Tutorial.start();
+    }
 };
 
 initDeck();
@@ -526,8 +537,3 @@ document.addEventListener('click', function () {
 
 window.cacheClearAll = ImageCache.clearAllSessions();
 window.cacheClearOld = ImageCache.clearOldSessions();
-
-window.Tutorial = Tutorial;
-
-if (localStorage.getItem('finishedTutorial') == null)
-    Tutorial.start();
