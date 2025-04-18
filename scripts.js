@@ -385,10 +385,8 @@ window.updatePdfCreation = function updatePdfCreation(targetOptions) {
     localStorage.setItem('printOptions', JSON.stringify(printOptions));
 
     let template = ImageDocumentTemplate.create(printOptions);
-console.log(template.svg);
 
-    let dataUri = "data:image/svg+xml," + encodeURI(template.svg.replace("\n", " "));
-
+    let dataUri = "data:image/svg+xml," + encodeURIComponent(template.svg);
     document.getElementById("templateDisplay").src = dataUri;
 
     let templateElem = document.getElementById("templateDisplayDetail");
