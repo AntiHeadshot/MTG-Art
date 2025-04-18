@@ -147,6 +147,11 @@
                     onchange="updatePdfCreation({cropMarkWidth: Number(this.value)});">
             </div>
             <div>
+                <label for="cropMarkWidth">Cropmark color: </label>
+                <input type="color" id="cropMarkColor" value="#ffffff"
+                    onchange="updatePdfCreation({cropMarkColor: this.value});">
+            </div>
+            <div>
                 <label for="cardMargin">Card Margin in mm: </label>
                 <input type="number" id="cardMargin" value="0"
                     onchange="updatePdfCreation({cardMargin: Number(this.value)});">

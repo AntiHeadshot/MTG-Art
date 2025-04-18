@@ -28,7 +28,7 @@ let printOptions = {
     borderMargin: 5,
     pageFormat: "A4",
     cropMarkShape: CropMark.STAR,
-    cropMarkColor: "white",
+    cropMarkColor: "#ffffff",
     cropMarkSize: 5,
     cropMarkWidth: 0.5,
     skipBasicLands: true,
@@ -45,6 +45,7 @@ document.getElementById('borderMargin').value = printOptions.borderMargin;
 document.getElementById('paperFormat').value = printOptions.pageFormat;
 document.getElementById('cropmarkSize').value = printOptions.cropMarkSize;
 document.getElementById('cropMarkWidth').value = printOptions.cropMarkWidth;
+document.getElementById('cropMarkColor').value = printOptions.cropMarkColor;
 document.getElementById('skipBasicLands').checked = printOptions.skipBasicLands;
 
 window.Events = Events;
@@ -384,6 +385,8 @@ window.updatePdfCreation = function updatePdfCreation(targetOptions) {
     localStorage.setItem('printOptions', JSON.stringify(printOptions));
 
     let template = ImageDocumentTemplate.create(printOptions);
+console.log(template.svg);
+
     let dataUri = "data:image/svg+xml," + encodeURI(template.svg.replace("\n", " "));
 
     document.getElementById("templateDisplay").src = dataUri;
