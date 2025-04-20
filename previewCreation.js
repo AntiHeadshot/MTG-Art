@@ -1,37 +1,8 @@
-import * as _ from 'https://cdn.jsdelivr.net/npm/blob-stream-browserify@0.1.3/index.js';
-import Image from './image.js';
-import ImageCache from './imageCache.js';
+import * as _ from 'https://cdn.jsdelivr.net/npm/pdfkit@0.16.0/js/pdfkit.standalone.js';
+import getDataUrl from './image.js';
+import CropMark from './cropmark.js';
 
 let lastUrl;
-
-let CropMark = Object.freeze({
-    LINES: 'lines',
-    STAR: 'star',
-    NONE: 'none',
-});
-
-async function getDataUrl(src) {
-    let dataUrl = await ImageCache.getImage(src);
-    if (dataUrl == null) {
-        let imageElem = await loadImage(src);
-        let image = new Image(imageElem);
-        image.removeBackground();
-        dataUrl = image.getDataUrl();
-        await ImageCache.storeImage(src, dataUrl);
-    }
-
-    return dataUrl;
-}
-
-function loadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = document.createElement('img');
-        img.crossOrigin = "Anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-    });
-}
 
 class ImageDocument {
     constructor(options) {
@@ -94,7 +65,7 @@ class ImageDocument {
 
             let imageIds = this.images.flatMap(img => Array(img.count).fill(img.image));
             var maxStep = imageIds.length;
-            
+
             let lastImage = "";
             let dataUrl;
 

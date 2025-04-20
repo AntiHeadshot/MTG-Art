@@ -1,14 +1,9 @@
 import * as _ from 'https://cdn.jsdelivr.net/npm/pdfkit@0.16.0/js/pdfkit.standalone.js';
 import * as _1 from 'https://cdn.jsdelivr.net/npm/blob-stream-browserify@0.1.3/index.js';
 import getDataUrl from './image.js';
+import CropMark from './cropmark.js';
 
 let lastUrl;
-
-let CropMark = Object.freeze({
-    LINES: 'lines',
-    STAR: 'star',
-    NONE: 'none',
-});
 
 class ImageDocument {
     constructor(options) {

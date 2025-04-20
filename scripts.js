@@ -1,4 +1,7 @@
-import { ImageDocument, CropMark } from './pdfCreation.js';
+'use strict';
+
+import CropMark from './cropmark.js';
+import { ImageDocument } from './pdfCreation.js';
 import { ImageDocumentTemplate } from './templateCreation.js';
 import ImageCache from './imageCache.js';
 import { Card, Format, Frame } from './card.js';
@@ -53,6 +56,7 @@ window.View = View;
 window.Format = Format;
 window.Frame = Frame;
 window.CropMark = CropMark;
+window.Card = Card;
 
 window.addEventListener("error", function (event) {
     print(`\nError: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
@@ -82,7 +86,7 @@ function updateStorageSize(size) {
 }
 
 updateStorageSize(ImageCache.getObjectStoreSize());
-Events.on(Events.Type.StorageChanged, v => updateStorageSize(v.totalSize));
+Events.on(Events.Type.StorageChanged, v => updateStorageSize(v.data.totalSize));
 
 function updateList() {
     let lastHoverOn = hoverOn;

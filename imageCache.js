@@ -1,3 +1,5 @@
+'use strict';
+
 import { openDB, deleteDB } from 'https://cdn.jsdelivr.net/npm/idb@8/+esm';
 import isMobileBrowser from './browserdetection.js';
 import Events from './events.js';
@@ -95,7 +97,7 @@ if (isMobile) {
         }
 
         size = { totalSize, sessionSize };
-        Events.dispatch(Events.Type.StorageSizeChanged, size);
+        Events.dispatch(Events.Type.StorageChanged, size);
     })();
 
     class ImageCache {
@@ -112,7 +114,7 @@ if (isMobile) {
 
             size.sessionSize += blob.length;
             size.totalSize += blob.length;
-            Events.dispatch(Events.Type.StorageSizeChanged, size);
+            Events.dispatch(Events.Type.StorageChanged, size);
 
             await objectStore.add(data);
         }
@@ -144,7 +146,7 @@ if (isMobile) {
             }
 
             size.totalSize = size.sessionSize;
-            Events.dispatch(Events.Type.StorageSizeChanged, size);
+            Events.dispatch(Events.Type.StorageChanged, size);
         }
 
         static async clearAllSessions() {
@@ -152,7 +154,7 @@ if (isMobile) {
             await objectStore.clear();
             size.sessionSize = 0;
             size.totalSize = 0;
-            Events.dispatch(Events.Type.StorageSizeChanged, size);
+            Events.dispatch(Events.Type.StorageChanged, size);
         }
 
         static getObjectStoreSize(session) {

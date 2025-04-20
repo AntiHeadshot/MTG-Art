@@ -6,4 +6,3 @@
 
 - add preview for pdf for faster viewing.
     -> Seperate loading images from PDF Creation
-    -> pass card instead of link into Image generation?
