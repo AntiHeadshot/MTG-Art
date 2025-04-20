@@ -1,18 +1,37 @@
-class Image {
-    constructor(image) {
-        var canvas = document.createElement('canvas');
-        image.crossOrigin = "Anonymous";
-        canvas.width = image.width;
-        canvas.height = image.height;
-        this.canvas = canvas;
-        let context = this.context = canvas.getContext("2d");
-        context.drawImage(image, 0, 0);
+import ImageCache from './imageCache.js';
 
-        this.cornerSize = this.canvas.width / 21;
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = document.createElement('img');
+        img.crossOrigin = "Anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+class Image {
+    constructor(src) {
+        this.src = src;
     }
 
-    getDataUrl() {
-        return this.canvas.toDataURL("image/png");
+    async getDataUrl() {
+        this.dataUrl = await ImageCache.getImage(this.src);
+        if (this.dataUrl == null) {
+            let imageElem = await loadImage(this.src);
+            this.canvas = document.createElement('canvas');
+            this.canvas.width = imageElem.width;
+            this.canvas.height = imageElem.height;
+            this.context = this.canvas.getContext("2d");
+            this.context.drawImage(imageElem, 0, 0);
+
+            this.cornerSize = this.canvas.width / 21;
+            this.removeBackground();
+            this.dataUrl = this.canvas.toDataURL("image/png");
+            await ImageCache.storeImage(this.src, this.dataUrl);
+        }
+
+        return this.dataUrl;
     }
 
     removeBackground() {
@@ -27,9 +46,9 @@ class Image {
 
         let avgSize = Math.floor(this.cornerSize / 3);
 
-        let avgColorTl = this.getAvgColor(canvasData, this.cornerSize - avgSize, this.cornerSize - avgSize, avgSize);
-        let avgColorTr = this.getAvgColor(canvasData, canvasWidth - this.cornerSize + avgSize, this.cornerSize - avgSize, avgSize);
-        let avgColorBl = this.getAvgColor(canvasData, this.cornerSize - avgSize, canvasHeight - this.cornerSize + avgSize, avgSize);
+        let avgColorTl = this.getAvgColor(canvasData, this.cornerSize - 2 * avgSize, this.cornerSize - 2 * avgSize, avgSize);
+        let avgColorTr = this.getAvgColor(canvasData, canvasWidth - this.cornerSize + avgSize, this.cornerSize - 2 * avgSize, avgSize);
+        let avgColorBl = this.getAvgColor(canvasData, this.cornerSize - 2 * avgSize, canvasHeight - this.cornerSize + avgSize, avgSize);
         let avgColorBr = this.getAvgColor(canvasData, canvasWidth - this.cornerSize + avgSize, canvasHeight - this.cornerSize + avgSize, avgSize);
 
         for (let y = 0, yi = this.cornerSize; y < this.cornerSize; y++, yi--) {
