@@ -1,6 +1,6 @@
 import * as _ from 'https://cdn.jsdelivr.net/npm/pdfkit@0.16.0/js/pdfkit.standalone.js';
 import * as _1 from 'https://cdn.jsdelivr.net/npm/blob-stream-browserify@0.1.3/index.js';
-import Image from './image.js';
+import getDataUrl from './image.js';
 
 let lastUrl;
 
@@ -9,11 +9,6 @@ let CropMark = Object.freeze({
     STAR: 'star',
     NONE: 'none',
 });
-
-async function getDataUrl(src) {
-    let image = new Image(src);
-    return await image.getDataUrl();
-}
 
 class ImageDocument {
     constructor(options) {
@@ -90,7 +85,7 @@ class ImageDocument {
 
                         let image = imageIds[imgNr];
                         if (lastImage != image) {
-                            dataUrl = await (new Image(image)).getDataUrl();
+                            dataUrl = await getDataUrl(image);
                             lastImage = image;
                         }
                         doc.image(dataUrl, xPos, yPos, { width: mtgWidth, height: mtgHeight });

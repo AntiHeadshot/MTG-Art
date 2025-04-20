@@ -1,13 +1,13 @@
 import ImageCache from './imageCache.js';
 
-function loadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = document.createElement('img');
-        img.crossOrigin = "Anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-    });
+let promisseCache = {};
+
+async function getDataUrl(src) {
+    let image = new Image(src);
+    if (promisseCache[src] == null)
+        return promisseCache[src] = image.getDataUrl();
+    console.log("Image already loaded: " + src);
+    return promisseCache[src];
 }
 
 class Image {
@@ -15,10 +15,20 @@ class Image {
         this.src = src;
     }
 
+    loadImage() {
+        return new Promise((resolve, reject) => {
+            const img = document.createElement('img');
+            img.crossOrigin = "Anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = this.src;
+        });
+    }
+
     async getDataUrl() {
         this.dataUrl = await ImageCache.getImage(this.src);
         if (this.dataUrl == null) {
-            let imageElem = await loadImage(this.src);
+            let imageElem = await this.loadImage();
             this.canvas = document.createElement('canvas');
             this.canvas.width = imageElem.width;
             this.canvas.height = imageElem.height;
@@ -94,4 +104,4 @@ class Image {
     }
 }
 
-export default Image;
+export default getDataUrl;
