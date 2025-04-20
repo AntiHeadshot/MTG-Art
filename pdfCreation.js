@@ -127,6 +127,6 @@ class ImageDocument {
     }
 }
 
-export { ImageDocument, CropMark };
+export { ImageDocument };
 
 export default ImageDocument;

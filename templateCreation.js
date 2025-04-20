@@ -1,5 +1,5 @@
 import * as _ from 'https://cdn.jsdelivr.net/npm/pdfkit@0.16.0/js/pdfkit.standalone.js';
-import { CropMark } from './pdfCreation.js';
+import CropMark from './cropmark.js';
 
 class ImageDocumentTemplate {
 
