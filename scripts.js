@@ -6,13 +6,14 @@ import { ImageDocumentTemplate } from './templateCreation.js';
 import ImageCache from './imageCache.js';
 import { Card, Format, Frame } from './card.js';
 import Tutorial from './tutorial.js';
-import * as _ from './tutorialDefinition.js';
+import './tutorialDefinition.js';
 import Events from './events.js';
 import { scrollTo } from './scroll.js';
 import View from './view.js';
 import Toaster from './toaster.js';
 import Scryfall from './scryfall.js';
 import isMobileBrowser from './browserdetection.js';
+import CodeMirror from './wrapper/codemirror.js';
 
 let isMobile = isMobileBrowser(navigator.userAgent || navigator.vendor || window.opera);
 
@@ -125,7 +126,7 @@ window.onDrop = async function onDrop(e) {
 
         if (text && text.length == 1) {
             text = text[0];
-            if (/^https:\/\/scryfall\.com\/card\/\w+\/[\w\-%]+\/[\w\-%()\/]+$/.test(text)) {
+            if (/^https:\/\/scryfall\.com\/card\/\w+\/[\w\-%]+\/[\w\-%()/]+$/.test(text)) {
                 const urlParts = text.split('/');
 
                 await openedCard.updateBySetNr(urlParts[4], urlParts[5]);
@@ -420,21 +421,21 @@ window.selectAllArt = function selectAllArt() {
     searchOptions.isExtendedArt = value;
 
     updateArtButtons();
-    openScryfall();
+    window.openScryfall();
 }
 
 window.selectExtendedArt = function selectWideArt() {
     searchOptions.isExtendedArt = !searchOptions.isExtendedArt;
 
     updateArtButtons();
-    openScryfall();
+    window.openScryfall();
 }
 
 window.selectFullArt = function selectFullArt() {
     searchOptions.isFullArt = !searchOptions.isFullArt;
 
     updateArtButtons();
-    openScryfall();
+    window.openScryfall();
 }
 
 window.selectFrameType = function selectFrameType(elem, frameType) {
@@ -445,7 +446,7 @@ window.selectFrameType = function selectFrameType(elem, frameType) {
         searchOptions.frames.push(frameType);
         elem.classList.add("selected");
     }
-    openScryfall();
+    window.openScryfall();
 }
 
 window.openScryfall = function openScryfall(card, evt) {
@@ -495,7 +496,7 @@ function cleanUpLocalStorage() {
 
 cleanUpLocalStorage();
 
-updatePdfCreation({});
+window.updatePdfCreation({});
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 

@@ -6,7 +6,6 @@ async function getDataUrl(src) {
     let image = new Image(src);
     if (promisseCache[src] == null)
         return promisseCache[src] = image.getDataUrl();
-    console.log("Image already loaded: " + src);
     return promisseCache[src];
 }
 

@@ -42,7 +42,7 @@ if (isMobile) {
                 entry.timestamp = new Date().toISOString();
 
                 return entry.blob;
-            } catch (_) {
+            } catch {
                 return null;
             }
         }
@@ -58,7 +58,7 @@ if (isMobile) {
             }
         }
 
-        static async clearOldSessions(session) {
+        static async clearOldSessions() {
         }
 
         static async getObjectStoreSize(session) {
@@ -69,6 +69,7 @@ if (isMobile) {
 } else {
     // Open (or create) the database
     const db = await openDB('imageCacheDB', 2, {
+        // eslint-disable-next-line no-unused-vars
         upgrade(db, oldVersion, newVersion, transaction, event) {
             if (oldVersion < 1) {
                 const objectStore = db.createObjectStore('images', { keyPath: 'uri' });
@@ -130,7 +131,7 @@ if (isMobile) {
                 await objectStore.delete(uri);
                 await objectStore.put(entry);
                 return entry.blob;
-            } catch (_) {
+            } catch {
                 return null;
             }
         }

@@ -113,7 +113,7 @@ class Card {
         }
         if (!match) {
             // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
-            const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-★]+)\/[\w\-%()\/]+)/;
+            const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-★]+)\/[\w\-%()/]+)/;
             format = Format.SCRYFALL;
             match = cardText.match(regexScryfall);
         }
@@ -141,9 +141,9 @@ class Card {
 
             const { count, name, set } = match.groups;
 
-            var card = new Card(parseInt(count, 10), format);
-            await card.searchByName(name, set);
-            return card;
+            var searchedCard = new Card(parseInt(count, 10), format);
+            await searchedCard.searchByName(name, set);
+            return searchedCard;
         }
 
         if (!match) {

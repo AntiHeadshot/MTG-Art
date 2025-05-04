@@ -11,8 +11,7 @@ let flippedCard = false;
 let triedFilters = false;
 
 let popup;
-function scrapeScryfall(evt) { popup = evt.data; scryfallViewed = true; };
-let scryfallViewed = false;
+function scrapeScryfall(evt) { popup = evt.data; };
 
 Events.on(Events.Type.TutorialStarted, () => Events.on(Events.Type.ScryfallOpened, scrapeScryfall));
 Events.on(Events.Type.TutorialEnded, () => Events.remove(Events.Type.ScryfallOpened, scrapeScryfall));
