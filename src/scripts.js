@@ -13,7 +13,7 @@ import View from './view.js';
 import Toaster from './toaster.js';
 import Scryfall from './scryfall.js';
 import isMobileBrowser from './browserdetection.js';
-import CodeMirror from './wrapper/codemirror.js';
+import CodeMirror from './wrapper/CodeMirror.js';
 
 let isMobile = isMobileBrowser(navigator.userAgent || navigator.vendor || window.opera);
 

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css"
+        integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script defer type="module" src="scripts.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
+    <div id="viewButtons">
+        <img id="defaultViewButton" title="input" src="img/input.svg" class="clickable gray border"
+            onclick="swapTo(View.Mode.INPUT); event.stopPropagation();">
+        <img id="artViewButton" title="art view" src="img/artView.svg" class="clickable gray border"
+            onclick="swapTo(View.Mode.ARTVIEW); event.stopPropagation(); parseDeck();">
+        <img id="pdfButton" title="pdf creation" src="img/pdf.svg" class="clickable gray border"
+            onclick="swapTo(View.Mode.PDF); event.stopPropagation();">
+        <img id="tutorialButton" title="start tutorial" src="img/tutorial.svg" class="clickable gray border"
+            onclick="localStorage.removeItem('finishedTutorial'); window.location.reload(); event.stopPropagation();">
+    </div>
+
+    <div id="cards" class="scrollbar">
+        <div id="cardContainer">
+            <div class="card" id="cardTemplate" style="display: none;" onclick="openScryfall(this.card, event)"
+                draggable="false" focusable="false" onmouseover="highlightDeckInput(this.card)"
+                onmouseout="removeHighlightDeckInput(this.card)">
+                <div class="cardFace">
+                    <img class="cardImg face" focusable="false" draggable="false" src="">
+                    <img class="cardFlipImg face" focusable="false" draggable="false" src="">
+                </div>
+                <img src="img/flip.svg" class="flipSvg gray border round clickable" draggable="false"
+                    onclick="this.parentElement.classList.toggle('flipped'); Events.dispatch(Events.Type.CardFlipped, this.card); event.stopPropagation();">
+                <img src="img/rollback.svg" class="rollbackSvg gray border round clickable" draggable="false"
+                    onclick="this.closest('.card').card.rollback(); event.stopPropagation();">
+                <img src="img/forward.svg" class="forwardSvg gray border round clickable" draggable="false"
+                    onclick="this.closest('.card').card.forward(); event.stopPropagation();">
+                <div class="update">
+                    <img src="img/update.svg" class="updateSvg" focusable="false" draggable="false" aria-hidden="true">
+                </div>
+            </div>
+        </div>
+        <div id="deckEnd"></div>
+    </div>
+    <div id="deckContainer">
+        <div class="searchButtons">
+            <div class="searchButtons">
+                <img src="img/allArt.svg" width="24" class="border transparent">
+                <img src="img/extendedArt.svg" width="24" class="border transparent">
+                <img src="img/fullArt.svg" width="24" class="border transparent">
+            </div>
+            <div class="searchButtons">
+                <img src="img/1993Frame.svg" width="24" class="border transparent">
+                <img src="img/1997Frame.svg" width="24" class="border transparent">
+                <img src="img/2003Frame.svg" width="24" class="border transparent">
+                <img src="img/2015Frame.svg" width="24" class="border transparent">
+                <img src="img/futureFrame.svg" width="24" class="border transparent">
+            </div>
+        </div>
+        <button id="loadDeck" onclick="parseDeck()">Load Deck</button>
+        <div style="align-self: center;">Convert to:</div>
+        <div id="convertButtons">
+            <button id="convertToScryfallBtn" disabled onclick="convertToFormat(Format.SCRYFALL)">
+                Scryfall Links
+            </button>
+            <button id="convertToDeckstatsBtn" disabled onclick="convertToFormat(Format.DECKSTATS)">
+                deckstats.net
+            </button>
+            <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">
+                MTG Print
+            </button>
+        </div>
+        <textarea id="deckInput"></textarea>
+    </div>
+    <div id="searchButtons" class="searchButtons">
+        <div class="searchButtons">
+            <img id="allArt" src="img/allArt.svg" width="24" class="selected allArtSvg gray border clickable"
+                draggable="false" title="show all arts" onclick="selectAllArt();">
+            <img id="extendedArt" src="img/extendedArt.svg" width="24"
+                class="selectExtendedArtSvg gray border clickable" draggable="false" title="show extended arts"
+                onclick="selectExtendedArt();">
+            <img id="fullArt" src="img/fullArt.svg" width="24" class="fullArtSvg gray border clickable"
+                draggable="false" title="show full arts" onclick="selectFullArt();">
+        </div>
+        <div class="searchButtons">
+            <img src="img/1993Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 1993 frames" onclick="selectFrameType(this, Frame._1993);">
+            <img src="img/1997Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 1997 frames" onclick="selectFrameType(this, Frame._1997);">
+            <img src="img/2003Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 2003 frames" onclick="selectFrameType(this, Frame._2003);">
+            <img src="img/2015Frame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show 2015 frames" onclick="selectFrameType(this, Frame._2015);">
+            <img src="img/futureFrame.svg" width="24" class="gray border clickable" draggable="false"
+                title="show future frames" onclick="selectFrameType(this, Frame.FUTURE);">
+        </div>
+    </div>
+    <div id="pdfContainer">
+        <div id="pdfInputs">
+            <div>
+                <label for="paperFormat">Paper format: </label>
+                <select id="paperFormat" onchange="updatePdfCreation({pageFormat: this.value});">
+                    <option selected>A4</option>
+                    <option>A3</option>
+                    <option>Letter</option>
+                </select>
+            </div>
+            <div>
+                <label for="borderMargin">Border Margin in mm: </label>
+                <input type="number" id="borderMargin" value="5"
+                    onchange="updatePdfCreation({borderMargin: Number(this.value)});">
+            </div>
+            <div>
+                <label for="cardSize">Card Size in %: </label>
+                <input type="number" id="cardSize" value="100" min="10" max="150"
+                    onchange="updatePdfCreation({scaling: Number(this.value)/100});">
+            </div>
+            <div id="cropMarkShapes">
+                <label>Cropmark: </label>
+                <img src="img/empty.svg" width="24" class="gray border clickable" draggable="false"
+                    title="no crop marks" data-value="none"
+                    onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+                <img src="img/plus.svg" width="24" class="gray border clickable" draggable="false"
+                    title="simple crop marks" data-value="lines"
+                    onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+                <img src="img/star.svg" width="24" class="gray border clickable" draggable="false"
+                    title="star shaped crop marks" data-value="star"
+                    onclick="updatePdfCreation({cropMarkShape: this.dataset.value});">
+            </div>
+            <div>
+                <label for="cropmarkSize">Cropmark size in mm: </label>
+                <input type="number" id="cropmarkSize" value="5"
+                    onchange="updatePdfCreation({cropMarkSize: Number(this.value)});">
+            </div>
+            <div>
+                <label for="cropMarkWidth">Cropmark line width in mm: </label>
+                <input type="number" id="cropMarkWidth" value=".5" step=".1"
+                    onchange="updatePdfCreation({cropMarkWidth: Number(this.value)});">
+            </div>
+            <div>
+                <label for="cropMarkWidth">Cropmark color: </label>
+                <input type="color" id="cropMarkColor" value="#ffffff"
+                    onchange="updatePdfCreation({cropMarkColor: this.value});">
+            </div>
+            <div>
+                <label for="cardMargin">Card Margin in mm: </label>
+                <input type="number" id="cardMargin" value="0"
+                    onchange="updatePdfCreation({cardMargin: Number(this.value)});">
+            </div>
+            <div>
+                <label for="skipBasicLands">Skip Basic Lands: </label>
+                <input type="checkbox" id="skipBasicLands"
+                    onchange="updatePdfCreation({skipBasicLands: this.checked});">
+            </div>
+            <div>
+                <button onclick="generatePdf(); event.stopPropagation()">create</button>
+                <button id="downloadPdf" disabled
+                    onclick="saveFile(document.getElementById('pdfView').src, cards.filter(c => c instanceof Card)[0].name + '.pdf'); event.stopPropagation()">save</button>
+            </div>
+        </div>
+        <div class="update">
+            <img src="img/update.svg" class="updateSvg" focusable="false" draggable="false" aria-hidden="true">
+        </div>
+        <img id="templateDisplay">
+        <img id="templateDisplayDetail">
+        <embed id="pdfView" type="application/pdf">
+    </div>
+    <div id="storeSizeDisplay" style="display: none;" class="circular-display">
+        <div class="circular-display-inner">
+            Used Storage<br />
+            <span id="storeSizeValue"></span>
+            MB
+        </div>
+    </div>
+    <div id="toaster">
+        <div id="toasterMessage"></div>
+        <div id="toasterProgress" class="progress-bar">
+            <div id="toasterProgressBar" class="progress-bar-inner"></div>
+        </div>
+    </div>
+    <div id="customContextMenu" class="context-menu">
+        On PC the generated Images from which the PDF <br />is created are saved locally. You can clear this <br />data
+        to free up
+        space, which is recomended, when <br />you are done with a deck. <br />(There is no detection for when you are
+        editing
+        <br />multiple decks at the same time.)
+        <ul>
+            <li onclick="cacheClearAll()">Clear all</li>
+            <li onclick="cacheClearOld()">Clear old</li>
+        </ul>
+    </div>
+    <div id="tutorial">
+        <div id="tutorialOverlay" class="tutorial-overlay"></div>
+        <div id="tutorialFrame" class="tutorial-frame"></div>
+        <div id="tutorialContentContainer" class="tutorial-content-container">
+            <div id="tutorialContent" class="tutorial-content">
+                <p id="tutorialText"></p>
+                <button id="prevButton" onclick="Tutorial.prevStep(event)">Previous</button>
+                <button id="nextButton" onclick="Tutorial.nextStep(event)">Next</button>
+                <button id="endButton" onclick="Tutorial.end()">X</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
