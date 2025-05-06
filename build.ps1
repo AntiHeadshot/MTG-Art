@@ -21,13 +21,8 @@ function EscapeNonAscii
     }
 }
 
-rmdir dist -Recurse -Force
-mkdir dist
+#rollup -f es src/scripts.js | EscapeNonAscii > docs/scripts.js
+rollup -f es src/scripts.js | EscapeNonAscii | uglifyjs -c -m --toplevel -O ascii_only > docs/scripts.js
+cat src/styles.css | uglifycss > docs/styles.css
 
-#rollup -f es src/scripts.js | EscapeNonAscii > dist/scripts.js
-rollup -f es src/scripts.js | EscapeNonAscii | uglifyjs -c -m --toplevel -O ascii_only > dist/scripts.js
-cat src/styles.css | uglifycss > dist/styles.css
-
-copy src/index.html dist/index.html
-
-Get-ChildItem -Path dist -Recurse -Directory | Where-Object { (Get-ChildItem -Path $_.FullName -Recurse | Measure-Object).Count -eq 0 } | Remove-Item -Recurse -Force
+copy src/index.html docs/index.html

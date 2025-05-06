@@ -55,7 +55,7 @@ Tutorial.addStep({
 
 Tutorial.addStep({
     getElement: async () => {
-        let template = await fetch('placeholder.txt');
+        let template = await fetch('assets/placeholder.txt');
         document.querySelector('.CodeMirror').CodeMirror.doc.setValue(await template.text());
 
         return document.querySelector('#loadDeck')

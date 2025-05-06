@@ -250,7 +250,7 @@ async function loadDeckstatDeck(userId, deckId) {
     if (sets)
         sets = JSON.parse(sets);
     else {
-        const setsResponse = await fetch('deckstats_sets.json');
+        const setsResponse = await fetch('assets/deckstats_sets.json');
         const setsData = await setsResponse.json();
         sets = setsData;
         localStorage.setItem('deckstatSets', JSON.stringify(sets));
