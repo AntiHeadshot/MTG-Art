@@ -28,18 +28,15 @@ let neededTokens = [];
 let cards = [];
 
 class Card {
-    constructor(count, format, set, nr, name, cardId, oracleId, imageUri) {
+    constructor(count, format) {
         cardCnt++;
         this.count = count;
         this.format = format;
-        this.set = set;
-        this.nr = nr;
-        this.name = name;
-        this.cardId = cardId;
+
         this.isToken = false;
-        this.oracleId = oracleId;
-        this.imageUri = imageUri;
+
         this.isBasicLand = false;
+        this.imageUris = [];
         this.highResImageUris = [];
         this.history = [];
         this.future = [];
@@ -196,7 +193,7 @@ class Card {
                 this.isUndefined = true;
                 this.set = set;
                 this.nr = nr;
-                this.imageUri = "img/undefinedCard.svg";
+                this.imageUris[0] = "img/undefinedCard.svg";
                 this.name = "undefined";
                 this.searchName = name;
                 this.updateElem();
@@ -229,7 +226,7 @@ class Card {
                 this.isUndefined = card.isUndefined;
                 this.applyCardData(card);
             } else {
-                this.imageUri = "img/undefinedCard.svg";
+                this.imageUris[0] = "img/undefinedCard.svg";
                 this.name = name;
                 this.isUndefined = true;
                 this.updateElem();
@@ -246,13 +243,11 @@ class Card {
         if (!data.image_uris) {
             this.twoFaced = true;
             this.imageUris = [data.card_faces[0].image_uris.normal, data.card_faces[1].image_uris.normal];
-            this.imageUri = this.imageUris[0];
             this.highResImageUris.push(data.card_faces[0].image_uris.large);
             this.highResImageUris.push(data.card_faces[1].image_uris.large);
         } else {
             this.twoFaced = false;
-            this.imageUri = data.image_uris.normal;
-            this.imageUris = [];
+            this.imageUris = [data.image_uris.normal];
             this.highResImageUris.push(data.image_uris.large);
         }
         this.set = data.set.toUpperCase();
@@ -274,7 +269,7 @@ class Card {
             return;
         this.elem = elem;
 
-        elem.querySelector(".cardImg").src = this.imageUri;
+        elem.querySelector(".cardImg").src = this.imageUris[0];
 
         if (this.twoFaced) {
             elem.classList.add("twoFaced");

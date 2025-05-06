@@ -1,165 +1,122 @@
 import getSettings from './printSettings.js';
-import blobStream from './wrapper/blobStream.js';
-import getDataUrl from './image.js';
+//import getDataUrl from './image.js';
 import CropMark from './cropmark.js';
 
-let lastUrl;
-
-class ImageDocument2 {
+class ImageDocumentPreview {
     constructor(options) {
         this.options = options;
 
-        this.images = [];
+        this.cards = [];
     }
 
-    addImage(count, image) {
-        this.images.push({ count, image });
+    addImage(count, card) {
+        this.cards.push({ count, card });
     }
 
     async create(updateCallback) {
-        let settings = getSettings(this.options);
+        const ptToPx = 1.333;
 
-        const doc = settings.doc;
+        let settings = getSettings(this.options, ptToPx);
 
-        // eslint-disable-next-line no-async-promise-executor
-        return new Promise(async resolve => {
-            const stream = settings.doc.pipe(blobStream());
-            stream.on('finish', function () {
-                const blob = stream.toBlob('application/pdf');
-                const url = URL.createObjectURL(blob);
+        let svg = document.createElement('svg');
 
-                if (lastUrl)
-                    URL.revokeObjectURL(lastUrl);
-                lastUrl = url;
+        svg.setAttribute('version', '1.1');
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('viewBox', `0 0 ${this.options.pageWidth} ${this.options.pageHeight}`);
 
-                resolve(url);
-            });
+        var imgNr = 0;
 
-            var imgNr = 0;
+        let cards = this.cards.flatMap(card => Array(card.count).flatMap(() => card.card.imageUris.map((u, i) => ({ imageUri: u, highResImageUri: card.card.highResImageUris[i] }))));
 
-            let imageIds = this.images.flatMap(img => Array(img.count).fill(img.image));
-            var maxStep = imageIds.length;
+        var maxStep = cards.length * 5;
 
-            let lastImage = "";
-            let dataUrl;
+        let dataUrl;
+        let pageNr = 0;
+        let progress = 0;
 
-            while (imgNr < imageIds.length) {
-                if (imgNr > 0)
-                    doc.addPage(settings.pageOptions);
+        updateCallback(0);
 
-                for (let y = 0, yPos = settings.marginY; y < settings.yCnt && imgNr < imageIds.length; y++, yPos += settings.mtgHeight + settings.cardMargin) {
-                    for (let x = 0, xPos = settings.marginX; x < settings.xCnt && imgNr < imageIds.length; x++, xPos += settings.mtgWidth + settings.cardMargin, imgNr++) {
-                        updateCallback((imgNr) / maxStep);
+        while (imgNr < cards.length) {
 
-                        let image = imageIds[imgNr];
-                        if (lastImage != image) {
-                            dataUrl = await getDataUrl(image);
-                            lastImage = image;
-                        }
-                        doc.image(dataUrl, xPos, yPos, { width: settings.mtgWidth, height: settings.mtgHeight });
-                    }
+            let page = svg.createElement('rect');
+
+            page.setAttribute('stroke', 'black');
+            page.setAttribute('width', settings.pageWidth);
+            page.setAttribute('height', settings.pageHeight);
+            page.setAttribute('y', pageNr * (settings.pageHeight + 16));
+
+            svg.childNodes.push(page);
+
+            for (let y = 0, yPos = settings.marginY; y < settings.yCnt && imgNr < cards.length; y++, yPos += settings.mtgHeight + settings.cardMargin) {
+                for (let x = 0, xPos = settings.marginX; x < settings.xCnt && imgNr < cards.length; x++, xPos += settings.mtgWidth + settings.cardMargin, imgNr++) {
+
+                    let card = cards[imgNr];
+
+                    let img = (dataUrl, xPos, yPos, { width: settings.mtgWidth, height: settings.mtgHeight });
+
+                    img.setAttribute('x', xPos);
+                    img.setAttribute('y', yPos);
+                    img.setAttribute('width', settings.mtgWidth);
+                    img.setAttribute('height', settings.mtgHeight);
+                    img.setAttribute('href', card.imageUri);
+
+                    //getDataUrl(card.highResImageUri).then(dataUrl => { img.setAttribute('href', dataUrl); });
+
+                    page.appendChild(img);
+
+                    progress++;
+                    updateCallback(progress / maxStep);
                 }
+            }
 
-                let cl_2 = settings.cropMarkSize / 2;
+            let cl_2 = settings.cropMarkSize / 2;
 
-                if (settings.cropMarkShape != CropMark.NONE)
-                    for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
-                        for (let x = 0, xPos = settings.marginX; x <= settings.xCnt; x++, xPos += settings.mtgWidth + settings.cardMargin) {
-                            {
-                                switch (settings.cropMarkShape) {
-                                    case CropMark.STAR:
-                                        {
-                                            let inset = cl_2 * .9;
-                                            let insetO = cl_2 - inset;
-                                            doc.path(`M ${xPos - cl_2},${yPos} `
-                                                + `c ${inset},${insetO} ${inset},${insetO} ${cl_2},${cl_2} `
-                                                + `c ${insetO},-${inset} ${insetO},-${inset} ${cl_2},-${cl_2} `
-                                                + `c -${inset},-${insetO} -${inset},-${insetO} -${cl_2},-${cl_2} `
-                                                + `c -${insetO},${inset} -${insetO},${inset} -${cl_2},${cl_2} `
-                                            )
-                                                .lineWidth(0)
-                                                .fillColor(settings.cropMarkColor)
-                                            doc.fill();
-                                        }
-                                        break;
-                                    case CropMark.LINES:
-                                    default:
-                                        doc.lineCap('round')
-                                            .lineWidth(settings.cropMarkWidth)
-                                            .moveTo(xPos, yPos - settings.cropMarkSize).lineTo(xPos, yPos + settings.cropMarkSize)
-                                            .moveTo(xPos - settings.cropMarkSize, yPos).lineTo(xPos + settings.cropMarkSize, yPos)
-                                            .stroke(settings.cropMarkColor);
-                                        break;
-                                }
+            if (settings.cropMarkShape != CropMark.NONE)
+                for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
+                    for (let x = 0, xPos = settings.marginX; x <= settings.xCnt; x++, xPos += settings.mtgWidth + settings.cardMargin) {
+                        {
+                            switch (settings.cropMarkShape) {
+                                case CropMark.STAR:
+                                    {
+                                        let inset = cl_2 * .9;
+                                        let insetO = cl_2 - inset;
+
+                                        let star = svg.createElement('path');
+                                        star.setAttribute('stroke-width', '0');
+                                        star.setAttribute('fill', settings.cropMarkColor);
+                                        star.setAttribute('d', `M ${xPos - cl_2},${yPos} `
+                                            + `c ${inset},${insetO} ${inset},${insetO} ${cl_2},${cl_2} `
+                                            + `c ${insetO},-${inset} ${insetO},-${inset} ${cl_2},-${cl_2} `
+                                            + `c -${inset},-${insetO} -${inset},-${insetO} -${cl_2},-${cl_2} `
+                                            + `c -${insetO},${inset} -${insetO},${inset} -${cl_2},${cl_2}`);
+
+                                        page.appendChild(star);
+                                    }
+                                    break;
+                                case CropMark.LINES:
+                                default:
+                                    {
+                                        let line = svg.createElement('path');
+
+                                        line.setAttribute('stroke-width', settings.cropMarkWidth);
+                                        line.setAttribute('stroke', settings.cropMarkColor);
+                                        line.setAttribute('stroke-linecap', 'round');
+                                        line.setAttribute('fill', 'transparent');
+                                        line.setAttribute('d', `M${xPos},${yPos - cl_2} v${settings.cropMarkSize} M${xPos - cl_2},${yPos} h${settings.cropMarkSize}`);
+
+                                        page.appendChild(line);
+                                    }
+                                    break;
                             }
                         }
                     }
-            }
-
-            updateCallback(1);
-            doc.end();
-        });
-    }
-}
-
-
-class ImageDocumentPreview {
-
-    static create(options) {
-        const ptToPx = 1.333;
-
-        let settings = getSettings(options, ptToPx);
-
-        let svg = [];
-        svg.push(`<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">`);
-        svg.push(`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${settings.pageWidth} ${settings.pageHeight}">`);
-
-        svg.push(`<rect fill="white" `
-            + `width="${settings.pageWidth}" height="${settings.pageHeight}"></rect>`);
-        for (let y = 0, yPos = settings.marginY; y < settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
-            for (let x = 0, xPos = settings.marginX; x < settings.xCnt; x++, xPos += settings.mtgWidth + settings.cardMargin) {
-                svg.push(`<rect fill="gray" x="${xPos}" y="${yPos}" width="${settings.mtgWidth}" height="${settings.mtgHeight}"></rect>`);
-                svg.push(`<rect stroke="red" stroke-width="0.3mm" fill="transparent" rx="${settings.cornerRadius}" x="${xPos}" y="${yPos}" width="${settings.mtgWidth}" height="${settings.mtgHeight}"></rect>`);
-            }
-        }
-
-        let cl_2 = settings.cropMarkSize / 2;
-
-        if (options.cropMarkShape != CropMark.NONE)
-            for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
-                for (let x = 0, xPos = settings.marginX; x <= settings.xCnt; x++, xPos += settings.mtgWidth + settings.cardMargin) {
-                    {
-                        switch (options.cropMarkShape) {
-                            case CropMark.STAR:
-                                {
-                                    let inset = cl_2 * .9;
-                                    let insetO = cl_2 - inset;
-                                    svg.push(`<path stroke-width="0" fill="${options.cropMarkColor}" d="M ${xPos - cl_2},${yPos} `
-                                        + `c ${inset},${insetO} ${inset},${insetO} ${cl_2},${cl_2} `
-                                        + `c ${insetO},-${inset} ${insetO},-${inset} ${cl_2},-${cl_2} `
-                                        + `c -${inset},-${insetO} -${inset},-${insetO} -${cl_2},-${cl_2} `
-                                        + `c -${insetO},${inset} -${insetO},${inset} -${cl_2},${cl_2}"></path>`);
-                                }
-                                break;
-                            case CropMark.LINES:
-                            default:
-                                svg.push(`<path stroke-width="${options.cropMarkWidth}" stroke="${options.cropMarkColor}" stroke-linecap="round" fill="transparent" `
-                                    + `d="M${xPos},${yPos - cl_2} v${settings.cropMarkSize} M${xPos - cl_2},${yPos} h${settings.cropMarkSize}"></path>`);
-                                break;
-                        }
-                    }
                 }
-            }
 
-        svg.push("</svg>");
-        return {
-            svg: svg.join("\n")
-            , corner: { x: (settings.marginX + settings.mtgWidth + .5 * settings.cardMargin) / settings.pageWidth, y: (settings.marginY + settings.mtgHeight + .5 * settings.cardMargin) / settings.pageHeight }
-            , scale: (settings.cardMargin + settings.cornerRadius * 4) / settings.pageWidth
-        };
+            pageNr++;
+        }
+        return svg;
     }
 }
-
-export { ImageDocumentPreview, ImageDocument2 };
 
 export default ImageDocumentPreview;
+export { ImageDocumentPreview };
