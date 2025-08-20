@@ -200,7 +200,7 @@ window.parseDeck = async function parseDeck() {
         card.lineNr = i - lineOffset;
 
         var line = view.getLine(i);
-        view.replaceRange(card.getDescription() + "✔️", { line: i, ch: 0 }, { line: i, ch: line.length });
+        view.replaceRange(card.getDescription() + "	\u2714\uFE0F", { line: i, ch: 0 }, { line: i, ch: line.length });
 
         var clone = template.cloneNode(true);
         clone.card = card;
