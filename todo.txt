@@ -6,3 +6,6 @@
 
 - add preview for pdf for faster viewing.
     -> Seperate loading images from PDF Creation
+
+- add ability to suppress one side of double sided cards
+    -> Add tutorial for that

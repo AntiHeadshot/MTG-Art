@@ -238,7 +238,7 @@ class Card {
 
     applyCardData(data) {
         this.cardId = data.id;
-        this.oracleId = data.oracle_id;
+        this.oracleId = data.oracle_id ?? data.card_faces?.[0]?.oracle_id ?? data.card_faces?.[1]?.oracle_id;
         this.highResImageUris = [];
         if (!data.image_uris) {
             this.twoFaced = true;
@@ -254,8 +254,8 @@ class Card {
         this.nr = data.collector_number;
         this.name = data.name;
         this.scryfall_uri = data.scryfall_uri;
-        this.isBasicLand = data.type_line.startsWith("Basic Land ");
-        this.isToken = data.type_line.startsWith("Token");
+        this.isBasicLand = data.type_line?.startsWith("Basic Land ")??false;
+        this.isToken = data.type_line?.startsWith("Token")??false;
         if (!this.isToken && data.all_parts)
             data.all_parts.filter(p => p.type_line.startsWith("Token")).forEach(t => neededTokens.push({ card: this, tokenId: t.id }));
 

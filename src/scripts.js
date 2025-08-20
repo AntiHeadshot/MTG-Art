@@ -501,7 +501,7 @@ window.updatePdfCreation({});
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 
 async function initDeck() {
-    let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text()
+    let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('assets/placeholder.txt')).text()
     view.doc.setValue(deckText);
     if (isMobile)
         document.getElementById("tutorialButton").style.display = 'none';
