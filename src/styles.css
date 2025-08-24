@@ -255,11 +255,12 @@ svg {
         flex-direction: row;
         justify-content: right;
         gap: -7px;
-
-        svg, img{
-            display: inline-block;
-        }
     }
+}
+
+.card .printSettings svg,
+.card .printSettings img{
+    display: inline-block;
 }
 
 .card.flipped {
