@@ -130,6 +130,7 @@ svg {
 
 .searchButtons img.selected,
 #cropMarkShapes img.selected,
+.printSettings img.selected,
 #defaultViewButton,
 .artView #artViewButton,
 .pdfView #pdfButton {
@@ -176,6 +177,11 @@ svg {
         /* Safari */
         -webkit-backface-visibility: hidden;
         margin-bottom: -4px;
+        transition: filter 0.5s ease-in-out;
+    }
+
+    .grayed {
+        filter: grayscale(50%) contrast(0.3);
     }
 
     .cardFlipImg {
@@ -192,6 +198,10 @@ svg {
         width: 28px;
         bottom: 20px;
         z-index: 1000;
+    }
+
+    .printSettings {
+        display: none;
     }
 
     .rollbackSvg {
@@ -232,6 +242,23 @@ svg {
 
     .cardFlipImg {
         display: block;
+    }
+
+    .printSettings {
+        position: absolute;
+        Bottom: 4px;
+        right: 4px;
+        z-index: 1000;
+        height: 32px;
+        align-items: right;
+        display: flex;
+        flex-direction: row;
+        justify-content: right;
+        gap: -7px;
+
+        svg, img{
+            display: inline-block;
+        }
     }
 }
 
@@ -319,6 +346,18 @@ svg.border {
 img.border.round,
 svg.border.round {
     border-radius: 50%;
+}
+
+img.border.roundLeft,
+svg.border.roundLeft {
+    border-radius: 50% 0 0 50%;
+    margin-right: -2px;
+    padding-left: 4px;
+}
+
+img.border.roundRight,
+svg.border.roundRight {
+    border-radius: 0 50% 50% 0;
 }
 
 #deckEnd {

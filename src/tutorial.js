@@ -14,6 +14,30 @@ let prevButton = document.getElementById("prevButton");
 let nextButton = document.getElementById("nextButton");
 
 class Tutorial {
+
+    static async showPopup(text) {
+        document.getElementById('tutorial').style.display = 'inherit';
+        isOpen = true;
+
+        const tutorialFrame = document.getElementById('tutorialFrame');
+        const tutorialText = document.getElementById('tutorialText');
+        const endButton = document.getElementById('endButton');
+
+        tutorialText.innerHTML = text;
+        tutorialFrame.style.display = 'none';
+
+        prevButton.disabled = true;
+        nextButton.disabled = true;       
+
+        function handleClose() {
+            document.getElementById('tutorial').style.display = 'none';
+            isOpen = false;
+            endButton.removeEventListener('mousedown', handleClose);
+            tutorialFrame.style.display = 'block';
+        }
+        endButton.addEventListener('mousedown', handleClose);
+    }
+
     static start() {
         document.getElementById('tutorial').style.display = 'inherit';
         isOpen = true;
@@ -109,6 +133,9 @@ class Tutorial {
     }
 
     static end() {
+        if(!isOpen)
+            return;
+
         Events.dispatch(Events.Type.TutorialEnded);
 
         document.getElementById('tutorial').style.display = 'none';
@@ -134,7 +161,7 @@ class Tutorial {
                 rejectLast = null;
                 resolve();
             }
-    
+
             Events.on(eventType, resolveThis);
             if (callBeforeWait)
                 callBeforeWait();
