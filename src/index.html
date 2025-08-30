@@ -20,6 +20,8 @@
             onclick="swapTo(View.Mode.PDF); event.stopPropagation();">
         <img id="tutorialButton" title="start tutorial" src="img/tutorial.svg" class="clickable gray border"
             onclick="localStorage.removeItem('finishedTutorial'); window.location.reload(); event.stopPropagation();">
+        <img id="newButton" title="release info" src="img/whatsnew.svg" class="clickable gray border"
+            onclick="fetch('assets/news.html').then(d=>d.text().then(t=>Tutorial.showPopup(t))); event.stopPropagation();">
     </div>
 
     <div id="cards" class="scrollbar">
@@ -30,6 +32,14 @@
                 <div class="cardFace">
                     <img class="cardImg face" focusable="false" draggable="false" src="">
                     <img class="cardFlipImg face" focusable="false" draggable="false" src="">
+                </div>
+                <div class="printSettings">
+                    <img src="img/printFront.svg" class="printFrontSvg gray border roundLeft clickable" draggable="false"
+                        onclick="this.closest('.card').card.selectPrint(Print.FRONT); event.stopPropagation();"
+                        title="print front art">
+                    <img src="img/printBack.svg" class="printBackSvg gray border roundRight clickable" draggable="false"
+                        onclick="this.closest('.card').card.selectPrint(Print.BACK); event.stopPropagation();"
+                        title="print back art">
                 </div>
                 <img src="img/flip.svg" class="flipSvg gray border round clickable" draggable="false"
                     onclick="this.parentElement.classList.toggle('flipped'); Events.dispatch(Events.Type.CardFlipped, this.card); event.stopPropagation();">
@@ -77,24 +87,24 @@
     <div id="searchButtons" class="searchButtons">
         <div class="searchButtons">
             <img id="allArt" src="img/allArt.svg" width="24" class="selected allArtSvg gray border clickable"
-                draggable="false" title="show all arts" onclick="selectAllArt();">
+                draggable="false" title="show all arts on Scryfall" onclick="selectAllArt();">
             <img id="extendedArt" src="img/extendedArt.svg" width="24"
-                class="selectExtendedArtSvg gray border clickable" draggable="false" title="show extended arts"
+                class="selectExtendedArtSvg gray border clickable" draggable="false" title="show extended arts on Scryfall"
                 onclick="selectExtendedArt();">
             <img id="fullArt" src="img/fullArt.svg" width="24" class="fullArtSvg gray border clickable"
-                draggable="false" title="show full arts" onclick="selectFullArt();">
+                draggable="false" title="show full arts on Scryfall" onclick="selectFullArt();">
         </div>
         <div class="searchButtons">
             <img src="img/1993Frame.svg" width="24" class="gray border clickable" draggable="false"
-                title="show 1993 frames" onclick="selectFrameType(this, Frame._1993);">
+                title="show 1993 frames on Scryfall" onclick="selectFrameType(this, Frame._1993);">
             <img src="img/1997Frame.svg" width="24" class="gray border clickable" draggable="false"
-                title="show 1997 frames" onclick="selectFrameType(this, Frame._1997);">
+                title="show 1997 frames on Scryfall" onclick="selectFrameType(this, Frame._1997);">
             <img src="img/2003Frame.svg" width="24" class="gray border clickable" draggable="false"
-                title="show 2003 frames" onclick="selectFrameType(this, Frame._2003);">
+                title="show 2003 frames on Scryfall" onclick="selectFrameType(this, Frame._2003);">
             <img src="img/2015Frame.svg" width="24" class="gray border clickable" draggable="false"
-                title="show 2015 frames" onclick="selectFrameType(this, Frame._2015);">
+                title="show 2015 frames on Scryfall" onclick="selectFrameType(this, Frame._2015);">
             <img src="img/futureFrame.svg" width="24" class="gray border clickable" draggable="false"
-                title="show future frames" onclick="selectFrameType(this, Frame.FUTURE);">
+                title="show future frames on Scryfall" onclick="selectFrameType(this, Frame.FUTURE);">
         </div>
     </div>
     <div id="pdfContainer">

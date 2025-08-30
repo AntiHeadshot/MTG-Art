@@ -20,7 +20,7 @@ Tutorial.addStep({
     getElement: () => document.querySelector('#tutorialContent'),
     text: `Welcome
 <br>
-<br>You can start the tutorial again anytime, if you want.`,
+<br>You can start the tutorial again anytime, if you want. &#x1F44D;`,
 });
 
 Tutorial.addStep({
@@ -205,7 +205,7 @@ Tutorial.addStep({
 Tutorial.addStep({
     getElement: () => document.querySelector('#cards'),
     getFrameElement: () => document.querySelector('#tutorialContent'),
-    text: 'Thank you!<br>Now have fun choosing artworks 😄',
+    text: 'Thank you!<br>Now have fun choosing artworks &#x1F604;',
 });
 
 // TODO create a tutorial for the PDF creation

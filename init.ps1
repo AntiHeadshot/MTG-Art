@@ -1,4 +1,4 @@
-npm install uglifyjs -g
+npm install uglify-js -g
 npm install uglifycss -g  
 npm install rollup -g
 

@@ -4,7 +4,7 @@ import CropMark from './cropmark.js';
 import { ImageDocument } from './pdfCreation.js';
 import { ImageDocumentTemplate } from './templateCreation.js';
 import ImageCache from './imageCache.js';
-import { Card, Format, Frame } from './card.js';
+import { Card, Format, Frame, Print } from './card.js';
 import Tutorial from './tutorial.js';
 import './tutorialDefinition.js';
 import Events from './events.js';
@@ -56,6 +56,7 @@ window.Events = Events;
 window.View = View;
 window.Format = Format;
 window.Frame = Frame;
+window.Print = Print;
 window.CropMark = CropMark;
 window.Card = Card;
 
@@ -200,7 +201,7 @@ window.parseDeck = async function parseDeck() {
         card.lineNr = i - lineOffset;
 
         var line = view.getLine(i);
-        view.replaceRange(card.getDescription() + "✔️", { line: i, ch: 0 }, { line: i, ch: line.length });
+        view.replaceRange(card.getDescription() + "	\u2714\uFE0F", { line: i, ch: 0 }, { line: i, ch: line.length });
 
         var clone = template.cloneNode(true);
         clone.card = card;
@@ -368,8 +369,12 @@ window.generatePdf = async function generatePdf() {
     for (const card of cards)
         if (card instanceof Card)
             if (!(card.isBasicLand && printOptions.skipBasicLands))
-                for (var img of card.highResImageUris)
-                    imageDocument.addImage(card.count, img);
+                if (card.twoFaced)
+                    for (var img of card.printOptions.map(po => po == Print.FRONT ? card.highResImageUris[0] : po == Print.BACK ? card.highResImageUris[1] : null).filter(uri => uri != null))
+                        imageDocument.addImage(card.count, img);
+                else
+                    for (var img of card.highResImageUris)
+                        imageDocument.addImage(card.count, img);
 
     document.getElementById("pdfContainer").classList.add("updating");
 
@@ -501,13 +506,13 @@ window.updatePdfCreation({});
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
 
 async function initDeck() {
-    let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('placeholder.txt')).text()
+    let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('assets/placeholder.txt')).text();
     view.doc.setValue(deckText);
+    window.Tutorial = Tutorial;
+
     if (isMobile)
         document.getElementById("tutorialButton").style.display = 'none';
     else {
-        window.Tutorial = Tutorial;
-
         if (localStorage.getItem('finishedTutorial') == null)
             Tutorial.start();
     }
