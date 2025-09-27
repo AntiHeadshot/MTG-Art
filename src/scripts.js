@@ -3,6 +3,7 @@
 import CropMark from './cropmark.js';
 import { ImageDocument } from './pdfCreation.js';
 import { ImageDocumentTemplate } from './templateCreation.js';
+import { ImageDocumentPreview } from './previewCreation.js';
 import ImageCache from './imageCache.js';
 import { Card, Format, Frame, Print } from './card.js';
 import Tutorial from './tutorial.js';
@@ -364,25 +365,35 @@ window.swapTo = function swapTo(target) {
 window.generatePdf = async function generatePdf() {
     Toaster.show("generating PDF");
 
-    var imageDocument = new ImageDocument(printOptions);
+    var imageDocument = new ImageDocumentPreview(printOptions);
 
     for (const card of cards)
         if (card instanceof Card)
             if (!(card.isBasicLand && printOptions.skipBasicLands))
-                if (card.twoFaced)
-                    for (var img of card.printOptions.map(po => po == Print.FRONT ? card.highResImageUris[0] : po == Print.BACK ? card.highResImageUris[1] : null).filter(uri => uri != null))
-                        imageDocument.addImage(card.count, img);
-                else
-                    for (var img of card.highResImageUris)
-                        imageDocument.addImage(card.count, img);
+                imageDocument.addCard(card.count, card);
 
-    document.getElementById("pdfContainer").classList.add("updating");
+    // var imageDocument = new ImageDocument(printOptions);
 
-    return imageDocument.create((p) => Toaster.show("generating PDF", p)).then(url => {
-        document.getElementById("pdfView").src = url;
-        document.getElementById("downloadPdf").disabled = false;
-        document.getElementById("pdfContainer").classList.remove("updating");
-    });
+    // for (const card of cards)
+    //     if (card instanceof Card)
+    //         if (!(card.isBasicLand && printOptions.skipBasicLands))
+    //             if (card.twoFaced)
+    //                 for (let img of card.printOptions.map(po => po == Print.FRONT ? card.highResImageUris[0] : po == Print.BACK ? card.highResImageUris[1] : null).filter(uri => uri != null))
+    //                     imageDocument.addImage(card.count, img);
+    //             else
+    //                 for (let img of card.highResImageUris)
+    //                     imageDocument.addImage(card.count, img);
+
+    // document.getElementById("pdfContainer").classList.add("updating");
+
+    var containerDiv = imageDocument.create((p) => Toaster.show("generating PDF", p));
+    document.getElementById("pdfPreview").appendChild(containerDiv);
+
+    // return imageDocument.create((p) => Toaster.show("generating PDF", p)).then(url => {
+    //     document.getElementById("pdfView").src = url;
+    //     document.getElementById("downloadPdf").disabled = false;
+    //     document.getElementById("pdfContainer").classList.remove("updating");
+    // });
 }
 
 window.updatePdfCreation = function updatePdfCreation(targetOptions) {

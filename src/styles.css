@@ -488,9 +488,17 @@ button {
     flex-direction: column;
 }
 
-#pdfContainer embed {
+#pdfContainer #pdfDisplay {
     flex-grow: 1;
+    position: relative;
     resize: none;
+}
+ 
+#pdfPreview,
+#pdfView{
+    height: 100%;
+    width: 100%;
+    position: absolute;
 }
 
 .pdfView #pdfContainer {
@@ -521,8 +529,7 @@ button {
 
 .CodeMirror-focused .CodeMirror-selected,
 .CodeMirror-selected {
-    background: purple;
-    box-shadow: 0 0 8px 8px purple;
+    background: purple;    box-shadow: 0 0 8px 8px purple;
 }
 
 .isUndefined {
