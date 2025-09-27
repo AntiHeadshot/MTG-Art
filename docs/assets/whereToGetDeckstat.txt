@@ -1,0 +1,1 @@
+https://deckstats.net/api.php?action=get_sets&response_type=list

@@ -173,7 +173,8 @@ window.parseDeck = async function parseDeck() {
     if (deckUrlMatch) {
         const { userId, deckId } = deckUrlMatch.groups;
         try {
-            view.doc.setValue(await loadDeckstatDeck(userId, deckId));
+            deckText = await loadDeckstatDeck(userId, deckId);
+            view.doc.setValue(deckText);
         } catch (error) {
             print("Deck could not be loaded; " + JSON.stringify(error.toString()));
         }
@@ -247,22 +248,19 @@ async function loadDeckstatDeck(userId, deckId) {
     const response = await fetch(`https://deckstats.net/api.php?action=get_deck&id_type=saved&owner_id=${userId}&id=${deckId}&response_type=json`);
     const deckData = await response.json();
 
-    var sets = localStorage.getItem('deckstatSets');
-
-    if (sets)
-        sets = JSON.parse(sets);
-    else {
-        const setsResponse = await fetch('assets/deckstats_sets.json');
-        const setsData = await setsResponse.json();
-        sets = setsData;
-        localStorage.setItem('deckstatSets', JSON.stringify(sets));
-    }
+    const setsResponse = await fetch('assets/deckstats_sets.json');
+    const setsData = await setsResponse.json();
+    var sets = setsData;
 
     function getCardText(card) {
-        if (card.set_id) {
-            if (card.collector_number)
-                return `${card.amount} [${sets[card.set_id].abbreviation}#${card.collector_number}] ${card.name}`;
-            return `${card.amount} [${sets[card.set_id].abbreviation}] ${card.name}`;
+        try {
+            if (card.set_id) {
+                if (card.collector_number)
+                    return `${card.amount} [${sets[card.set_id].abbreviation}#${card.collector_number}] ${card.name}`;
+                return `${card.amount} [${sets[card.set_id].abbreviation}] ${card.name}`;
+            }
+        } catch {
+            ;
         }
         return `${card.amount} ${card.name}`;
     }

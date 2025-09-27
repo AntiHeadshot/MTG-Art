@@ -149,6 +149,10 @@ class Card {
                 match = cardText.match(regexUndefined);
             }
 
+            if(!match){
+                ;
+            }
+
             const { count, name, set } = match.groups;
 
             var searchedCard = new Card(parseInt(count, 10), format);

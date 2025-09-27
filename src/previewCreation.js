@@ -24,8 +24,8 @@ class ImageDocumentPreview {
         var imgNr = 0;
 
         let cards1 = this.cards.map(card => Array(card.count).fill(card.card)).flat(1);
-        let cards2 = cards1.map(card => card.twoFaced ? card.printOptions.map(po => (po == Print.FRONT) ? { u: card.imageUris[0], i: 0 } : (po == Print.BACK) ? { u: card.imageUris[1], i: 1 } : null) : [{ u: card.imageUris[0], i: 0 }]
-            .filter(c => c != null)
+        let cards2 = cards1.map(card => (card.twoFaced ? card.printOptions.map(po => (po == Print.FRONT) ? { u: card.imageUris[0], i: 0 } : (po == Print.BACK) ? { u: card.imageUris[1], i: 1 } : null) : [{ u: card.imageUris[0], i: 0 }]
+            .filter(c => c != null))
             .map(c => ({ card, u: c.u, i: c.i }))).flat(1);
         let cards = cards2.map(x => ({ imageUri: x.u, highResImageUri: x.card.highResImageUris[x.i] }));
 
