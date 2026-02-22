@@ -1,6 +1,6 @@
 import getSettings from './printSettings.js';
 import blobStream from './wrapper/blobStream.js';
-import getDataUrl from './image.js';
+import { getDataUrl, editImageBrightness } from './image.js';
 import CropMark from './cropmark.js';
 
 let lastUrl;
@@ -12,8 +12,8 @@ class ImageDocument {
         this.images = [];
     }
 
-    addImage(count, image) {
-        this.images.push({ count, image });
+    addImage(count, image, printSettings) {
+        this.images.push({ count, image, printSettings });
     }
 
     async create(updateCallback) {
@@ -37,10 +37,11 @@ class ImageDocument {
 
             var imgNr = 0;
 
-            let imageIds = this.images.flatMap(img => Array(img.count).fill(img.image));
+            let imageIds = this.images.flatMap(img => Array(img.count).fill({ image: img.image, printSettings: img.printSettings }));
             var maxStep = imageIds.length;
 
             let lastImage = "";
+            let lastBrightness = null;
             let dataUrl;
 
             while (imgNr < imageIds.length) {
@@ -51,11 +52,15 @@ class ImageDocument {
                     for (let x = 0, xPos = settings.marginX; x < settings.xCnt && imgNr < imageIds.length; x++, xPos += settings.mtgWidth + settings.cardMargin, imgNr++) {
                         updateCallback((imgNr) / maxStep);
 
-                        let image = imageIds[imgNr];
-                        if (lastImage != image) {
-                            dataUrl = await getDataUrl(image);
-                            lastImage = image;
+                        let card = imageIds[imgNr];
+                        if (lastImage != card.image || card.printSettings?.brightness != lastBrightness) {
+                            dataUrl = await getDataUrl(card.image);
+                            if (card.printSettings?.brightness != null && card.printSettings.brightness != 1)
+                                dataUrl = await editImageBrightness(dataUrl, card.printSettings.brightness);
+                            lastImage = card.image;
+                            lastBrightness = card.printSettings?.brightness;
                         }
+
                         doc.image(dataUrl, xPos, yPos, { width: settings.mtgWidth, height: settings.mtgHeight });
                     }
                 }

@@ -46,6 +46,7 @@ class Card {
         this.history = [];
         this.future = [];
         this.printOptions = [Print.FRONT, Print.BACK];
+        this.printSettings = { brightness: 100 };
 
         cards.push(this);
     }
@@ -96,10 +97,14 @@ class Card {
             case Format.DECKSTATS:
             default:
                 var settings = [];
-                if(!this.printOptions.includes(Print.FRONT))
+                if (!this.printOptions.includes(Print.FRONT))
                     settings.push("donotprintfront");
-                if(!this.printOptions.includes(Print.BACK))
+                if (!this.printOptions.includes(Print.BACK))
                     settings.push("donotprintback");
+                if (this.printSettings) {
+                    if (this.printSettings.brightness != 100)
+                        settings.push(`brightness:${this.printSettings.brightness.toFixed()}`);
+                }
 
                 if (this.isUndefined && (!this.nr))
                     return `${this.count} ${this.name}`;
@@ -149,7 +154,7 @@ class Card {
                 match = cardText.match(regexUndefined);
             }
 
-            if(!match){
+            if (!match) {
                 ;
             }
 
@@ -164,15 +169,19 @@ class Card {
             throw new Error("Invalid card text format");
         }
 
-        const { count, set, nr, name, parameters} = match.groups;
+        const { count, set, nr, name, parameters } = match.groups;
 
         var card = new Card(parseInt(count, 10), format);
-        if(parameters){
+        if (parameters) {
             let params = parameters.split(" ").map(p => p.trim().toLowerCase());
-            if(params.includes("donotprintfront"))
+            if (params.includes("donotprintfront"))
                 card.printOptions = card.printOptions.filter(p => p != Print.FRONT);
-            if(params.includes("donotprintback"))
+            if (params.includes("donotprintback"))
                 card.printOptions = card.printOptions.filter(p => p != Print.BACK);
+            const brightMatch = params.find(p => p.startsWith("brightness:"))?.match(/brightness:(\d+)/);
+            if (brightMatch)
+                card.printSettings.brightness = Number(brightMatch[1]);
+            
         }
         await card.update(false, null, set, nr, name);
         if (card.isUndefined === undefined)
@@ -294,10 +303,13 @@ class Card {
         this.elem = elem;
 
         elem.querySelector(".cardImg").src = this.imageUris[0];
+        if (this.printSettings?.brightness != null && this.printSettings.brightness != 100)
+            elem.querySelector(".cardImg").style.filter = `brightness(${this.printSettings.brightness}%)`;
 
         if (this.twoFaced) {
             elem.classList.add("twoFaced");
             elem.querySelector(".cardFlipImg").src = this.imageUris[1];
+            elem.querySelector(".cardFlipImg").style.filter = `brightness(${this.printSettings.brightness}%)`;
         }
         else {
             elem.classList.remove("twoFaced");
@@ -404,6 +416,11 @@ class Card {
         openedCard.elem.classList.add("selected");
 
         Scryfall.open(evt, searchOptions, position, this);
+    }
+
+    updated() {
+        this.updateElem();
+        Events.dispatch(Events.Type.CardChanged, this);
     }
 }
 

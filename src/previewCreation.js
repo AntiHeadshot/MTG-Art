@@ -1,5 +1,5 @@
 import getSettings from './printSettings.js';
-import getDataUrl from './image.js';
+import { getDataUrl } from './image.js';
 import CropMark from './cropmark.js';
 import { Print } from './card.js';
 
@@ -27,9 +27,9 @@ class ImageDocumentPreview {
         let cards2 = cards1.map(card => (card.twoFaced ? card.printOptions.map(po => (po == Print.FRONT) ? { u: card.imageUris[0], i: 0 } : (po == Print.BACK) ? { u: card.imageUris[1], i: 1 } : null) : [{ u: card.imageUris[0], i: 0 }]
             .filter(c => c != null))
             .map(c => ({ card, u: c.u, i: c.i }))).flat(1);
-        let cards = cards2.map(x => ({ imageUri: x.u, highResImageUri: x.card.highResImageUris[x.i] }));
+        let cards = cards2.map(x => ({ card: x.card, imageUri: x.u, highResImageUri: x.card.highResImageUris[x.i] }));
 
-        var maxStep = cards.length * 5;
+        var maxStep = cards.length;
 
         let pageNr = 0;
         let progress = 0;
@@ -58,9 +58,35 @@ class ImageDocumentPreview {
                     let img = document.createElement('img');
                     img.style.transform = `translate(${xPos.toFixed(1)}px,${yPos.toFixed(1)}px)`;
                     img.style.position = 'absolute';
+
+                    if (card.card.printSettings?.brightness != null && card.card.printSettings.brightness != 100)
+                        img.style.filter = `brightness(${card.card.printSettings.brightness}%)`;
                     img.setAttribute('width', settings.mtgWidth + 'px');
                     img.setAttribute('height', settings.mtgHeight + 'px');
                     img.setAttribute('src', card.imageUri);
+
+                    img.addEventListener('mousedown', (event) => {
+                        event.preventDefault();
+
+                        if (event.button === 0)
+                            card.card.printSettings.brightness += 5;
+                        else if (event.button === 1) {
+                            event.preventDefault();
+                            card.card.printSettings.brightness = 100;
+                        }
+                        else if (event.button === 2) {
+                            event.preventDefault();
+                            card.card.printSettings.brightness -= 5;
+                        }
+
+                        img.style.filter = `brightness(${card.card.printSettings.brightness}%)`;
+
+                        card.card.updated();
+                    });
+
+                    img.addEventListener('contextmenu', (event) => {
+                        event.preventDefault();
+                    });
 
                     getDataUrl(card.highResImageUri).then(dataUrl => { img.setAttribute('src', dataUrl); });
 
@@ -116,9 +142,11 @@ class ImageDocumentPreview {
         }
 
         divContainer.setAttribute('viewBox', `0 0 ${settings.pageWidth} ${pageNr * (settings.pageHeight + 16) - 16}`);
-        divContainer.setAttribute('width', settings.pageWidth);
-        divContainer.setAttribute('height', pageNr * (settings.pageHeight + 16) - 16);
-        divContainer.setAttribute('style', 'width:100%; height:auto;');
+        // divContainer.style.width = `${settings.pageWidth.toFixed(1)}px`;
+        // divContainer.style.height = `${(pageNr * (settings.pageHeight + 16) - 16).toFixed(1)}px`;
+        divContainer.style.width = "100%";
+        divContainer.style.height = "auto";
+        divContainer.style.justifyItems = 'center';
 
         return divContainer;
     }

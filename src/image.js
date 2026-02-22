@@ -3,15 +3,20 @@ import ImageCache from './imageCache.js';
 let promisseCache = {};
 
 async function getDataUrl(src) {
-    let image = new Image(src);
-    if (promisseCache[src] == null)
-        return promisseCache[src] = image.getDataUrl();
+    if (promisseCache[src] == null) {
+        return promisseCache[src] = new Image(src).getDataUrl(null, Image.removeBackground);
+    }
     return promisseCache[src];
 }
 
+async function editImageBrightness(src, brightness) {
+    return new Image(src, { nocache: true }).getDataUrl(Image.setBrightness, null, brightness);
+}
+
 class Image {
-    constructor(src) {
+    constructor(src, params) {
         this.src = src;
+        this.cache = !(params?.nocache === true);
     }
 
     loadImage() {
@@ -24,55 +29,71 @@ class Image {
         });
     }
 
-    async getDataUrl() {
-        this.dataUrl = await ImageCache.getImage(this.src);
+    async getDataUrl(funcPre, funcPost, params) {
+        this.dataUrl = null;
+        if (this.cache)
+            this.dataUrl = await ImageCache.getImage(this.src);
+
         if (this.dataUrl == null) {
             let imageElem = await this.loadImage();
             this.canvas = document.createElement('canvas');
             this.canvas.width = imageElem.width;
             this.canvas.height = imageElem.height;
             this.context = this.canvas.getContext("2d");
-            this.context.drawImage(imageElem, 0, 0);
 
-            this.cornerSize = this.canvas.width / 21;
-            this.removeBackground();
+            if (funcPre)
+                funcPre(this, params);
+            this.context.drawImage(imageElem, 0, 0);
+            if (funcPost)
+                funcPost(this, params);
+
             this.dataUrl = this.canvas.toDataURL("image/png");
-            await ImageCache.storeImage(this.src, this.dataUrl);
+
+            if (this.cache)
+                await ImageCache.storeImage(this.src, this.dataUrl);
+
+            this.canvas = null;
+            this.context = null;
         }
 
         return this.dataUrl;
     }
 
-    removeBackground() {
-        var canvasWidth = this.canvas.width;
-        var canvasHeight = this.canvas.height;
+    static setBrightness(image, value) {
+        image.context.filter = `brightness(${value}%)`;
+    }
 
-        var canvasData = this.context.getImageData(0, 0, canvasWidth, canvasHeight);
+    static removeBackground(image, value) {
+        var canvasWidth = image.canvas.width;
+        var cornerSize = canvasWidth / 21;
+        var canvasHeight = image.canvas.height;
 
-        let r2 = this.cornerSize * this.cornerSize + 2;
+        var canvasData = image.context.getImageData(0, 0, canvasWidth, canvasHeight);
+
+        let r2 = cornerSize * cornerSize + 2;
 
         let size = canvasWidth * canvasHeight * 4;
 
-        let avgSize = Math.floor(this.cornerSize / 3);
+        let avgSize = Math.floor(cornerSize / 3);
 
-        let avgColorTl = this.getAvgColor(canvasData, this.cornerSize - 2 * avgSize, this.cornerSize - 2 * avgSize, avgSize);
-        let avgColorTr = this.getAvgColor(canvasData, canvasWidth - this.cornerSize + avgSize, this.cornerSize - 2 * avgSize, avgSize);
-        let avgColorBl = this.getAvgColor(canvasData, this.cornerSize - 2 * avgSize, canvasHeight - this.cornerSize + avgSize, avgSize);
-        let avgColorBr = this.getAvgColor(canvasData, canvasWidth - this.cornerSize + avgSize, canvasHeight - this.cornerSize + avgSize, avgSize);
+        let avgColorTl = image.getAvgColor(canvasData, cornerSize - 2 * avgSize, cornerSize - 2 * avgSize, avgSize);
+        let avgColorTr = image.getAvgColor(canvasData, canvasWidth - cornerSize + avgSize, cornerSize - 2 * avgSize, avgSize);
+        let avgColorBl = image.getAvgColor(canvasData, cornerSize - 2 * avgSize, canvasHeight - cornerSize + avgSize, avgSize);
+        let avgColorBr = image.getAvgColor(canvasData, canvasWidth - cornerSize + avgSize, canvasHeight - cornerSize + avgSize, avgSize);
 
-        for (let y = 0, yi = this.cornerSize; y < this.cornerSize; y++, yi--) {
-            for (let x = 0, xi = this.cornerSize; x < this.cornerSize && (xi * xi + yi * yi) >= r2; x++, xi--) {
+        for (let y = 0, yi = cornerSize; y < cornerSize; y++, yi--) {
+            for (let x = 0, xi = cornerSize; x < cornerSize && (xi * xi + yi * yi) >= r2; x++, xi--) {
                 let topLeft = (x + y * canvasWidth) * 4;
                 let topRight = (canvasWidth - x + y * canvasWidth) * 4;
 
-                this.colorPixel(topLeft, canvasData, avgColorTl);
-                this.colorPixel(topRight, canvasData, avgColorTr);
-                this.colorPixel((size - topRight), canvasData, avgColorBl);
-                this.colorPixel((size - topLeft), canvasData, avgColorBr);
+                image.colorPixel(topLeft, canvasData, avgColorTl);
+                image.colorPixel(topRight, canvasData, avgColorTr);
+                image.colorPixel((size - topRight), canvasData, avgColorBl);
+                image.colorPixel((size - topLeft), canvasData, avgColorBr);
             }
         }
 
-        this.context.putImageData(canvasData, 0, 0);
+        image.context.putImageData(canvasData, 0, 0);
     }
 
     getAvgColor(canvasData, x, y, avgSize) {
@@ -103,4 +124,4 @@ class Image {
     }
 }
 
-export default getDataUrl;
+export { getDataUrl, editImageBrightness };

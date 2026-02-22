@@ -349,6 +349,7 @@ window.swapTo = function swapTo(target) {
         case View.Mode.PDF:
             document.body.classList.add('pdfView');
             selectedCard = null;
+            updatePdfPreview();
             break;
         case View.Mode.INPUT:
             break;
@@ -360,9 +361,7 @@ window.swapTo = function swapTo(target) {
     Events.dispatch(Events.Type.ViewChanged, target);
 };
 
-window.generatePdf = async function generatePdf() {
-    Toaster.show("generating PDF");
-
+window.updatePdfPreview = async function updatePdfPreview() {
     var imageDocument = new ImageDocumentPreview(printOptions);
 
     for (const card of cards)
@@ -370,28 +369,40 @@ window.generatePdf = async function generatePdf() {
             if (!(card.isBasicLand && printOptions.skipBasicLands))
                 imageDocument.addCard(card.count, card);
 
-    // var imageDocument = new ImageDocument(printOptions);
+    var containerDiv = imageDocument.create((p) => Toaster.show("loading high res preview", p));
+    var previewParent = document.getElementById("pdfPreview");
+    while (previewParent.firstChild) {
+        previewParent.removeChild(previewParent.firstChild);
+    }
 
-    // for (const card of cards)
-    //     if (card instanceof Card)
-    //         if (!(card.isBasicLand && printOptions.skipBasicLands))
-    //             if (card.twoFaced)
-    //                 for (let img of card.printOptions.map(po => po == Print.FRONT ? card.highResImageUris[0] : po == Print.BACK ? card.highResImageUris[1] : null).filter(uri => uri != null))
-    //                     imageDocument.addImage(card.count, img);
-    //             else
-    //                 for (let img of card.highResImageUris)
-    //                     imageDocument.addImage(card.count, img);
+    previewParent.appendChild(containerDiv);
+    document.getElementById("pdfView").style.display = "none";
+}
 
-    // document.getElementById("pdfContainer").classList.add("updating");
+window.generatePdf = async function generatePdf() {
+    Toaster.show("generating PDF");
 
-    var containerDiv = imageDocument.create((p) => Toaster.show("generating PDF", p));
-    document.getElementById("pdfPreview").appendChild(containerDiv);
+    var imageDocument = new ImageDocument(printOptions);
 
-    // return imageDocument.create((p) => Toaster.show("generating PDF", p)).then(url => {
-    //     document.getElementById("pdfView").src = url;
-    //     document.getElementById("downloadPdf").disabled = false;
-    //     document.getElementById("pdfContainer").classList.remove("updating");
-    // });
+    for (const card of cards)
+        if (card instanceof Card)
+            if (!(card.isBasicLand && printOptions.skipBasicLands))
+                if (card.twoFaced)
+                    for (let img of card.printOptions.map(po => po == Print.FRONT ? card.highResImageUris[0] : po == Print.BACK ? card.highResImageUris[1] : null).filter(uri => uri != null))
+                        imageDocument.addImage(card.count, img, card.printSettings);
+                else
+                    for (let img of card.highResImageUris)
+                        imageDocument.addImage(card.count, img, card.printSettings);
+
+    document.getElementById("pdfContainer").classList.add("updating");
+
+    document.getElementById("pdfView").style.display = "block";
+
+    return imageDocument.create((p) => Toaster.show("generating PDF", p)).then(url => {
+        document.getElementById("pdfView").src = url;
+        document.getElementById("downloadPdf").disabled = false;
+        document.getElementById("pdfContainer").classList.remove("updating");
+    });
 }
 
 window.updatePdfCreation = function updatePdfCreation(targetOptions) {
@@ -414,6 +425,8 @@ window.updatePdfCreation = function updatePdfCreation(targetOptions) {
     templateElem.style.setProperty("--zoom", 1 / template.scale);
     templateElem.style.setProperty("--x", template.corner.x * 100 + "%");
     templateElem.style.setProperty("--y", template.corner.y * 100 + "%");
+
+    updatePdfPreview();
 }
 
 window.saveFile = function saveFile(src, fileName) {
