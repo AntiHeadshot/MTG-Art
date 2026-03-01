@@ -151,7 +151,8 @@
                     onchange="updatePdfCreation({cropMarkWidth: Number(this.value)});">
             </div>
             <div>
-                <label for="cropMarkWidth">Cropmark color: </label>
+                <label for="cropMarkColor">Cropmark color: </label>
+                <input type="color" id="cropMarkColor" value="#ffffff"
                 <input type="color" id="cropMarkColor" value="#ffffff"
                     onchange="updatePdfCreation({cropMarkColor: this.value});">
             </div>
@@ -166,7 +167,7 @@
                     onchange="updatePdfCreation({skipBasicLands: this.checked});">
             </div>
             <div>
-                <button id="editPdf" onclick="hideGeneratedPdf(); event.stopPropagation()">edit</button>
+                <button id="editPdf" disabled onclick="hideGeneratedPdf(); event.stopPropagation()">edit</button>
                 <button id="createPdf" onclick="generatePdf(); event.stopPropagation()">create</button>
                 <button id="downloadPdf" disabled
                     onclick="saveFile(document.getElementById('pdfView').src, cards.filter(c => c instanceof Card)[0].name + '.pdf'); event.stopPropagation()">save</button>
