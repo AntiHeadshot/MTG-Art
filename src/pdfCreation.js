@@ -65,7 +65,9 @@ class ImageDocument {
                     }
                 }
 
-                let cl_2 = settings.cropMarkSize / 2;
+                
+                let halfW = settings.cropMarkWidth * 0.5;
+                let cl = settings.cropMarkSize - halfW;
 
                 if (settings.cropMarkShape != CropMark.NONE)
                     for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
@@ -74,13 +76,13 @@ class ImageDocument {
                                 switch (settings.cropMarkShape) {
                                     case CropMark.STAR:
                                         {
-                                            let inset = cl_2 * .9;
-                                            let insetO = cl_2 - inset;
-                                            doc.path(`M ${xPos - cl_2},${yPos} `
-                                                + `c ${inset},${insetO} ${inset},${insetO} ${cl_2},${cl_2} `
-                                                + `c ${insetO},-${inset} ${insetO},-${inset} ${cl_2},-${cl_2} `
-                                                + `c -${inset},-${insetO} -${inset},-${insetO} -${cl_2},-${cl_2} `
-                                                + `c -${insetO},${inset} -${insetO},${inset} -${cl_2},${cl_2} `
+                                            let inset = cl * .9;
+                                            let insetO = cl - inset;
+                                            doc.path(`M ${xPos - cl},${yPos} `
+                                                + `c ${inset},${insetO} ${inset},${insetO} ${cl},${cl} `
+                                                + `c ${insetO},-${inset} ${insetO},-${inset} ${cl},-${cl} `
+                                                + `c -${inset},-${insetO} -${inset},-${insetO} -${cl},-${cl} `
+                                                + `c -${insetO},${inset} -${insetO},${inset} -${cl},${cl} `
                                             )
                                                 .lineWidth(0)
                                                 .fillColor(settings.cropMarkColor)

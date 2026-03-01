@@ -181,7 +181,7 @@ svg {
     }
 
     .grayed {
-        filter: grayscale(50%) contrast(0.3);
+        filter: grayscale(50%) contrast(0.3) !important;
     }
 
     .cardFlipImg {
@@ -201,6 +201,20 @@ svg {
     }
 
     .printSettings {
+        position: absolute;
+        Bottom: 4px;
+        right: 4px;
+        z-index: 1000;
+        height: 32px;
+        align-items: right;
+        display: flex;
+        flex-direction: row;
+        justify-content: right;
+        gap: -7px;
+        border-radius: 100px;
+    }
+
+    .printSettings .printBackSvg {
         display: none;
     }
 
@@ -244,22 +258,20 @@ svg {
         display: block;
     }
 
-    .printSettings {
-        position: absolute;
-        Bottom: 4px;
-        right: 4px;
-        z-index: 1000;
-        height: 32px;
-        align-items: right;
-        display: flex;
-        flex-direction: row;
-        justify-content: right;
-        gap: -7px;
+    .printSettings .printBackSvg {
+        display: inline-block;
     }
+
+    .printSettings .printFrontSvg {
+        border-radius: 50% 0 0 50%;
+        margin-right: -2px;
+        padding-left: 4px;
+    }
+
 }
 
 .card .printSettings svg,
-.card .printSettings img{
+.card .printSettings img {
     display: inline-block;
 }
 
@@ -302,7 +314,7 @@ svg {
     right: 0;
     bottom: 0;
     opacity: 0;
-    z-index: 2000;
+    z-index: 20000;
     backdrop-filter: blur(3px);
 }
 
@@ -336,6 +348,12 @@ svg.gray,
     transition: filter 1s ease-in-out;
 }
 
+img.white,
+svg.white {
+    filter: invert(1);
+    transition: filter 1s ease-in-out;
+}
+
 img.border,
 svg.border {
     background: #ffffff6e;
@@ -344,16 +362,16 @@ svg.border {
     border-radius: 8px;
 }
 
-img.border.round,
-svg.border.round {
-    border-radius: 50%;
-}
-
 img.border.roundLeft,
 svg.border.roundLeft {
     border-radius: 50% 0 0 50%;
     margin-right: -2px;
     padding-left: 4px;
+}
+
+img.border.round,
+svg.border.round {
+    border-radius: 50%;
 }
 
 img.border.roundRight,
@@ -445,7 +463,8 @@ button {
     transition: width 1s ease;
 }
 
-#viewButtons {
+#viewButtons,
+#pdfPreviewSettings {
     position: absolute;
     top: 4px;
     right: 4px;
@@ -455,7 +474,8 @@ button {
     gap: 4px;
 }
 
-#viewButtons>* {
+#viewButtons>*,
+#pdfPreviewSettings>* {
     z-index: 10001;
 }
 
@@ -493,12 +513,22 @@ button {
     position: relative;
     resize: none;
 }
- 
+
 #pdfPreview,
-#pdfView{
+#pdfPreviewContainer,
+#pdfView {
     height: 100%;
     width: 100%;
     position: absolute;
+}
+
+#pdfPreviewContainer:before {
+    content: "";
+    z-index: 100;
+    position: fixed;
+    width: 100%;
+    height: 16px;
+    background-image: linear-gradient(#2c2c2c, transparent);
 }
 
 .pdfView #pdfContainer {
@@ -529,7 +559,8 @@ button {
 
 .CodeMirror-focused .CodeMirror-selected,
 .CodeMirror-selected {
-    background: purple;    box-shadow: 0 0 8px 8px purple;
+    background: purple;
+    box-shadow: 0 0 8px 8px purple;
 }
 
 .isUndefined {
@@ -593,10 +624,12 @@ button {
     background-color: purple;
 }
 
+#popup,
 #tutorial {
     display: none;
 }
 
+.popup-overlay,
 .tutorial-overlay {
     position: fixed;
     top: 0;
@@ -621,6 +654,7 @@ button {
     pointer-events: none;
 }
 
+.popup-content-container,
 .tutorial-content-container {
     display: flex;
     position: fixed;
@@ -635,6 +669,7 @@ button {
     pointer-events: none;
 }
 
+.popup-content,
 .tutorial-content {
     position: fixed;
     background: #2c2c2c;
@@ -647,14 +682,17 @@ button {
     pointer-events: all;
 }
 
+.popup-content p,
 .tutorial-content p {
     margin-bottom: 20px;
 }
 
+.popup-content button,
 .tutorial-content button {
     margin: 5px;
 }
 
+.popup-content #popupEndButton,
 .tutorial-content #endButton {
     position: absolute;
     top: 0;

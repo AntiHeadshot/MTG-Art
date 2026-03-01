@@ -4,8 +4,7 @@
 
 - recognize wrong tokens
 
-- add preview for pdf for faster viewing.
-    -> Seperate loading images from PDF Creation
+- add cut marks to preview
+- improove cut marks for spacing
 
-- add ability to suppress one side of double sided cards
-    -> Add tutorial for that
+- add edit while loaded

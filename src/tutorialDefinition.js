@@ -28,6 +28,7 @@ Tutorial.addStep({
     text: `Input your deck here. You can type or paste your deck list into this field. Each card should be on a new line and if no count is given, a single card is assumed.
 <br>
 <br>Your deck will be <b>automatically saved</b> and loaded again when you reload or revisit this site.
+<br>Also missing tokens are fetched and added to the bottom of the list.
 <br>
 <br>Possible Inputs are:
 <br>
@@ -140,8 +141,8 @@ Tutorial.addStep({
 });
 
 Tutorial.addStep({
-    getElement: () => document.querySelector('#card3'),
-    getFrameElement: () => document.querySelector('#card3 .flipSvg'),
+    getElement: () => document.querySelector('#card4'),
+    getFrameElement: () => document.querySelector('#card4 .flipSvg'),
     text: `You can also flip two-sided cards by clicking on this arrow.`,
     continueAfter: async () => {
         scrollTo(document.querySelector('#card3').card);
@@ -159,6 +160,17 @@ Tutorial.addStep({
         });
     },
     canSkip: () => flippedCard,
+});
+
+Tutorial.addStep({
+    getElement: () => document.querySelector('#card2'),
+    getFrameElement: () => document.querySelector('#card2 .printSettings'),
+    text: `You can also hide one side of double sided cards from printing.
+<br>
+<br>This is not as relevant for normal cards, but may some times be advantagious, like on this "Anointed Procession" from SLD.
+<br>
+<br>(You can also hide any regular card from print.)
+    `,
 });
 
 Tutorial.addStep({
@@ -201,6 +213,15 @@ Tutorial.addStep({
     continueAfter: () => Tutorial.waitForEvent(Events.Type.ViewChanged, () => { if (View.mode != View.Mode.ARTVIEW) throw new Error("ArtView not opened"); }),
     canSkip: () => View.mode == View.Mode.ARTVIEW,
 });
+
+Tutorial.addStep({
+    getElement: () => document.querySelector('#tutorialContent'),
+    text: `The ArtView funcions are exactly the same as the left side of the InputView.
+<br>
+<br>This way you can open this site on one sid of your monitor and move the Scryfall window to the other side.
+`,
+});
+
 
 Tutorial.addStep({
     getElement: () => document.querySelector('#cards'),

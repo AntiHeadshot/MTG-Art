@@ -43,6 +43,7 @@ class Card {
         this.isBasicLand = false;
         this.imageUris = [];
         this.highResImageUris = [];
+        this.imageElements = [];
         this.history = [];
         this.future = [];
         this.printOptions = [Print.FRONT, Print.BACK];
@@ -181,7 +182,7 @@ class Card {
             const brightMatch = params.find(p => p.startsWith("brightness:"))?.match(/brightness:(\d+)/);
             if (brightMatch)
                 card.printSettings.brightness = Number(brightMatch[1]);
-            
+
         }
         await card.update(false, null, set, nr, name);
         if (card.isUndefined === undefined)
@@ -295,6 +296,10 @@ class Card {
         this.updateElem();
     }
 
+    addImageElem(elem){
+        this.imageElements.push(elem);
+    }
+
     updateElem(elem) {
         elem ||= this.elem;
 
@@ -303,18 +308,21 @@ class Card {
         this.elem = elem;
 
         elem.querySelector(".cardImg").src = this.imageUris[0];
-        if (this.printSettings?.brightness != null && this.printSettings.brightness != 100)
-            elem.querySelector(".cardImg").style.filter = `brightness(${this.printSettings.brightness}%)`;
+        elem.querySelector(".cardImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
 
         if (this.twoFaced) {
             elem.classList.add("twoFaced");
             elem.querySelector(".cardFlipImg").src = this.imageUris[1];
-            elem.querySelector(".cardFlipImg").style.filter = `brightness(${this.printSettings.brightness}%)`;
-        }
+            elem.querySelector(".cardFlipImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
+        }        
         else {
             elem.classList.remove("twoFaced");
             elem.classList.remove("flipped");
         }
+        
+        this.imageElements = this.imageElements.filter(x=>x.isConnected);
+        for(let img of this.imageElements)
+            img.style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
 
         elem.classList.toggle("revertable", this.history.length > 0);
         elem.classList.toggle("forwardable", this.future.length > 0);

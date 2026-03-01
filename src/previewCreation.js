@@ -24,7 +24,9 @@ class ImageDocumentPreview {
         var imgNr = 0;
 
         let cards1 = this.cards.map(card => Array(card.count).fill(card.card)).flat(1);
-        let cards2 = cards1.map(card => (card.twoFaced ? card.printOptions.map(po => (po == Print.FRONT) ? { u: card.imageUris[0], i: 0 } : (po == Print.BACK) ? { u: card.imageUris[1], i: 1 } : null) : [{ u: card.imageUris[0], i: 0 }]
+        let cards2 = cards1.map(card => (card.printOptions.map(po =>
+            (po == Print.FRONT) ? { u: card.imageUris[0], i: 0 } :
+                ((po == Print.BACK) && (card.imageUris.length > 1)) ? { u: card.imageUris[1], i: 1 } : null)
             .filter(c => c != null))
             .map(c => ({ card, u: c.u, i: c.i }))).flat(1);
         let cards = cards2.map(x => ({ card: x.card, imageUri: x.u, highResImageUri: x.card.highResImageUris[x.i] }));
@@ -42,7 +44,7 @@ class ImageDocumentPreview {
             let pageGroup = document.createElement('div');
             pageGroup.setAttribute('id', `page${pageNr}`);
             pageGroup.style.position = 'absolute';
-            pageGroup.style.transform = `translate(0px,${((pageNr - 1) * (settings.pageHeight + 16)).toFixed(1)}px)`;
+            pageGroup.style.transform = `translate(0px,${((pageNr - 1) * (settings.pageHeight + 16) + 16).toFixed(1)}px)`;
             pageGroup.style.outline = '1px black';
             pageGroup.style.width = `${settings.pageWidth.toFixed(1)}px`;
             pageGroup.style.height = `${settings.pageHeight.toFixed(1)}px`;
@@ -79,14 +81,14 @@ class ImageDocumentPreview {
                             card.card.printSettings.brightness -= 5;
                         }
 
-                        img.style.filter = `brightness(${card.card.printSettings.brightness}%)`;
-
                         card.card.updated();
                     });
 
                     img.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
                     });
+
+                    card.card.addImageElem(img);
 
                     getDataUrl(card.highResImageUri).then(dataUrl => { img.setAttribute('src', dataUrl); });
 

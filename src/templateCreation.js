@@ -21,7 +21,8 @@ class ImageDocumentTemplate {
             }
         }
 
-        let cl_2 = settings.cropMarkSize / 2;
+        let halfW = settings.cropMarkWidth * 0.5;
+        let cl = settings.cropMarkSize - halfW;
 
         if (options.cropMarkShape != CropMark.NONE)
             for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
@@ -30,19 +31,19 @@ class ImageDocumentTemplate {
                         switch (options.cropMarkShape) {
                             case CropMark.STAR:
                                 {
-                                    let inset = cl_2 * .9;
-                                    let insetO = cl_2 - inset;
-                                    svg.push(`<path stroke-width="0" fill="${options.cropMarkColor}" d="M ${xPos - cl_2},${yPos} `
-                                        + `c ${inset},${insetO} ${inset},${insetO} ${cl_2},${cl_2} `
-                                        + `c ${insetO},-${inset} ${insetO},-${inset} ${cl_2},-${cl_2} `
-                                        + `c -${inset},-${insetO} -${inset},-${insetO} -${cl_2},-${cl_2} `
-                                        + `c -${insetO},${inset} -${insetO},${inset} -${cl_2},${cl_2}"></path>`);
+                                    let inset = cl * .9;
+                                    let insetO = cl - inset;
+                                    svg.push(`<path stroke-width="0" fill="${options.cropMarkColor}" d="M ${xPos - cl},${yPos} `
+                                        + `c ${inset},${insetO} ${inset},${insetO} ${cl},${cl} `
+                                        + `c ${insetO},-${inset} ${insetO},-${inset} ${cl},-${cl} `
+                                        + `c -${inset},-${insetO} -${inset},-${insetO} -${cl},-${cl} `
+                                        + `c -${insetO},${inset} -${insetO},${inset} -${cl},${cl}"></path>`);
                                 }
                                 break;
                             case CropMark.LINES:
                             default:
                                 svg.push(`<path stroke-width="${options.cropMarkWidth}" stroke="${options.cropMarkColor}" stroke-linecap="round" fill="transparent" `
-                                    + `d="M${xPos},${yPos - cl_2} v${settings.cropMarkSize} M${xPos - cl_2},${yPos} h${settings.cropMarkSize}"></path>`);
+                                    + `d="M${xPos},${yPos - cl} v${cl * 2} M${xPos - cl},${yPos} h${cl * 2}"></path>`);
                                 break;
                         }
                     }

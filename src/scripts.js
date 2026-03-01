@@ -7,6 +7,7 @@ import { ImageDocumentPreview } from './previewCreation.js';
 import ImageCache from './imageCache.js';
 import { Card, Format, Frame, Print } from './card.js';
 import Tutorial from './tutorial.js';
+import Popup from './popup.js';
 import './tutorialDefinition.js';
 import Events from './events.js';
 import { scrollTo } from './scroll.js';
@@ -114,6 +115,32 @@ function updateList() {
         localStorage.setItem('deck', deck);
         sessionStorage.setItem('deck', deck);
     }
+}
+
+window.Popup = Popup;
+
+window.changeBrightness = function changeBrightness(value) {
+    var deckCards = cards.filter(c => c instanceof Card);
+
+    Events.remove(Events.Type.CardChanged, updateList);
+    for (let card of deckCards) {
+        card.printSettings.brightness += value;
+        card.updated();
+    }
+    Events.on(Events.Type.CardChanged, updateList);
+    updateList();
+}
+
+window.setBrightness = function setBrightness(value) {
+    var deckCards = cards.filter(c => c instanceof Card);
+
+    Events.remove(Events.Type.CardChanged, updateList);
+    for (let card of deckCards) {
+        card.printSettings.brightness = value;
+        card.updated();
+    }
+    Events.on(Events.Type.CardChanged, updateList);
+    updateList();
 }
 
 window.onDrop = async function onDrop(e) {
@@ -370,12 +397,20 @@ window.updatePdfPreview = async function updatePdfPreview() {
                 imageDocument.addCard(card.count, card);
 
     var containerDiv = imageDocument.create((p) => Toaster.show("loading high res preview", p));
-    var previewParent = document.getElementById("pdfPreview");
+    var previewParent = document.getElementById("pdfPreviewContainer");
     while (previewParent.firstChild) {
         previewParent.removeChild(previewParent.firstChild);
     }
 
     previewParent.appendChild(containerDiv);
+    document.getElementById("pdfPreviewSettings").style.visibility = "visible";
+    document.getElementById("pdfView").style.display = "none";
+}
+
+window.hideGeneratedPdf = function hideGeneratedPdf() {
+    document.getElementById("downloadPdf").disabled = true;
+    document.getElementById("editPdf").disabled = true;
+    document.getElementById("pdfPreviewSettings").style.visibility = "visible";
     document.getElementById("pdfView").style.display = "none";
 }
 
@@ -387,20 +422,22 @@ window.generatePdf = async function generatePdf() {
     for (const card of cards)
         if (card instanceof Card)
             if (!(card.isBasicLand && printOptions.skipBasicLands))
-                if (card.twoFaced)
-                    for (let img of card.printOptions.map(po => po == Print.FRONT ? card.highResImageUris[0] : po == Print.BACK ? card.highResImageUris[1] : null).filter(uri => uri != null))
-                        imageDocument.addImage(card.count, img, card.printSettings);
-                else
-                    for (let img of card.highResImageUris)
-                        imageDocument.addImage(card.count, img, card.printSettings);
+                for (let img of card.printOptions.map(po => (po == Print.FRONT) ?
+                    card.highResImageUris[0] :
+                    ((po == Print.BACK) && (card.highResImageUris.length > 1)) ?
+                        card.highResImageUris[1] : null)
+                    .filter(uri => uri != null))
+                    imageDocument.addImage(card.count, img, card.printSettings);
 
     document.getElementById("pdfContainer").classList.add("updating");
 
     document.getElementById("pdfView").style.display = "block";
+    document.getElementById("pdfPreviewSettings").style.visibility = "hidden";
 
     return imageDocument.create((p) => Toaster.show("generating PDF", p)).then(url => {
         document.getElementById("pdfView").src = url;
         document.getElementById("downloadPdf").disabled = false;
+        document.getElementById("editPdf").disabled = false;
         document.getElementById("pdfContainer").classList.remove("updating");
     });
 }
@@ -523,6 +560,7 @@ function cleanUpLocalStorage() {
 
 cleanUpLocalStorage();
 
+window.updatePdfCreation({});
 window.updatePdfCreation({});
 
 let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
