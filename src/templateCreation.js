@@ -21,19 +21,22 @@ class ImageDocumentTemplate {
             }
         }
 
-        let halfW = settings.cropMarkWidth * 0.5;
-        let cl = settings.cropMarkSize - halfW;
+        let cl=0;
+        if (settings.cropMarkShape == CropMark.LINES)
+            cl = settings.cropMarkSize - settings.cropMarkWidth * 0.5;
+        else
+            cl = settings.cropMarkSize;
 
-        if (options.cropMarkShape != CropMark.NONE)
+        if (settings.cropMarkShape != CropMark.NONE)
             for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
                 for (let x = 0, xPos = settings.marginX; x <= settings.xCnt; x++, xPos += settings.mtgWidth + settings.cardMargin) {
                     {
-                        switch (options.cropMarkShape) {
+                        switch (settings.cropMarkShape) {
                             case CropMark.STAR:
                                 {
                                     let inset = cl * .9;
                                     let insetO = cl - inset;
-                                    svg.push(`<path stroke-width="0" fill="${options.cropMarkColor}" d="M ${xPos - cl},${yPos} `
+                                    svg.push(`<path stroke-width="0" fill="${settings.cropMarkColor}" d="M ${xPos - cl},${yPos} `
                                         + `c ${inset},${insetO} ${inset},${insetO} ${cl},${cl} `
                                         + `c ${insetO},-${inset} ${insetO},-${inset} ${cl},-${cl} `
                                         + `c -${inset},-${insetO} -${inset},-${insetO} -${cl},-${cl} `
@@ -42,7 +45,7 @@ class ImageDocumentTemplate {
                                 break;
                             case CropMark.LINES:
                             default:
-                                svg.push(`<path stroke-width="${options.cropMarkWidth}" stroke="${options.cropMarkColor}" stroke-linecap="round" fill="transparent" `
+                                svg.push(`<path stroke-width="${settings.cropMarkWidth}" stroke="${settings.cropMarkColor}" stroke-linecap="round" fill="transparent" `
                                     + `d="M${xPos},${yPos - cl} v${cl * 2} M${xPos - cl},${yPos} h${cl * 2}"></path>`);
                                 break;
                         }

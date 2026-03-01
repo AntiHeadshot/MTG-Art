@@ -51,6 +51,62 @@ class ImageDocumentPreview {
             pageGroup.style.background = 'white';
             divContainer.appendChild(pageGroup);
 
+            let cl = 0;
+            if (settings.cropMarkShape == CropMark.LINES)
+                cl = settings.cropMarkSize - settings.cropMarkWidth * 0.5;
+            else
+                cl = settings.cropMarkSize;
+
+            let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute('width', settings.pageWidth);
+            svg.setAttribute('height', settings.pageHeight);
+            svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+            svg.style.position = 'absolute';
+            svg.style.zIndex = 10;
+            svg.style.pointerEvents = 'none';
+
+            if (settings.cropMarkShape != CropMark.NONE) {
+                for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
+                    for (let x = 0, xPos = settings.marginX; x <= settings.xCnt; x++, xPos += settings.mtgWidth + settings.cardMargin) {
+                        {
+                            switch (settings.cropMarkShape) {
+                                case CropMark.STAR:
+                                    {
+                                        let inset = cl * .9;
+                                        let insetO = cl - inset;
+
+                                        let star = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+                                        star.setAttribute('stroke-width', '0');
+                                        star.setAttribute('fill', settings.cropMarkColor);
+                                        star.setAttribute('d', `M ${xPos - cl},${yPos} `
+                                            + `c ${inset},${insetO} ${inset},${insetO} ${cl},${cl} `
+                                            + `c ${insetO},-${inset} ${insetO},-${inset} ${cl},-${cl} `
+                                            + `c -${inset},-${insetO} -${inset},-${insetO} -${cl},-${cl} `
+                                            + `c -${insetO},${inset} -${insetO},${inset} -${cl},${cl}`);
+
+                                        svg.appendChild(star);
+                                    }
+                                    break;
+                                case CropMark.LINES:
+                                default:
+                                    {
+                                        let line = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+
+                                        line.setAttribute('stroke-width', settings.cropMarkWidth);
+                                        line.setAttribute('stroke', settings.cropMarkColor);
+                                        line.setAttribute('stroke-linecap', 'round');
+                                        line.setAttribute('fill', 'transparent');
+                                        line.setAttribute('d', `M${xPos},${yPos - cl} v${cl * 2} M${xPos - cl},${yPos} h${cl * 2}`);
+
+                                        svg.appendChild(line);
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            pageGroup.appendChild(svg);
 
             for (let y = 0, yPos = settings.marginY; y < settings.yCnt && imgNr < cards.length; y++, yPos += settings.mtgHeight + settings.cardMargin) {
                 for (let x = 0, xPos = settings.marginX; x < settings.xCnt && imgNr < cards.length; x++, xPos += settings.mtgWidth + settings.cardMargin, imgNr++) {
@@ -98,49 +154,6 @@ class ImageDocumentPreview {
                     updateCallback(progress / maxStep);
                 }
             }
-
-            let cl_2 = settings.cropMarkSize / 2;
-
-            if (settings.cropMarkShape != CropMark.NONE)
-                for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
-                    for (let x = 0, xPos = settings.marginX; x <= settings.xCnt; x++, xPos += settings.mtgWidth + settings.cardMargin) {
-                        {
-                            switch (settings.cropMarkShape) {
-                                case CropMark.STAR:
-                                    {
-                                        let inset = cl_2 * .9;
-                                        let insetO = cl_2 - inset;
-
-                                        let star = document.createElement('path');
-                                        star.setAttribute('stroke-width', '0');
-                                        star.setAttribute('fill', settings.cropMarkColor);
-                                        star.setAttribute('d', `M ${xPos - cl_2},${yPos} `
-                                            + `c ${inset},${insetO} ${inset},${insetO} ${cl_2},${cl_2} `
-                                            + `c ${insetO},-${inset} ${insetO},-${inset} ${cl_2},-${cl_2} `
-                                            + `c -${inset},-${insetO} -${inset},-${insetO} -${cl_2},-${cl_2} `
-                                            + `c -${insetO},${inset} -${insetO},${inset} -${cl_2},${cl_2}`);
-
-                                        pageGroup.appendChild(star);
-                                    }
-                                    break;
-                                case CropMark.LINES:
-                                default:
-                                    {
-                                        let line = document.createElement('path');
-
-                                        line.setAttribute('stroke-width', settings.cropMarkWidth);
-                                        line.setAttribute('stroke', settings.cropMarkColor);
-                                        line.setAttribute('stroke-linecap', 'round');
-                                        line.setAttribute('fill', 'transparent');
-                                        line.setAttribute('d', `M${xPos},${yPos - cl_2} v${settings.cropMarkSize} M${xPos - cl_2},${yPos} h${settings.cropMarkSize}`);
-
-                                        pageGroup.appendChild(line);
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                }
         }
 
         divContainer.setAttribute('viewBox', `0 0 ${settings.pageWidth} ${pageNr * (settings.pageHeight + 16) - 16}`);

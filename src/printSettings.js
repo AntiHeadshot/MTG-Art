@@ -12,7 +12,7 @@ function getSettings(options, ptToUnit) {
     settings.cropMarkShape = options?.cropMarkShape || CropMark.LINES;
     settings.cropMarkColor = options?.cropMarkColor || 'white';
     let cropMarkSize = options?.cropMarkSize || 5;
-    settings.cropMarkWidth = options?.cropMarkWidth || .5;
+    let cropMarkWidth = options?.cropMarkWidth || .5;
 
     let doc = new PDFDocument({ size: settings.pageFormat });
     settings.doc = doc;
@@ -20,6 +20,7 @@ function getSettings(options, ptToUnit) {
     const mmToPt = 2.8346456693;
 
     settings.cropMarkSize = cropMarkSize * .5 * mmToPt * ptToUnit;
+    settings.cropMarkWidth = cropMarkWidth * mmToPt * ptToUnit;
 
     settings.pageHeight = doc.page.height * ptToUnit;
     settings.pageWidth = doc.page.width * ptToUnit;

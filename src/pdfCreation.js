@@ -65,9 +65,12 @@ class ImageDocument {
                     }
                 }
 
-                
-                let halfW = settings.cropMarkWidth * 0.5;
-                let cl = settings.cropMarkSize - halfW;
+
+                let cl = 0;
+                if (settings.cropMarkShape == CropMark.LINES)
+                    cl = settings.cropMarkSize - settings.cropMarkWidth * 0.5;
+                else
+                    cl = settings.cropMarkSize;
 
                 if (settings.cropMarkShape != CropMark.NONE)
                     for (let y = 0, yPos = settings.marginY; y <= settings.yCnt; y++, yPos += settings.mtgHeight + settings.cardMargin) {
