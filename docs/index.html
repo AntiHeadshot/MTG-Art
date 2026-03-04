@@ -34,8 +34,7 @@
                     <img class="cardFlipImg face" focusable="false" draggable="false" src="">
                 </div>
                 <div class="printSettings">
-                    <img src="img/printFront.svg" class="printFrontSvg gray border round clickable"
-                        draggable="false"
+                    <img src="img/printFront.svg" class="printFrontSvg gray border round clickable" draggable="false"
                         onclick="this.closest('.card').card.selectPrint(Print.FRONT); event.stopPropagation();"
                         title="print front art">
                     <img src="img/printBack.svg" class="printBackSvg gray border roundRight clickable" draggable="false"
@@ -153,7 +152,6 @@
             <div>
                 <label for="cropMarkColor">Cropmark color: </label>
                 <input type="color" id="cropMarkColor" value="#ffffff"
-                <input type="color" id="cropMarkColor" value="#ffffff"
                     onchange="updatePdfCreation({cropMarkColor: this.value});">
             </div>
             <div>
@@ -183,7 +181,8 @@
                 <div id="pdfPreviewSettings">
                     <img id="darkerButton" title="darker" src="img/darker.svg" class="clickable white border"
                         onclick="changeBrightness(-5); event.stopPropagation();">
-                    <img id="resetBrightnessButton" title="reset brightness" src="img/flip.svg" class="clickable white border"
+                    <img id="resetBrightnessButton" title="reset brightness" src="img/flip.svg"
+                        class="clickable white border"
                         onclick="Popup.showYesNo('Do you really want to reset all changes in brightness?',()=>setBrightness(100)); event.stopPropagation();">
                     <img id="brighterButton" title="brighter" src="img/brighter.svg" class="clickable white border"
                         onclick="changeBrightness(5); event.stopPropagation();">
