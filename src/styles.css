@@ -1,3 +1,16 @@
+:root {
+    --bg-primary: #2c2c2c;
+    --bg-secondary: #1e1e1e;
+    --text-primary: #ffffff;
+    --text-secondary: #020202;
+    --border-color: #4c4c4c;
+    --border-dark: #6e6e6e;
+    --border-light: #ffffff;
+    --accent-color: purple;
+    --accent-light: #ffffff6e;
+}
+
+
 html,
 body {
     overflow: hidden;
@@ -154,74 +167,134 @@ svg {
 
     .cardEntry {
         position: relative;
-        margin-top: 0.6em;
-    }
 
-    #count {
-        position: relative;
-        font-weight: bold;
-        display: inline-block;
-        width: 2em;
-        margin-right: 0.5em;
-        text-align: end;
-    }
+        input {
+            position: absolute;
+            width: 20em;
+            top: 4px;
+            height: 22px;
+            margin-inline: 0.5em;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-dark);
+            border-radius: 3px;
+            font-size: 1.2em;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            transform-origin: 0 50% -1em;
+            transform: perspective(1000px) rotateX(90deg);
+            backface-visibility: hidden;
+            transition: transform 0.2s;
 
-    #count::after {
-        content: "x";
-        font-weight: normal;
-        position: absolute;
-        right: -1em;
-        display: inline-block;
-    }
+            &:focus {
+                transition: transform 0.2s;
+                transform: perspective(1000px) rotateX(0deg);
+                border: 2px solid var(--border-dark);
+                outline: none;
+            }
+        }
 
-    #cardHeader:before {
-        content: "";
-        z-index: 0;
-        display: inline-block;
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: -0.75em;
-        height: 3em;
-        background-color: beige;
-        border-radius: 50em;
-    }
+        input:focus+#display {
+            transform: perspective(1000px) rotateX(-90deg);
+            transition: transform 0.2s;
+        }
 
-    #cardHeader {
-        position: absolute;
-        display: inline-block;
-        padding-block: 0.2em;
-        padding-inline: 0.5em;
-        margin-inline: 1em;
-        width: 20em;
-        overflow: hidden;
-    }
+        #display {
+            height: 30px;
+            display: inline-block;
+            transform-origin: 0 50% -1em;
+            transform: perspective(1000px) rotateX(0deg);
+            backface-visibility: hidden;
+            transition: transform 0.2s;
 
-    #name {
-        position: relative;
-        z-index: 1;
-        font-weight: bold;
-        color: #020202;
-        display: inline-block;
-    }
+            label {
+                display: inline-block;
+                vertical-align: middle;
+            }
 
-    #manacost {
-        display: inline-block;
-        position: absolute;
-        right: 0.3em;
-    }
+            #count {
+                position: relative;
+                font-weight: bold;
+                display: inline-block;
+                width: 2em;
+                margin-right: 0.5em;
+                text-align: end;
+                vertical-align: super;
 
-    #manacost svg {
-        display: inline-block;
-        transform-origin: top center;
-        height: 1.2em;
-        width: auto;
-    }
+                &:after {
+                    content: "x";
+                    font-weight: normal;
+                    position: absolute;
+                    right: -1em;
+                    display: inline-block;
+                }
+            }
 
-    #manacost svg use {
-        display: inline-block;
-        transform-origin: top left;
-        transform: scale(calc(1.2em / 100px));
+            #cardHeader {
+                position: relative;
+                display: inline-block;
+                padding-block: 0.2em;
+                padding-inline: 0.5em;
+                margin-inline: 1em;
+                width: 20em;
+                overflow: hidden;
+
+                &:before {
+                    content: "";
+                    z-index: 0;
+                    display: inline-block;
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    top: -0.75em;
+                    height: 3em;
+                    background-color: beige;
+                    border-radius: 50em;
+                }
+            }
+
+            #name {
+                position: relative;
+                z-index: 1;
+                font-weight: bold;
+                color: #020202;
+                display: inline-block;
+            }
+
+            #manacost {
+                display: inline-block;
+                position: absolute;
+                right: 0.3em;
+
+                svg {
+                    display: inline-block;
+                    transform-origin: top center;
+                    height: 1.2em;
+                    width: auto;
+
+                    use {
+                        display: inline-block;
+                        transform-origin: top left;
+                        transform: scale(calc(1.2em / 100px));
+                    }
+                }
+            }
+        }
+
+        #delete {
+            position: relative;
+            font-weight: bold;
+            background-color: transparent;
+            color: white;
+            border: 2px solid var(--border-dark);
+            border-radius: 3px;
+            display: inline-block;
+            top: -3px;
+            height: 28px;
+            width: 28px;
+            vertical-align: top;
+            padding: 0px;
+        }
     }
 }
 
