@@ -232,23 +232,24 @@ window.parseDeck = async function parseDeck() {
             continue;
         }
 
-        var clone = template.cloneNode(true);
         var cloneElem = entryTemplate.cloneNode(true);
 
+        var clone = template.cloneNode(true);
         var data = Card.parseCardText(cardText, clone, cloneElem);
         data.card.order = ++cardNr;
         data.card.lineNr = i - lineOffset;
-        
+
         clone.card = data.card;
         cloneElem.card = data.card;
 
         await data.load;
-        
+
         data.card.updateElem();
-        
-        insertCardInOrder(parent, data.card, data.card.elem);
+
+        if (!data.card.isUnset)
+            insertCardInOrder(parent, data.card, data.card.elem);
         insertCardInOrder(entryParent, data.card, data.card.entryElem);
-        
+
         cards.push(data.card);
     }
 

@@ -170,7 +170,8 @@ svg {
 
         input {
             position: absolute;
-            width: 20em;
+            left: 0;
+            right: 4em;
             top: 4px;
             height: 22px;
             margin-inline: 0.5em;
@@ -319,6 +320,11 @@ svg {
             width: 28px;
             vertical-align: top;
             padding: 0px;
+        }
+
+        &>#delete {
+            position: absolute;
+            right: 5em;
         }
     }
 }
