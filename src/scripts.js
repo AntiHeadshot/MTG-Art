@@ -190,8 +190,15 @@ window.parseDeck = async function parseDeck() {
     var template = document.getElementById("cardTemplate");
     var parent = document.getElementById("cardContainer");
 
+    var entryTemplate = document.getElementById("cardEntryTemplate");
+    var entryParent = document.getElementById("newDeckInput");
+
     while (parent.lastChild && parent.lastChild.style?.display !== "none")
         parent.removeChild(parent.lastChild);
+
+
+    while (entryParent.lastChild && entryParent.lastChild.style?.display !== "none")
+        entryParent.removeChild(entryParent.lastChild);
 
     // Example deck URL: https://deckstats.net/decks/276918/3990370-rawr-from-the-dead
     const deckUrlRegex = /^https:\/\/deckstats\.net\/decks\/(?<userId>\d+)\/(?<deckId>\d+)-/;
@@ -225,21 +232,24 @@ window.parseDeck = async function parseDeck() {
             continue;
         }
 
-        var card = await Card.parseCardText(cardText);
-        card.order = ++cardNr;
-        card.lineNr = i - lineOffset;
-
-        var line = view.getLine(i);
-        view.replaceRange(card.getDescription() + "	\u2714\uFE0F", { line: i, ch: 0 }, { line: i, ch: line.length });
-
         var clone = template.cloneNode(true);
-        clone.card = card;
-        card.updateElem(clone);
-        clone.style.display = "block";
+        var cloneElem = entryTemplate.cloneNode(true);
 
-        insertCardInOrder(parent, card, clone)
+        var data = Card.parseCardText(cardText, clone, cloneElem);
+        data.card.order = ++cardNr;
+        data.card.lineNr = i - lineOffset;
+        
+        clone.card = data.card;
+        cloneElem.card = data.card;
 
-        cards.push(card);
+        await data.load;
+        
+        data.card.updateElem();
+        
+        insertCardInOrder(parent, data.card, data.card.elem);
+        insertCardInOrder(entryParent, data.card, data.card.entryElem);
+        
+        cards.push(data.card);
     }
 
     for (const card of cards) {

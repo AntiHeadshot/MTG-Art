@@ -1,5 +1,6 @@
 import Events from "./events.js";
 import Scryfall from "./scryfall.js";
+import Mana from "./mana.js";
 
 let cardCnt = 0;
 
@@ -33,12 +34,16 @@ let neededTokens = [];
 let cards = [];
 
 class Card {
-    constructor(count, format) {
+    constructor(text, elem, entryElem) {
         cardCnt++;
-        this.count = count;
-        this.format = format;
+        this.elem = elem;
+        this.entryElem = entryElem;
 
+        this.count = 0;
+        this.format = null;
         this.isToken = false;
+        this.isUnset = true;
+        this.text = text;
 
         this.isBasicLand = false;
         this.imageUris = [];
@@ -48,6 +53,7 @@ class Card {
         this.future = [];
         this.printOptions = [Print.FRONT, Print.BACK];
         this.printSettings = { brightness: 100 };
+        this.identity = [];
 
         cards.push(this);
     }
@@ -87,6 +93,8 @@ class Card {
 
     getDescription() {
         switch (this.format) {
+            case null:
+                return this.text;
             case Format.MTGPRINT:
                 if (this.isUndefined && (!this.nr))
                     return `${this.count} ${this.name}`;
@@ -115,79 +123,92 @@ class Card {
         }
     }
 
-    static async parseCardText(cardText) {
-        // Example cardText: "1 [CMR#656] Vampiric Tutor"
-        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\](\s+(?<name>[^#]+))?(#(?<parameters>([^ ]+)( ([^ ]+))*))?$/;
-        let match = cardText.match(regexDeckstats);
-        let format = Format.DECKSTATS;
+    static parseCardText(cardText, elem, entryElem) {
+        var card = new Card(cardText, elem, entryElem);
+        var returnValue = { card: card };
 
-        if (!match) {
-            // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
-            const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-★]+)$/;
-            format = Format.MTGPRINT;
-            match = cardText.match(regexMtgPrint);
-        }
-        if (!match) {
-            // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
-            const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-★]+)\/[\w\-%()/]+)/;
-            format = Format.SCRYFALL;
-            match = cardText.match(regexScryfall);
-        }
-
-        //Search for card
-        if (!match) {
-            // Example cardText: "1 [CMR] Vampiric Tutor"
-            const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)\](\s+(?<name>.+))?$/;
+        returnValue.load = new Promise(async (resolve) => {
+            // Example cardText: "1 [CMR#656] Vampiric Tutor"
+            const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\](\s+(?<name>[^#]+))?(#(?<parameters>([^ ]+)( ([^ ]+))*))?$/;
             let match = cardText.match(regexDeckstats);
             let format = Format.DECKSTATS;
 
             if (!match) {
-                // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC)"
-                const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+$/;
+                // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
+                const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-★]+)$/;
                 format = Format.MTGPRINT;
                 match = cardText.match(regexMtgPrint);
             }
-
             if (!match) {
-                // Example cardText: "1 Vampiric Tutor"
-                const regexUndefined = /^(?<count>\d+)\s+(?<name>.+)$/;
-                format = Format.DECKSTATS;
-                match = cardText.match(regexUndefined);
+                // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
+                const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-★]+)\/[\w\-%()/]+)/;
+                format = Format.SCRYFALL;
+                match = cardText.match(regexScryfall);
+            }
+
+            //Search for card
+            if (!match) {
+                // Example cardText: "1 [CMR] Vampiric Tutor"
+                const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)\](\s+(?<name>.+))?$/;
+                let match = cardText.match(regexDeckstats);
+                let format = Format.DECKSTATS;
+
+                if (!match) {
+                    // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC)"
+                    const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+$/;
+                    format = Format.MTGPRINT;
+                    match = cardText.match(regexMtgPrint);
+                }
+
+                if (!match) {
+                    // Example cardText: "1 Vampiric Tutor"
+                    const regexUndefined = /^(?<count>\d+)\s+(?<name>.+)$/;
+                    format = Format.DECKSTATS;
+                    match = cardText.match(regexUndefined);
+                }
+
+                if (!match) {
+                    card.count = 1;
+                    card.format = Format.DECKSTATS;
+                    await card.searchByName(cardText, null);
+                    resolve(card);
+                    return;
+                }
+
+                const { count, name, set } = match.groups;
+
+                card.count = parseInt(count, 10)
+                card.format = format;
+                await card.searchByName(name, set);
+                resolve(card);
+                return;
             }
 
             if (!match) {
-                ;
+                throw new Error("Invalid card text format");
             }
 
-            const { count, name, set } = match.groups;
+            const { count, set, nr, name, parameters } = match.groups;
 
-            var searchedCard = new Card(parseInt(count, 10), format);
-            await searchedCard.searchByName(name, set);
-            return searchedCard;
-        }
+            card.count = parseInt(count, 10)
+            card.format = format;
+            if (parameters) {
+                let params = parameters.split(" ").map(p => p.trim().toLowerCase());
+                if (params.includes("donotprintfront"))
+                    card.printOptions = card.printOptions.filter(p => p != Print.FRONT);
+                if (params.includes("donotprintback"))
+                    card.printOptions = card.printOptions.filter(p => p != Print.BACK);
+                const brightMatch = params.find(p => p.startsWith("brightness:"))?.match(/brightness:(\d+)/);
+                if (brightMatch)
+                    card.printSettings.brightness = Number(brightMatch[1]);
 
-        if (!match) {
-            throw new Error("Invalid card text format");
-        }
-
-        const { count, set, nr, name, parameters } = match.groups;
-
-        var card = new Card(parseInt(count, 10), format);
-        if (parameters) {
-            let params = parameters.split(" ").map(p => p.trim().toLowerCase());
-            if (params.includes("donotprintfront"))
-                card.printOptions = card.printOptions.filter(p => p != Print.FRONT);
-            if (params.includes("donotprintback"))
-                card.printOptions = card.printOptions.filter(p => p != Print.BACK);
-            const brightMatch = params.find(p => p.startsWith("brightness:"))?.match(/brightness:(\d+)/);
-            if (brightMatch)
-                card.printSettings.brightness = Number(brightMatch[1]);
-
-        }
-        await card.update(false, null, set, nr, name);
-        if (card.isUndefined === undefined)
-            card.isUndefined = false;
-        return card;
+            }
+            await card.update(false, null, set, nr, name);
+            if (card.isUndefined === undefined)
+                card.isUndefined = false;
+            resolve(card);
+        });
+        return returnValue;
     }
 
     async updateById(cardId) {
@@ -287,75 +308,77 @@ class Card {
         this.set = data.set.toUpperCase();
         this.nr = data.collector_number;
         this.name = data.name;
+        this.cardTitle = data.card_faces?.[0]?.name ?? data.name;
+        this.mana = data.mana_cost ?? data.card_faces?.[0]?.mana_cost;
+        this.identity = data.color_identity;
         this.scryfall_uri = data.scryfall_uri;
         this.isBasicLand = data.type_line?.startsWith("Basic Land ") ?? false;
         this.isToken = data.type_line?.startsWith("Token") ?? false;
         if (!this.isToken && data.all_parts)
             data.all_parts.filter(p => p.type_line.startsWith("Token")).forEach(t => neededTokens.push({ card: this, tokenId: t.id }));
 
+        this.isUnset = false;
+
         this.updateElem();
     }
 
-    addImageElem(elem){
+    addImageElem(elem) {
         this.imageElements.push(elem);
     }
 
-    updateElem(elem) {
-        elem ||= this.elem;
+    updateElem() {
+        this.elem.style.display = "block";
+        this.entryElem.style.display = "block";
 
-        if (elem == null)
-            return;
-        this.elem = elem;
-
-        elem.querySelector(".cardImg").src = this.imageUris[0];
-        elem.querySelector(".cardImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
+        this.elem.querySelector(".cardImg").src = this.imageUris[0];
+        this.elem.querySelector(".cardImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
 
         if (this.twoFaced) {
-            elem.classList.add("twoFaced");
-            elem.querySelector(".cardFlipImg").src = this.imageUris[1];
-            elem.querySelector(".cardFlipImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
-        }        
-        else {
-            elem.classList.remove("twoFaced");
-            elem.classList.remove("flipped");
+            this.elem.classList.add("twoFaced");
+            this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];
+            this.elem.querySelector(".cardFlipImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
         }
-        
-        this.imageElements = this.imageElements.filter(x=>x.isConnected);
-        for(let img of this.imageElements)
+        else {
+            this.elem.classList.remove("twoFaced");
+            this.elem.classList.remove("flipped");
+        }
+
+        this.imageElements = this.imageElements.filter(x => x.isConnected);
+        for (let img of this.imageElements)
             img.style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
 
-        elem.classList.toggle("revertable", this.history.length > 0);
-        elem.classList.toggle("forwardable", this.future.length > 0);
+        this.elem.classList.toggle("revertable", this.history.length > 0);
+        this.elem.classList.toggle("forwardable", this.future.length > 0);
 
-        elem.id = "card" + this.order;
+        this.elem.id = "card" + this.order;
 
         if (this.printOptions.includes(Print.FRONT)) {
-            elem.querySelector(".printSettings .printFrontSvg").classList.add("selected");
-            elem.querySelector(".cardImg").classList.remove("grayed");
+            this.elem.querySelector(".printSettings .printFrontSvg").classList.add("selected");
+            this.elem.querySelector(".cardImg").classList.remove("grayed");
 
         } else {
-            elem.querySelector(".printSettings .printFrontSvg").classList.remove("selected");
-            elem.querySelector(".cardImg").classList.add("grayed");
+            this.elem.querySelector(".printSettings .printFrontSvg").classList.remove("selected");
+            this.elem.querySelector(".cardImg").classList.add("grayed");
         }
 
         if (this.printOptions.includes(Print.BACK)) {
-            elem.querySelector(".printSettings .printBackSvg").classList.add("selected");
-            elem.querySelector(".cardFlipImg").classList.remove("grayed");
+            this.elem.querySelector(".printSettings .printBackSvg").classList.add("selected");
+            this.elem.querySelector(".cardFlipImg").classList.remove("grayed");
         } else {
-            elem.querySelector(".printSettings .printBackSvg").classList.remove("selected");
-            elem.querySelector(".cardFlipImg").classList.add("grayed");
+            this.elem.querySelector(".printSettings .printBackSvg").classList.remove("selected");
+            this.elem.querySelector(".cardFlipImg").classList.add("grayed");
         }
 
-        if (!elem.style.zIndex)
-            elem.style.zIndex = 9000 - this.order;
+        if (!this.elem.style.zIndex)
+            this.elem.style.zIndex = 9000 - this.order;
 
-        elem.style.top = `${this.order * 2 + 4}px`;
-        elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
-        elem.style.transition = `bottom 1s ease-in-out`;
+        this.elem.style.top = `${this.order * 2 + 4}px`;
+        this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
+        this.elem.style.transition = `bottom 1s ease-in-out`;
 
-        if (!elem.style.transform) {
+        if (!this.elem.style.transform) {
             this.rotation = (Math.random() - 0.5) * 2 * 2;
-            elem.style.transform = `rotate(${this.rotation}deg)`;
+            this.elem.style.transform = `rotate(${this.rotation}deg)`;
         }
 
         if (this.observer)
@@ -373,7 +396,23 @@ class Card {
             rootMargin: `-${this.order * 2 + 5}px 0px 0px 0px`,
             threshold: 1
         });
-        this.observer.observe(elem);
+        this.observer.observe(this.elem);
+
+
+        this.entryElem.classList.toggle("unset", this.isUnset);
+
+        if (this.identity)
+            this.entryElem.querySelector("#cardHeader").classList.add("identity" + this.identity.join(""));
+
+        this.entryElem.querySelector("#input").value = this.getDescription();
+        this.entryElem.querySelector("#name").innerHTML = this.cardTitle;
+        this.entryElem.querySelector("#count").innerHTML = this.count;
+        const manacostElem = this.entryElem.querySelector("#manacost");
+        while (manacostElem.firstChild)
+            manacostElem.removeChild(manacostElem.firstChild);
+
+        for (let mana of Mana.getMana(this.mana))
+            manacostElem.appendChild(mana);
     }
 
     rollback() {
