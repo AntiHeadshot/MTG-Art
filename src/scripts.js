@@ -15,12 +15,10 @@ import View from './view.js';
 import Toaster from './toaster.js';
 import Scryfall from './scryfall.js';
 import isMobileBrowser from './browserdetection.js';
-import CodeMirror from './wrapper/CodeMirror.js';
 
 let isMobile = isMobileBrowser(navigator.userAgent || navigator.vendor || window.opera);
 
 let cards = window.cards = [];
-let hoverOn = true;
 
 let searchOptions = window.searchOptions = {
     frames: [],
@@ -54,6 +52,9 @@ document.getElementById('cropMarkWidth').value = printOptions.cropMarkWidth;
 document.getElementById('cropMarkColor').value = printOptions.cropMarkColor;
 document.getElementById('skipBasicLands').checked = printOptions.skipBasicLands;
 
+var parent = document.getElementById("cardContainer");
+var entryParent = document.getElementById("newDeckInput");
+
 window.Events = Events;
 window.View = View;
 window.Format = Format;
@@ -63,22 +64,12 @@ window.CropMark = CropMark;
 window.Card = Card;
 
 window.addEventListener("error", function (event) {
-    print(`\nError: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
+    Toaster.showError(`\nError: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
 });
 
 window.addEventListener("unhandledrejection", function (event) {
-    print(`\nUnhandled rejection: ${event.reason}`);
+    Toaster.showError(`\nUnhandled rejection: ${event.reason}`);
 });
-
-function print(text) {
-    let lastHoverOn = hoverOn;
-    hoverOn = false;
-    console.log("printing: " + text);
-    const scrollInfo = view.getScrollInfo();
-    view.doc.setValue(view.doc.getValue() + '\n' + text);
-    view.scrollTo(scrollInfo.left, scrollInfo.top);
-    hoverOn = lastHoverOn;
-}
 
 function updateStorageSize(size) {
     let storeSize = Math.round(size / 1048576 * 10) / 10;
@@ -92,24 +83,10 @@ function updateStorageSize(size) {
 updateStorageSize(ImageCache.getObjectStoreSize());
 Events.on(Events.Type.StorageChanged, v => updateStorageSize(v.data.totalSize));
 
+var deck;
+
 function updateList() {
-    let lastHoverOn = hoverOn;
-    hoverOn = false;
-
-    var deckCards = cards.filter(c => c instanceof Card);
-
-    var deck = cards.map(c => c.getDescription ? c.getDescription() : c).join("\n");
-
-    const scrollInfo = view.getScrollInfo();
-    view.doc.setValue(deck);
-    for (let card of deckCards) {
-        if (card.isUndefined)
-            view.addLineClass(card.lineNr, "text", "isUndefined");
-    }
-
-    view.scrollTo(scrollInfo.left, scrollInfo.top);
-
-    hoverOn = lastHoverOn;
+    deck = cards.map(c => c.getDescription()).join("\n");
 
     if (!Tutorial.isOpen) {
         localStorage.setItem('deck', deck);
@@ -120,24 +97,24 @@ function updateList() {
 window.Popup = Popup;
 
 window.changeBrightness = function changeBrightness(value) {
-    var deckCards = cards.filter(c => c instanceof Card);
+    var deckCards = cards.filter(c => !c.isUnset);
 
     Events.remove(Events.Type.CardChanged, updateList);
     for (let card of deckCards) {
         card.printSettings.brightness += value;
-        card.updated();
+        card.changed();
     }
     Events.on(Events.Type.CardChanged, updateList);
     updateList();
 }
 
 window.setBrightness = function setBrightness(value) {
-    var deckCards = cards.filter(c => c instanceof Card);
+    var deckCards = cards.filter(c => !c.isUnset);
 
     Events.remove(Events.Type.CardChanged, updateList);
     for (let card of deckCards) {
         card.printSettings.brightness = value;
-        card.updated();
+        card.changed();
     }
     Events.on(Events.Type.CardChanged, updateList);
     updateList();
@@ -146,7 +123,6 @@ window.setBrightness = function setBrightness(value) {
 window.onDrop = async function onDrop(e) {
     e.preventDefault();
     Scryfall.focusPopupWindow();
-    print("\ndropped:\n" + e.dataTransfer.getData("text/uri-list"));
 
     let openedCard = Card.getOpenedCard();
 
@@ -173,25 +149,8 @@ window.onDrop = async function onDrop(e) {
     }
 };
 
-window.parseDeck = async function parseDeck() {
-    var deckText = view.doc.getValue();
-
+window.parseDeck = async function parseDeck(deckText) {
     Events.dispatch(Events.Type.DeckLoading);
-
-    if (deckText.trim() === "")
-        return;
-
-    if (document.getElementById("loadDeck").disabled)
-        return;
-
-    document.getElementById("loadDeck").disabled = true;
-    view.disabled = true;
-
-    var template = document.getElementById("cardTemplate");
-    var parent = document.getElementById("cardContainer");
-
-    var entryTemplate = document.getElementById("cardEntryTemplate");
-    var entryParent = document.getElementById("newDeckInput");
 
     while (parent.lastChild && parent.lastChild.style?.display !== "none")
         parent.removeChild(parent.lastChild);
@@ -200,86 +159,116 @@ window.parseDeck = async function parseDeck() {
     while (entryParent.lastChild && entryParent.lastChild.style?.display !== "none")
         entryParent.removeChild(entryParent.lastChild);
 
-    // Example deck URL: https://deckstats.net/decks/276918/3990370-rawr-from-the-dead
-    const deckUrlRegex = /^https:\/\/deckstats\.net\/decks\/(?<userId>\d+)\/(?<deckId>\d+)-/;
-    const deckUrlMatch = deckText.match(deckUrlRegex);
+    var deckstats = await tryLoadDeckstatDeck(deckText);
+    if (deckstats)
+        deckText = deckstats;
 
-    if (deckUrlMatch) {
-        const { userId, deckId } = deckUrlMatch.groups;
-        try {
-            deckText = await loadDeckstatDeck(userId, deckId);
-            view.doc.setValue(deckText);
-        } catch (error) {
-            print("Deck could not be loaded; " + JSON.stringify(error.toString()));
-        }
-    }
-
-    const deckLines = deckText.split("\n");
+    let deckLines = deckText.split("\n");
     let cardNr = 0;
-    let isMissingTokensText = false;
-    let lineOffset = 0;
+    let isMissingMissingTokensText = true;
+
+    if (deckLines.length < 1)
+        deckLines.push("");
 
     for (let i = 0; i < deckLines.length; i++) {
         Toaster.show(`Parsing card ${i + 1} of ${deckLines.length}...`, (i / deckLines.length));
-        const cardText = deckLines[i];
-        if (cardText.trim() === "" || cardText.startsWith("//")) {
-            if (cardText == "// Missing Tokens" || isMissingTokensText) {
-                isMissingTokensText = true;
-                lineOffset++;
-            }
-            else
-                cards.push(cardText);
-            continue;
-        }
+        const cardText = deckLines[i].trim('\r');
 
-        var cloneElem = entryTemplate.cloneNode(true);
+        if (cardText == "// Missing Tokens")
+            isMissingMissingTokensText = false;
 
-        var clone = template.cloneNode(true);
-        var data = Card.parseCardText(cardText, clone, cloneElem);
-        data.card.order = ++cardNr;
-        data.card.lineNr = i - lineOffset;
+        var card = new Card();
+        cards.push(card);
 
-        clone.card = data.card;
-        cloneElem.card = data.card;
+        card.order = ++cardNr;
 
-        await data.load;
+        await card.setCardText(cardText);
 
-        data.card.updateElem();
+        insertCardInOrder(parent, card, card.elem);
+        insertCardInOrder(entryParent, card, card.entryElem);
 
-        if (!data.card.isUnset)
-            insertCardInOrder(parent, data.card, data.card.elem);
-        insertCardInOrder(entryParent, data.card, data.card.entryElem);
-
-        cards.push(data.card);
     }
-
-    for (const card of cards) {
-        if (card instanceof Card) {
-            card.updateElem();
-        }
-    }
-
-    Events.dispatch(Events.Type.DeckLoaded);
-
-    document.getElementById("convertToScryfallBtn").disabled = false;
-    document.getElementById("convertToMtgPrintBtn").disabled = false;
-    document.getElementById("convertToDeckstatsBtn").disabled = false;
-    view.disabled = false;
 
     let missingTokens = await Card.handleTokens();
     if (missingTokens.length > 0) {
-        cards.push("");
-        cards.push("// Missing Tokens");
+        if (isMissingMissingTokensText) {
+            card = new Card()
+            card.order = ++cardNr;
+            card.setCardText("// Missing Tokens");
+            cards.push(card);
+            insertCardInOrder(parent, card, card.elem);
+            insertCardInOrder(entryParent, card, card.entryElem);
+        }
+
         for (const token of missingTokens) {
-            cards.push(`//1 [${token.card.set.toUpperCase()}#${token.card.collector_number}] ${token.card.name}`);
+            let tokenText = `1 [${token.card.set.toUpperCase()}#${token.card.collector_number}] ${token.card.name} #donotprintfront`;
+            if (!cards.some(c => c.getDescription() === tokenText)) {
+                card = new Card();
+                card.order = ++cardNr;
+                card.setCardText(tokenText);
+                cards.push(card);
+                insertCardInOrder(parent, card, card.elem);
+                insertCardInOrder(entryParent, card, card.entryElem);
+            }
         }
     }
+
+    updateCardOrder();
+
     Toaster.hide();
 
     updateList();
     Events.on(Events.Type.CardChanged, updateList);
+}
 
-    view.on("beforeSelectionChange", (_, selection) => scrollToSelectedCard(cards, selection));
+window.addCardAfter = function addCardAfter(card) {
+    const index = cards.indexOf(card);
+
+    var newCard = new Card();
+    newCard.order = index + 1;
+    cards.push(newCard);
+
+    newCard.setCardText("");
+
+    if (index !== -1) {
+        cards.splice(index + 1, 0, cards.pop()); // Move newCard to after the given card
+    }
+
+    updateCardOrder();
+
+    insertCardInOrder(parent, newCard, newCard.elem);
+    insertCardInOrder(entryParent, newCard, newCard.entryElem);
+
+    updateList();
+
+    return newCard;
+};
+
+function updateCardOrder() {
+    let cardNr = 0;
+    for (const c of cards) {
+        c.order = ++cardNr;
+        c.updateElem();
+    }
+}
+
+// Example deck URL: https://deckstats.net/decks/276918/3990370-rawr-from-the-dead
+const deckstatUrlRegex = /^https:\/\/deckstats\.net\/decks\/(?<userId>\d+)\/(?<deckId>\d+)-/;
+
+async function tryLoadDeckstatDeck(deck) {
+    if (!deck)
+        return;
+
+    const deckUrlMatch = deck.match(deckstatUrlRegex);
+
+    if (deckUrlMatch) {
+        const { userId, deckId } = deckUrlMatch.groups;
+        try {
+            return await loadDeckstatDeck(userId, deckId);
+        } catch (error) {
+            Toaster.showError("Deck could not be loaded; " + JSON.stringify(error.toString()));
+        }
+    }
 }
 
 async function loadDeckstatDeck(userId, deckId) {
@@ -303,16 +292,16 @@ async function loadDeckstatDeck(userId, deckId) {
         return `${card.amount} ${card.name}`;
     }
 
-    let deckText = deckData.sections.map(s => ((s.name && s.name != "Main") ? `\n// ${s.name}\n` : "")
+    let deckText = deckData.sections.map(s => ((s.name && s.name != "Main") ? `// ${s.name}\n` : "")
         + s.cards.map(getCardText).join('\n')).join('\n');
 
     if (deckData?.sideboard?.length > 0) {
-        deckText += '\n\n// Sideboard\n';
+        deckText += '\n// Sideboard\n';
         deckText += deckData.sideboard.map(getCardText).join('\n');
     }
 
     if (deckData?.tokens?.length > 0) {
-        deckText += '\n\n// Tokens\n';
+        deckText += '\n// Tokens\n';
         deckText += deckData.tokens.map(getCardText).join('\n');
     }
 
@@ -334,29 +323,109 @@ function insertCardInOrder(parent, card, elem) {
     }
 }
 
-window.convertToFormat = function convertToFormat(format) {
+window.deleteCard = function deleteCard(card) {
+    if (cards.length <= 1)
+        return;
+
+    cards.splice(cards.indexOf(card), 1);
+    card.elem.parentNode.removeChild(card.elem);
+    card.entryElem.parentNode.removeChild(card.entryElem);
+    card.destruct();
+
+    let cardNr = 0;
     for (const card of cards) {
-        if (card instanceof Card)
-            card.format = format;
+        card.order = ++cardNr;
+        card.updateElem();
     }
 
-    updateList();
+    updateList()
+}
+
+window.input = async function input(event, card) {
+    if (event.ctrlKey && event.key === 'Delete') {
+        if (card) {
+            var id = cards.indexOf(card);
+            deleteCard(card);
+            event.preventDefault();
+            card = cards[id];
+            if (card)
+                card.entryElem.querySelector("#inputField").focus();
+        }
+    } else if (event.key === 'Enter') {
+        event.preventDefault();
+
+        if (event.ctrlKey) {
+            if (card)
+                card.entryElem.querySelector("#inputField").blur();
+        } else {
+            var value = event.target.value;
+            var newCard = addCardAfter(card);
+
+            if (event.target.selectionStart > 0 && event.target.selectionStart < value.length) {
+                newCard.setCardText(value.substring(event.target.selectionStart));
+                card.text = value.substring(0, event.target.selectionStart);
+            }
+            else {
+                card.text = value;
+            }
+            card.setCardText(card.text);
+
+            newCard.entryElem.querySelector("#inputField").focus();
+        }
+    } else if (event.key === "d" && event.ctrlKey) {
+        if (!card)
+            card = cards[cards.length - 1];
+        var newCard = addCardAfter(card);
+        await newCard.setCardText(card.getDescription());
+        newCard.entryElem.querySelector("#inputField").focus();
+
+        event.preventDefault();
+    } else if (event.key === "ArrowUp") {
+        cards.findLast(c => c.order < card.order)?.entryElem.querySelector("#inputField").focus();
+    } else if (event.key === "ArrowDown") {
+        cards.find(c => c.order > card.order)?.entryElem.querySelector("#inputField").focus();
+    }
+}
+
+window.cardTextChanged = async function cardTextChanged(card) {
+    var texts = card.entryElem.querySelector("#inputField").value.split("\n");
+    if (texts.length <= 1) {
+        var deckstatDeck = await tryLoadDeckstatDeck(texts[0]);
+        if (deckstatDeck)
+            texts = deckstatDeck.split('\n');
+        else
+            return card.textChanged();
+    }
+
+    await card.setCardText(texts[0]);
+
+    for (let i = 1; i < texts.length; i++) {
+        card = addCardAfter(card);
+        card.setCardText(texts[i].trim());
+    }
+    card.entryElem.querySelector("#inputField").focus();
+
+    updateCardOrder();
+}
+
+window.copyAs = function copyAs(format) {
+    let text = "";
+
+    for (const card of cards) {
+        if (!card.isUnset)
+            text += card.getDescription(format) + "\n";
+    }
+
+    navigator.clipboard.writeText(text);
+    Toaster.show("Copied to clipboard");
 }
 
 window.highlightDeckInput = function highlightDeckInput(card) {
-    const cardText = card.getDescription();
 
-    let lastHoverOn = hoverOn;
-    hoverOn = false;
-    view.setSelection({ line: card.lineNr, ch: 0 }, { line: card.lineNr, ch: cardText.length });
-    hoverOn = lastHoverOn;
 }
 
 window.removeHighlightDeckInput = function removeHighlightDeckInput(card) {
-    let lastHoverOn = hoverOn;
-    hoverOn = false;
-    view.setSelection({ line: card.lineNr, ch: 0 });
-    hoverOn = lastHoverOn;
+
 }
 
 window.swapTo = function swapTo(target) {
@@ -366,11 +435,11 @@ window.swapTo = function swapTo(target) {
     let selectedCard;
     switch (View.mode) {
         case View.Mode.ARTVIEW:
-            selectedCard = cards.filter(c => c instanceof Card).find(c => c.elem.getBoundingClientRect().top > 0);
+            selectedCard = cards.filter(c => !c.isUnset).find(c => c.elem.getBoundingClientRect().top > 0);
             document.body.classList.remove('artView');
             break;
         case View.Mode.INPUT:
-            selectedCard = cards.filter(c => c instanceof Card).find(c => {
+            selectedCard = cards.filter(c => !c.isUnset).find(c => {
                 let rect = c.elem.getBoundingClientRect();
                 return rect.top <= (window.innerHeight / 2 + 10) && rect.bottom >= (window.innerHeight / 2 - 10);
             });
@@ -394,7 +463,7 @@ window.swapTo = function swapTo(target) {
     }
 
     if (selectedCard)
-        scrollTo(selectedCard, "instant");
+        scrollTo(selectedCard, cards, "instant");
 
     Events.dispatch(Events.Type.ViewChanged, target);
 };
@@ -403,7 +472,7 @@ window.updatePdfPreview = async function updatePdfPreview() {
     var imageDocument = new ImageDocumentPreview(printOptions);
 
     for (const card of cards)
-        if (card instanceof Card)
+        if (!card.isUnset)
             if (!(card.isBasicLand && printOptions.skipBasicLands))
                 imageDocument.addCard(card.count, card);
 
@@ -431,7 +500,7 @@ window.generatePdf = async function generatePdf() {
     var imageDocument = new ImageDocument(printOptions);
 
     for (const card of cards)
-        if (card instanceof Card)
+        if (!card.isUnset)
             if (!(card.isBasicLand && printOptions.skipBasicLands))
                 for (let img of card.printOptions.map(po => (po == Print.FRONT) ?
                     card.highResImageUris[0] :
@@ -526,7 +595,7 @@ window.selectFrameType = function selectFrameType(elem, frameType) {
 
 window.openScryfall = function openScryfall(card, evt) {
     card ||= Card.getOpenedCard();
-    card?.openScryfall(evt, searchOptions, view.display.wrapper.getBoundingClientRect());
+    card?.openScryfall(evt, searchOptions, document.getElementById("newDeckInput").getBoundingClientRect());
 };
 
 function updateArtButtons() {
@@ -574,29 +643,36 @@ cleanUpLocalStorage();
 window.updatePdfCreation({});
 window.updatePdfCreation({});
 
-let view = CodeMirror.fromTextArea(document.getElementById("deckInput"));
-
 async function initDeck() {
-    let deckText = sessionStorage.getItem("deck") ?? localStorage.getItem("deck") ?? await (await fetch('assets/placeholder.txt')).text();
-    view.doc.setValue(deckText);
+    deck = sessionStorage.getItem("deck") ?? localStorage.getItem("deck")
+
+    if (!deck)
+        deck = await (await fetch('assets/placeholder.txt')).text();
     window.Tutorial = Tutorial;
 
     if (isMobile)
         document.getElementById("tutorialButton").style.display = 'none';
     else {
-        if (localStorage.getItem('finishedTutorial') == null)
+        if (localStorage.getItem('finishedTutorial') == null) {
             Tutorial.start();
+            deck = await (await fetch('assets/placeholder.txt')).text();
+        }
     }
+
+    if (deck)
+        parseDeck(deck);
 };
 
 initDeck();
 
-async function scrollToSelectedCard(cards, selection) {
-    if (hoverOn && cards?.length > 0) {
-        const line = Math.min(selection.ranges[0].anchor.line, selection.ranges[0].head.line);
-        let closestCard = cards.find(card => card.lineNr >= line) || cards[cards.length - 1];
-        scrollTo(closestCard);
-        Events.dispatch(Events.Type.ScrollingToCard, closestCard);
+window.scrollToCard = async function scrollToCard(card) {
+    if (cards?.length > 0) {
+        if (card.isUnset)
+            card = cards.find(c => !c.isUnset && c.order > card.order) ?? cards.findLast(c => !c.isUnset && c.order < card.order);
+        if (card) {
+            scrollTo(card, cards);
+            Events.dispatch(Events.Type.ScrollingToCard, card);
+        }
     }
 }
 

@@ -15,7 +15,7 @@
         <img id="defaultViewButton" title="input" src="img/input.svg" class="clickable gray border"
             onclick="swapTo(View.Mode.INPUT); event.stopPropagation();">
         <img id="artViewButton" title="art view" src="img/artView.svg" class="clickable gray border"
-            onclick="swapTo(View.Mode.ARTVIEW); event.stopPropagation(); parseDeck();">
+            onclick="swapTo(View.Mode.ARTVIEW); event.stopPropagation();">
         <img id="pdfButton" title="pdf creation" src="img/pdf.svg" class="clickable gray border"
             onclick="swapTo(View.Mode.PDF); event.stopPropagation();">
         <img id="tutorialButton" title="start tutorial" src="img/tutorial.svg" class="clickable gray border"
@@ -68,34 +68,40 @@
                 <img src="img/futureFrame.svg" width="24" class="border transparent">
             </div>
         </div>
-        <button id="loadDeck" onclick="parseDeck()">Load Deck</button>
-        <div style="align-self: center;">Convert to:</div>
+        <div style="align-self: center;">copy as:</div>
         <div id="convertButtons">
-            <button id="convertToScryfallBtn" disabled onclick="convertToFormat(Format.SCRYFALL)">
+            <button id="convertToScryfallBtn" onclick="copyAs(Format.SCRYFALL)">
                 Scryfall Links
             </button>
-            <button id="convertToDeckstatsBtn" disabled onclick="convertToFormat(Format.DECKSTATS)">
+            <button id="convertToDeckstatsBtn" onclick="copyAs(Format.DECKSTATS)">
                 deckstats.net
             </button>
-            <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">
+            <button id="convertToMtgPrintBtn" onclick="copyAs(Format.MTGPRINT)">
                 MTG Print
             </button>
         </div>
-        <div id="newDeckInput">
+        <div id="newDeckInput" class="scrollbar">
             <div id="cardEntryTemplate" class="cardEntry unset" style="display: none;">
                 <label>
-                    <input id="input" type="text" />
+                    <div id="input">
+                        <textarea id="inputField" oninput="cardTextChanged(this.closest('.cardEntry').card)"
+                            onblur="this.closest('.cardEntry').card.editFinish()"
+                            onfocus="scrollToCard(this.closest('.cardEntry').card);"
+                            onkeydown="input(event, this.closest('.cardEntry').card)">
+                        </textarea>
+                        <button title="delete" id="delete" tabindex="-1"
+                            onclick="deleteCard(this.closest('.cardEntry').card)">X</button>
+                    </div>
                     <div id="display">
                         <div id="count">666</div>
                         <div id="cardHeader">
                             <div id="name">Fail</div>
-                            <div id="manacost">
-                            </div>
+                            <div id="manacost"></div>
                         </div>
-                        <button title="delete" id="delete">X</button>
+                        <button title="delete" id="delete" tabindex="-1"
+                            onclick="deleteCard(this.closest('.cardEntry').card)">X</button>
                     </div>
                 </label>
-                <button title="delete" id="delete">X</button>
             </div>
         </div>
         <textarea id="deckInput" style="display: none;"></textarea>
@@ -346,8 +352,8 @@
         <svg id="costG" width="100" height="100">
             <use href="img/mana.svg#costG"></use>
         </svg>
-        <svg id="costSnow" width="100" height="100">
-            <use href="img/mana.svg#costSnow"></use>
+        <svg id="costS" width="100" height="100">
+            <use href="img/mana.svg#costS"></use>
         </svg>
         <svg id="costWU" width="100" height="100">
             <use href="img/mana.svg#costWU"></use>
@@ -393,6 +399,9 @@
         </svg>
         <svg id="cost2G" width="100" height="100">
             <use href="img/mana.svg#cost2G"></use>
+        </svg>
+        <svg id="costPC" width="100" height="100">
+            <use href="img/mana.svg#costPC"></use>
         </svg>
         <svg id="costPW" width="100" height="100">
             <use href="img/mana.svg#costPW"></use>

@@ -164,52 +164,84 @@ svg {
 #newDeckInput {
     overflow: hidden scroll;
     font-size: 1.2em;
+    padding-block: 0.2em;
 
     .cardEntry {
         position: relative;
 
-        input {
+        --flip-speed: 0.2s;
+
+        #input {
             position: absolute;
+            display: inline-flex;
             left: 0;
-            right: 4em;
-            top: 4px;
-            height: 22px;
-            margin-inline: 0.5em;
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 2px solid var(--border-dark);
-            border-radius: 3px;
-            font-size: 1.2em;
+            right: 0;
+            top: 0.4em;
             perspective: 1000px;
             transform-style: preserve-3d;
             transform-origin: 0 50% -1em;
             transform: perspective(1000px) rotateX(90deg);
             backface-visibility: hidden;
-            transition: transform 0.2s;
-
+            transition: transform var(--flip-speed);
         }
 
-        input:focus,
-        &.unset input{
-            transition: transform 0.2s;
-            transform: perspective(1000px) rotateX(0deg);
+        #inputField {
+            position: relative;
+            width: calc(100% - 6em);
+            height: 20px;
+            top: -0.25em;
+            margin-inline: 1em;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
             border: 2px solid var(--border-dark);
+            border-radius: 3px;
+            font-size: 1em;
+            padding: 4px 4px 0 4px;
+            overflow: hidden;
+        }
+
+        &.unset #inputField {
+            border-bottom: none;
+        }
+
+        &.unset+.cardEntry.unset #inputField {
+            border-top: none;
+            border-bottom: none;
+            height: 28px;
+            top: calc(-0.25em - 4px);
+        }
+
+        #input:focus-within {
+            z-index: 100;
+        }
+
+        #input #delete {
+            position: absolute;
+            right: 3.5em;
+            top: -0.65em;
+        }
+
+        #input:focus-within,
+        &.unset #input {
+            transform: perspective(100000px) rotateX(0deg);
             outline: none;
         }
 
-        input:focus+#display,
-        &.unset #display{
+        #input:focus-within+#display,
+        &.unset #display {
             transform: perspective(1000px) rotateX(-90deg);
-            transition: transform 0.2s;
         }
 
         #display {
             height: 30px;
+            width: 100%;
             display: inline-block;
             transform-origin: 0 50% -1em;
-            transform: perspective(1000px) rotateX(0deg);
+            transform: perspective(100000px) rotateX(0deg);
             backface-visibility: hidden;
-            transition: transform 0.2s;
+            transition: transform var(--flip-speed);
+            -webkit-user-select: none;
+            user-select: none;
 
             label {
                 display: inline-block;
@@ -221,9 +253,12 @@ svg {
                 font-weight: bold;
                 display: inline-block;
                 width: 2em;
+                top: 0.4em;
                 margin-right: 0.5em;
                 text-align: end;
                 vertical-align: super;
+                -webkit-user-select: none;
+                user-select: none;
 
                 &:after {
                     content: "x";
@@ -236,12 +271,15 @@ svg {
 
             #cardHeader {
                 position: relative;
-                display: inline-block;
+                display: inline-flex;
                 padding-block: 0.2em;
-                padding-inline: 0.5em;
+                padding-left: 0.5em;
+                padding-right: 0.25em;
                 margin-inline: 1em;
                 width: 20em;
+                height: 1em;
                 overflow: hidden;
+                align-items: flex-end;
 
                 &:before {
                     content: "";
@@ -250,82 +288,161 @@ svg {
                     position: absolute;
                     left: 0;
                     right: 0;
-                    top: -0.6em;
+                    top: -0.8em;
                     height: 3em;
                     background-color: #dce1e5;
                     border-radius: 50em;
                 }
-                
+
                 --mana-w: #e5dfcb;
                 --mana-u: #b4d2ed;
                 --mana-b: #ad9d9e;
                 --mana-r: #e6c0b2;
                 --mana-g: #bdbca5;
+                --angle: 160deg;
 
-                &.identityW:before{ background-color: var(--mana-w); }
-                &.identityU:before{ background-color: var(--mana-u); }
-                &.identityB:before{ background-color: var(--mana-b); }
-                &.identityR:before{ background-color: var(--mana-r); }
-                &.identityG:before{ background-color: var(--mana-g); }
-                &.identityWU:before,&.identityUW:before{ background-image: linear-gradient(30deg,var(--mana-w) 0 30%,var(--mana-u) 70% 100%); }
-                &.identityWB:before,&.identityBW:before{ background-image: linear-gradient(30deg,var(--mana-w) 0 30%,var(--mana-b) 70% 100%); }
-                &.identityUB:before,&.identityBU:before{ background-image: linear-gradient(30deg,var(--mana-u) 0 30%,var(--mana-b) 70% 100%); }
-                &.identityUR:before,&.identityRU:before{ background-image: linear-gradient(30deg,var(--mana-u) 0 30%,var(--mana-r) 70% 100%); }
-                &.identityBR:before,&.identityRB:before{ background-image: linear-gradient(30deg,var(--mana-b) 0 30%,var(--mana-r) 70% 100%); }
-                &.identityBG:before,&.identityGB:before{ background-image: linear-gradient(30deg,var(--mana-b) 0 30%,var(--mana-g) 70% 100%); }
-                &.identityRG:before,&.identityGR:before{ background-image: linear-gradient(30deg,var(--mana-r) 0 30%,var(--mana-g) 70% 100%); }
-                &.identityRW:before,&.identityWR:before{ background-image: linear-gradient(30deg,var(--mana-r) 0 30%,var(--mana-w) 70% 100%); }
-                &.identityGW:before,&.identityWG:before{ background-image: linear-gradient(30deg,var(--mana-g) 0 30%,var(--mana-w) 70% 100%); }
-                &.identityGU:before,&.identityUG:before{ background-image: linear-gradient(30deg,var(--mana-g) 0 30%,var(--mana-u) 70% 100%); }
-            }
+                &[identity~="W"]:before {
+                    background-color: var(--mana-w);
+                }
 
-            #name {
-                position: relative;
-                z-index: 1;
-                font-weight: bold;
-                color: #020202;
-                display: inline-block;
-            }
+                &[identity~="U"]:before {
+                    background-color: var(--mana-u);
+                }
 
-            #manacost {
-                display: inline-block;
-                position: absolute;
-                right: 0.3em;
-                filter: drop-shadow(-1px 3px 1px rgba(0, 0, 0, 0.6));
+                &[identity~="B"]:before {
+                    background-color: var(--mana-b);
+                }
 
-                svg {
-                    display: inline-block;
-                    transform-origin: top center;
-                    height: 1.2em;
-                    width: auto;
+                &[identity~="R"]:before {
+                    background-color: var(--mana-r);
+                }
 
-                    use {
-                        display: inline-block;
-                        transform-origin: top left;
-                        transform: scale(calc(1.2em / 100px));
-                    }
+                &[identity~="G"]:before {
+                    background-color: var(--mana-g);
+                }
+
+                &[identity~="UW"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-w) 0 30%, var(--mana-u) 70% 100%);
+                }
+
+                &[identity~="BW"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-w) 0 30%, var(--mana-b) 70% 100%);
+                }
+
+                &[identity~="BU"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-u) 0 30%, var(--mana-b) 70% 100%);
+                }
+
+                &[identity~="RU"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-u) 0 30%, var(--mana-r) 70% 100%);
+                }
+
+                &[identity~="BR"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-b) 0 30%, var(--mana-r) 70% 100%);
+                }
+
+                &[identity~="BG"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-b) 0 30%, var(--mana-g) 70% 100%);
+                }
+
+                &[identity~="GR"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-r) 0 30%, var(--mana-g) 70% 100%);
+                }
+
+                &[identity~="RW"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-r) 0 30%, var(--mana-w) 70% 100%);
+                }
+
+                &[identity~="GW"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-g) 0 30%, var(--mana-w) 70% 100%);
+                }
+
+                &[identity~="GU"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-g) 0 30%, var(--mana-u) 70% 100%);
+                }
+
+                /* &[identity~="BRW"]:before {
+                    background-image: linear-gradient(var(--angle), var(--mana-r) 0 20%, var(--mana-w) 45% 55%, var(--mana-b) 80% 100%);
+                    } */
+
+                &[identity~="BGR"]:before,
+                &[identity~="BGU"]:before,
+                &[identity~="BGW"]:before,
+                &[identity~="BRU"]:before,
+                &[identity~="BRW"]:before,
+                &[identity~="BUW"]:before,
+                &[identity~="GRU"]:before,
+                &[identity~="GRW"]:before,
+                &[identity~="GUW"]:before,
+                &[identity~="RUW"]:before,
+                &[identity~="BGRU"]:before,
+                &[identity~="BRUW"]:before,
+                &[identity~="BGUW"]:before,
+                &[identity~="BGRW"]:before,
+                &[identity~="GRUW"]:before,
+                &[identity~="BGRUW"]:before {
+                    background-color: #d3bd81;
+                }
+
+                &.grayed {
+                    filter: grayscale(50%) contrast(0.3) !important;
                 }
             }
         }
 
-        #delete {
+        #name {
             position: relative;
+            z-index: 1;
+            top: 2px;
+            height: 1em;
             font-weight: bold;
-            background-color: transparent;
-            color: white;
-            border: 2px solid var(--border-dark);
-            border-radius: 3px;
+            color: #020202;
             display: inline-block;
-            height: 28px;
-            width: 28px;
-            vertical-align: top;
-            padding: 0px;
+            text-overflow: ellipsis;
+            flex: 1;
+            overflow: clip;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        &>#delete {
-            position: absolute;
-            right: 5em;
+        #manacost {
+            position: relative;
+            display: inline-block;
+            top: 5px;
+            flex: 0;
+            text-wrap-mode: nowrap;
+            filter: drop-shadow(-1px 3px 1px rgba(0, 0, 0, 0.6));
+
+            svg {
+                display: inline-block;
+                transform-origin: top center;
+                height: 1.2em;
+                width: auto;
+
+                use {
+                    display: inline-block;
+                    transform-origin: top left;
+                    transform: scale(0.23);
+                    /*scale(calc(1.2em / 100px));*/
+                }
+            }
         }
+    }
+
+    #delete {
+        position: relative;
+        font-weight: bold;
+        background-color: transparent;
+        color: white;
+        border: 2px solid var(--border-dark);
+        border-radius: 3px;
+        display: inline-block;
+        height: 28px;
+        width: 28px;
+        vertical-align: top;
+        padding: 0px;
+        -webkit-user-select: none;
+        user-select: none;
     }
 }
 
@@ -620,6 +737,10 @@ button {
     pointer-events: none;
 }
 
+#toaster.error {
+    background-color: rgb(73, 23, 23);
+}
+
 #toaster.show {
     opacity: 1;
 }
@@ -628,7 +749,12 @@ button {
     margin: 0;
 }
 
+#toaster.progress .progress-bar {
+    display: inherit;
+}
+
 .progress-bar {
+    display: none;
     width: 100%;
     height: 5px;
     background-color: #555;
@@ -880,4 +1006,9 @@ button {
     top: 0;
     right: 0;
     padding: 4px 8px;
+}
+
+textarea {
+    resize: none;
+    font-family: 'Roboto', sans-serif;
 }

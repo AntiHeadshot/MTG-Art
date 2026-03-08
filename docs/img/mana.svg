@@ -320,6 +320,12 @@
             </g>
             <path fill="#111212" d="M-342.437,259.925c0.058-5.344-1.64-10.739-4.967-14.928c-1.608-1.771-2.93-3.787-4.633-5.461  c-3.754-3.726-9.375-3.974-13.897-6.321c-0.263-2.357-1.125-4.715-0.603-7.093c0.159-0.791,0.392-1.593-0.029-2.349  c-1.186-2.732-0.167-5.698-0.378-8.547c-0.158-1.488-0.057-3.309-1.474-4.228c-0.33,3.097-1.469,5.979-2.392,8.918  c-0.426,2.29-0.426,4.676-1.413,6.836c0.626,2.188-0.614,4.03-1.956,5.646c-2.966,1.52-6.496,1.881-9.077,4.11  c-1.841,1.562-3.828,2.931-5.888,4.202c-1.545,1.934-3.256,3.797-3.944,6.24c-2.762,3.335-3.088,7.811-4.654,11.717  c-0.029,5.799,1.146,12.043,4.85,16.691c2.65,2.188,4.502,5.131,7.148,7.32c2.54,1.516,5.251,2.762,7.874,4.127  c1.71,0.398,3.475,0.594,5.176,1.059c1.38,7.109,2.322,14.391,5.092,21.133c0.919-2.768,0.808-5.734,1.601-8.531  c1.118-4.136-1.176-8.441,0.117-12.501c1.938-1.733,5.17-0.608,7.32-2.095c4.092-2.523,8.422-4.98,11.39-8.84  c1.105-2.219,3.426-3.877,3.426-6.539C-343.729,266.906-341.638,263.549-342.437,259.925z M-372.81,281.855  c-2.965-0.721-5.727-2.139-8.214-3.871c-2.676-1.783-3.674-5.11-6.314-6.934c-2.472-2.951-1.937-6.982-2.95-10.476  c0.406-2.438,0.885-4.856,1.138-7.325c1.206-1.956,3.067-3.516,3.583-5.87c1.767-2.532,4.458-4.284,6.619-6.479  c1.572-1.813,4.074-1.049,6.139-1.119c-0.205,2-0.368,4.068,0.133,6.041c0.244,1.212,0.791,2.406,0.604,3.676  c-0.414,2.699,0.599,5.406-0.117,8.074c-1.443,5.578,0.131,11.209,0.268,16.832C-372.127,276.895-372.243,279.404-372.81,281.855z   M-350.333,271.285c-1.964,1.396-3.637,3.111-5.351,4.785c-2.979,2.06-5.923,4.24-9.469,5.27c0.32-2.529,0.632-5.131-0.174-7.607  c-1.978-5.594,0.446-11.445,0.855-17.102c-0.361-3.363-0.016-6.951-1.558-10.049c-0.202-2.327,0.804-4.574,1.486-6.764  c2.342,0.935,4.547,2.197,6.496,3.82c2.354,1.764,5.96,2.908,6.487,6.198c0.269,2.161,2.634,3.468,2.565,5.679  C-349.144,260.771-348.419,266.268-350.333,271.285z" id="path124" />
         </symbol>
+        <symbol id="costPC" viewBox="-420 210 100 100" width="100" height="100">
+            <g id="g95">
+                <circle fill="#CAC5C0" cx="-370" cy="260" r="50" id="circle94" />
+            </g>
+            <path fill="#111212" d="M-342.437,259.925c0.058-5.344-1.64-10.739-4.967-14.928c-1.608-1.771-2.93-3.787-4.633-5.461  c-3.754-3.726-9.375-3.974-13.897-6.321c-0.263-2.357-1.125-4.715-0.603-7.093c0.159-0.791,0.392-1.593-0.029-2.349  c-1.186-2.732-0.167-5.698-0.378-8.547c-0.158-1.488-0.057-3.309-1.474-4.228c-0.33,3.097-1.469,5.979-2.392,8.918  c-0.426,2.29-0.426,4.676-1.413,6.836c0.626,2.188-0.614,4.03-1.956,5.646c-2.966,1.52-6.496,1.881-9.077,4.11  c-1.841,1.562-3.828,2.931-5.888,4.202c-1.545,1.934-3.256,3.797-3.944,6.24c-2.762,3.335-3.088,7.811-4.654,11.717  c-0.029,5.799,1.146,12.043,4.85,16.691c2.65,2.188,4.502,5.131,7.148,7.32c2.54,1.516,5.251,2.762,7.874,4.127  c1.71,0.398,3.475,0.594,5.176,1.059c1.38,7.109,2.322,14.391,5.092,21.133c0.919-2.768,0.808-5.734,1.601-8.531  c1.118-4.136-1.176-8.441,0.117-12.501c1.938-1.733,5.17-0.608,7.32-2.095c4.092-2.523,8.422-4.98,11.39-8.84  c1.105-2.219,3.426-3.877,3.426-6.539C-343.729,266.906-341.638,263.549-342.437,259.925z M-372.81,281.855  c-2.965-0.721-5.727-2.139-8.214-3.871c-2.676-1.783-3.674-5.11-6.314-6.934c-2.472-2.951-1.937-6.982-2.95-10.476  c0.406-2.438,0.885-4.856,1.138-7.325c1.206-1.956,3.067-3.516,3.583-5.87c1.767-2.532,4.458-4.284,6.619-6.479  c1.572-1.813,4.074-1.049,6.139-1.119c-0.205,2-0.368,4.068,0.133,6.041c0.244,1.212,0.791,2.406,0.604,3.676  c-0.414,2.699,0.599,5.406-0.117,8.074c-1.443,5.578,0.131,11.209,0.268,16.832C-372.127,276.895-372.243,279.404-372.81,281.855z   M-350.333,271.285c-1.964,1.396-3.637,3.111-5.351,4.785c-2.979,2.06-5.923,4.24-9.469,5.27c0.32-2.529,0.632-5.131-0.174-7.607  c-1.978-5.594,0.446-11.445,0.855-17.102c-0.361-3.363-0.016-6.951-1.558-10.049c-0.202-2.327,0.804-4.574,1.486-6.764  c2.342,0.935,4.547,2.197,6.496,3.82c2.354,1.764,5.96,2.908,6.487,6.198c0.269,2.161,2.634,3.468,2.565,5.679  C-349.144,260.771-348.419,266.268-350.333,271.285z" id="path124" />
+        </symbol>
         <symbol id="costTap" viewBox="-945 315 100 100" width="100" height="100">
             <g id="g96">
                 <circle fill="#CAC5C0" cx="-895" cy="364.998" r="50" id="circle95" />
@@ -458,86 +464,92 @@
                 <polygon fill="#FFFFFF" points="77.436,42.303 63.268,42.341 70.385,30.092 84.551,30.053  " id="polygon150" />
             </g>
         </symbol>
+        <symbol id="costC" viewBox="0 0 32 32" width="100" height="100">
+            <path fill="#cac5c0" d="M32 16c0 8.835-7.162 16-16 16s-16-7.165-16-16 7.162-16 16-16 16 7.165 16 16z"/>
+            <path fill="#000" d="M15.9 3.848c0.792 1.59 1.761 3.134 2.911 4.632 0.489 0.629 1.049 1.287 1.681 1.967 0.623 0.68 1.315 1.361 2.064 2.030 0.755 0.669 1.581 1.304 2.482 1.904s1.87 1.149 2.911 1.641c-1.53 0.818-3.045 1.813-4.552 2.991-0.626 0.492-1.281 1.058-1.967 1.704-0.68 0.641-1.349 1.344-2.004 2.104-0.655 0.772-1.284 1.601-1.887 2.505-0.601 0.898-1.147 1.853-1.638 2.865-0.766-1.504-1.721-2.991-2.868-4.466-0.984-1.258-2.227-2.579-3.731-3.974-1.501-1.395-3.319-2.636-5.45-3.728 1.532-0.795 3.048-1.778 4.552-2.951 1.284-1.012 2.608-2.276 3.972-3.791 1.366-1.516 2.539-3.323 3.525-5.433zM14.139 20.775c0.712 0.904 1.298 1.819 1.761 2.745 0.603-1.287 1.327-2.39 2.17-3.317 0.846-0.932 1.67-1.71 2.462-2.339 0.9-0.703 1.841-1.321 2.828-1.847-1.312-0.595-2.428-1.321-3.34-2.167-0.918-0.846-1.69-1.664-2.316-2.459-0.712-0.898-1.315-1.853-1.804-2.865-0.6 1.309-1.321 2.43-2.15 3.357-0.835 0.932-1.647 1.704-2.439 2.339-0.903 0.709-1.844 1.304-2.828 1.801 1.312 0.681 2.43 1.447 3.36 2.293s1.696 1.67 2.296 2.459z"/>
+</symbol>
     </defs>
-    <use href="#cost1" x="5" y="5"/><text x="5" y="0">#cost1</text>
-    <use href="#cost2" x="110" y="5"/><text x="110" y="0">#cost2</text>
-    <use href="#cost3" x="215" y="5"/><text x="215" y="0">#cost3</text>
-    <use href="#cost4" x="320" y="5"/><text x="320" y="0">#cost4</text>
-    <use href="#cost5" x="425" y="5"/><text x="425" y="0">#cost5</text>
-    <use href="#cost6" x="530" y="5"/><text x="530" y="0">#cost6</text>
-    <use href="#cost7" x="635" y="5"/><text x="635" y="0">#cost7</text>
-    <use href="#cost8" x="740" y="5"/><text x="740" y="0">#cost8</text>
-    <use href="#cost9" x="845" y="5"/><text x="845" y="0">#cost9</text>
-    <use href="#cost10" x="950" y="5"/><text x="950" y="0">#cost10</text>
-    <use href="#cost11" x="5" y="110"/><text x="5" y="105">#cost11</text>
-    <use href="#cost12" x="110" y="110"/><text x="110" y="105">#cost12</text>
-    <use href="#cost13" x="215" y="110"/><text x="215" y="105">#cost13</text>
-    <use href="#cost14" x="320" y="110"/><text x="320" y="105">#cost14</text>
-    <use href="#cost15" x="425" y="110"/><text x="425" y="105">#cost15</text>
-    <use href="#cost16" x="530" y="110"/><text x="530" y="105">#cost16</text>
-    <use href="#cost17" x="635" y="110"/><text x="635" y="105">#cost17</text>
-    <use href="#cost18" x="740" y="110"/><text x="740" y="105">#cost18</text>
-    <use href="#cost19" x="845" y="110"/><text x="845" y="105">#cost19</text>
-    <use href="#cost20" x="950" y="110"/><text x="950" y="105">#cost20</text>
-    <use href="#costW" x="5" y="215"/><text x="5" y="210">#costW</text>
-    <use href="#costU" x="110" y="215"/><text x="110" y="210">#costU</text>
-    <use href="#costB" x="215" y="215"/><text x="215" y="210">#costB</text>
-    <use href="#costR" x="320" y="215"/><text x="320" y="210">#costR</text>
-    <use href="#costG" x="425" y="215"/><text x="425" y="210">#costG</text>
-    <use href="#cost2W" x="530" y="215"/><text x="530" y="210">#cost2W</text>
-    <use href="#cost2U" x="635" y="215"/><text x="635" y="210">#cost2U</text>
-    <use href="#cost2B" x="740" y="215"/><text x="740" y="210">#cost2B</text>
-    <use href="#cost2R" x="845" y="215"/><text x="845" y="210">#cost2R</text>
-    <use href="#cost2G" x="950" y="215"/><text x="950" y="210">#cost2G</text>
-    <use href="#costWU" x="5" y="320"/><text x="5" y="315">#costWU</text>
-    <use href="#costWB" x="110" y="320"/><text x="110" y="315">#costWB</text>
-    <use href="#costUB" x="215" y="320"/><text x="215" y="315">#costUB</text>
-    <use href="#costUR" x="320" y="320"/><text x="320" y="315">#costUR</text>
-    <use href="#costBR" x="425" y="320"/><text x="425" y="315">#costBR</text>
-    <use href="#costBG" x="530" y="320"/><text x="530" y="315">#costBG</text>
-    <use href="#costRG" x="635" y="320"/><text x="635" y="315">#costRG</text>
-    <use href="#costRW" x="740" y="320"/><text x="740" y="315">#costRW</text>
-    <use href="#costGW" x="845" y="320"/><text x="845" y="315">#costGW</text>
-    <use href="#costGU" x="950" y="320"/><text x="950" y="315">#costGU</text>
-    <use href="#costCW" x="5" y="425"/><text x="5" y="420">#costCW</text>
-    <use href="#costCU" x="110" y="425"/><text x="110" y="420">#costCU</text>
-    <use href="#costCB" x="215" y="425"/><text x="215" y="420">#costCB</text>
-    <use href="#costCR" x="320" y="425"/><text x="320" y="420">#costCR</text>
-    <use href="#costCG" x="425" y="425"/><text x="425" y="420">#costCG</text>
-    <use href="#costPW" x="530" y="425"/><text x="530" y="420">#costPW</text>
-    <use href="#costPU" x="635" y="425"/><text x="635" y="420">#costPU</text>
-    <use href="#costPB" x="740" y="425"/><text x="740" y="420">#costPB</text>
-    <use href="#costPR" x="845" y="425"/><text x="845" y="420">#costPR</text>
-    <use href="#costPG" x="950" y="425"/><text x="950" y="420">#costPG</text>
-    <use href="#costPWU" x="5" y="530"/><text x="5" y="525">#costPWU</text>
-    <use href="#costPWB" x="110" y="530"/><text x="110" y="525">#costPWB</text>
-    <use href="#costPUB" x="215" y="530"/><text x="215" y="525">#costPUB</text>
-    <use href="#costPUR" x="320" y="530"/><text x="320" y="525">#costPUR</text>
-    <use href="#costPBR" x="425" y="530"/><text x="425" y="525">#costPBR</text>
-    <use href="#costPBG" x="530" y="530"/><text x="530" y="525">#costPBG</text>
-    <use href="#costPRG" x="635" y="530"/><text x="635" y="525">#costPRG</text>
-    <use href="#costPRW" x="740" y="530"/><text x="740" y="525">#costPRW</text>
-    <use href="#costPGW" x="845" y="530"/><text x="845" y="525">#costPGW</text>
-    <use href="#costPGU" x="950" y="530"/><text x="950" y="525">#costPGU</text>
-    <use href="#cost0" x="5" y="635"/><text x="5" y="630">#cost0</text>
-    <use href="#costC" x="110" y="635"/><text x="110" y="630">#costC</text>
-    <use href="#costInf" x="215" y="635"/><text x="215" y="630">#costInf</text>
-    <use href="#costHalf" x="320" y="635"/><text x="320" y="630">#costHalf</text>
-    <use href="#costS" x="425" y="635"/><text x="425" y="630">#costS</text>
-    <use href="#costWOld" x="530" y="635"/><text x="530" y="630">#costWOld</text>
-    <use href="#costTap" x="635" y="635"/><text x="635" y="630">#costTap</text>
-    <use href="#costTapOld1" x="740" y="635"/><text x="740" y="630">#costTapOld1</text>
-    <use href="#costTapOld2" x="845" y="635"/><text x="845" y="630">#costTapOld2</text>
-    <use href="#costUntap" x="950" y="635"/><text x="950" y="630">#costUntap</text>
-    <use href="#costX" x="5" y="740"/><text x="5" y="740">#costX</text>
-    <use href="#costY" x="110" y="740"/><text x="110" y="735">#costY</text>
-    <use href="#costZ" x="215" y="740"/><text x="215" y="735">#costZ</text>
-    <use href="#costWHalf" x="316.6" y="740"/><text x="316.6" y="735">#costWHalf</text>
-    <use href="#costRHalf" x="373.3" y="740"/><text x="373.3" y="735">#costRHalf</text>
-    <use href="#cost1Mil" x="425" y="740"/><text x="425" y="735">#cost1Mil</text>
+    <g style="fill:deeppink">
+    <use href="#cost1" x="5" y="5"/><text x="5" y="20">#cost1</text>
+    <use href="#cost2" x="110" y="5"/><text x="110" y="20">#cost2</text>
+    <use href="#cost3" x="215" y="5"/><text x="215" y="20">#cost3</text>
+    <use href="#cost4" x="320" y="5"/><text x="320" y="20">#cost4</text>
+    <use href="#cost5" x="425" y="5"/><text x="425" y="20">#cost5</text>
+    <use href="#cost6" x="530" y="5"/><text x="530" y="20">#cost6</text>
+    <use href="#cost7" x="635" y="5"/><text x="635" y="20">#cost7</text>
+    <use href="#cost8" x="740" y="5"/><text x="740" y="20">#cost8</text>
+    <use href="#cost9" x="845" y="5"/><text x="845" y="20">#cost9</text>
+    <use href="#cost10" x="950" y="5"/><text x="950" y="20">#cost10</text>
+    <use href="#cost11" x="5" y="110"/><text x="5" y="125">#cost11</text>
+    <use href="#cost12" x="110" y="110"/><text x="110" y="125">#cost12</text>
+    <use href="#cost13" x="215" y="110"/><text x="215" y="125">#cost13</text>
+    <use href="#cost14" x="320" y="110"/><text x="320" y="125">#cost14</text>
+    <use href="#cost15" x="425" y="110"/><text x="425" y="125">#cost15</text>
+    <use href="#cost16" x="530" y="110"/><text x="530" y="125">#cost16</text>
+    <use href="#cost17" x="635" y="110"/><text x="635" y="125">#cost17</text>
+    <use href="#cost18" x="740" y="110"/><text x="740" y="125">#cost18</text>
+    <use href="#cost19" x="845" y="110"/><text x="845" y="125">#cost19</text>
+    <use href="#cost20" x="950" y="110"/><text x="950" y="125">#cost20</text>
+    <use href="#costW" x="5" y="215"/><text x="5" y="230">#costW</text>
+    <use href="#costU" x="110" y="215"/><text x="110" y="230">#costU</text>
+    <use href="#costB" x="215" y="215"/><text x="215" y="230">#costB</text>
+    <use href="#costR" x="320" y="215"/><text x="320" y="230">#costR</text>
+    <use href="#costG" x="425" y="215"/><text x="425" y="230">#costG</text>
+    <use href="#cost2W" x="530" y="215"/><text x="530" y="230">#cost2W</text>
+    <use href="#cost2U" x="635" y="215"/><text x="635" y="230">#cost2U</text>
+    <use href="#cost2B" x="740" y="215"/><text x="740" y="230">#cost2B</text>
+    <use href="#cost2R" x="845" y="215"/><text x="845" y="230">#cost2R</text>
+    <use href="#cost2G" x="950" y="215"/><text x="950" y="230">#cost2G</text>
+    <use href="#costWU" x="5" y="320"/><text x="5" y="335">#costWU</text>
+    <use href="#costWB" x="110" y="320"/><text x="110" y="335">#costWB</text>
+    <use href="#costUB" x="215" y="320"/><text x="215" y="335">#costUB</text>
+    <use href="#costUR" x="320" y="320"/><text x="320" y="335">#costUR</text>
+    <use href="#costBR" x="425" y="320"/><text x="425" y="335">#costBR</text>
+    <use href="#costBG" x="530" y="320"/><text x="530" y="335">#costBG</text>
+    <use href="#costRG" x="635" y="320"/><text x="635" y="335">#costRG</text>
+    <use href="#costRW" x="740" y="320"/><text x="740" y="335">#costRW</text>
+    <use href="#costGW" x="845" y="320"/><text x="845" y="335">#costGW</text>
+    <use href="#costGU" x="950" y="320"/><text x="950" y="335">#costGU</text>
+    <use href="#costCW" x="5" y="425"/><text x="5" y="450">#costCW</text>
+    <use href="#costCU" x="110" y="425"/><text x="110" y="450">#costCU</text>
+    <use href="#costCB" x="215" y="425"/><text x="215" y="450">#costCB</text>
+    <use href="#costCR" x="320" y="425"/><text x="320" y="450">#costCR</text>
+    <use href="#costCG" x="425" y="425"/><text x="425" y="450">#costCG</text>
+    <use href="#costPW" x="530" y="425"/><text x="530" y="450">#costPW</text>
+    <use href="#costPU" x="635" y="425"/><text x="635" y="450">#costPU</text>
+    <use href="#costPB" x="740" y="425"/><text x="740" y="450">#costPB</text>
+    <use href="#costPR" x="845" y="425"/><text x="845" y="450">#costPR</text>
+    <use href="#costPG" x="950" y="425"/><text x="950" y="450">#costPG</text>
+    <use href="#costPWU" x="5" y="530"/><text x="5" y="555">#costPWU</text>
+    <use href="#costPWB" x="110" y="530"/><text x="110" y="555">#costPWB</text>
+    <use href="#costPUB" x="215" y="530"/><text x="215" y="555">#costPUB</text>
+    <use href="#costPUR" x="320" y="530"/><text x="320" y="555">#costPUR</text>
+    <use href="#costPBR" x="425" y="530"/><text x="425" y="555">#costPBR</text>
+    <use href="#costPBG" x="530" y="530"/><text x="530" y="555">#costPBG</text>
+    <use href="#costPRG" x="635" y="530"/><text x="635" y="555">#costPRG</text>
+    <use href="#costPRW" x="740" y="530"/><text x="740" y="555">#costPRW</text>
+    <use href="#costPGW" x="845" y="530"/><text x="845" y="555">#costPGW</text>
+    <use href="#costPGU" x="950" y="530"/><text x="950" y="555">#costPGU</text>
+    <use href="#cost0" x="5" y="635"/><text x="5" y="660">#cost0</text>
+    <use href="#costC" x="110" y="635"/><text x="110" y="660">#costC</text>
+    <use href="#costInf" x="215" y="635"/><text x="215" y="660">#costInf</text>
+    <use href="#costHalf" x="320" y="635"/><text x="320" y="660">#costHalf</text>
+    <use href="#costS" x="425" y="635"/><text x="425" y="660">#costS</text>
+    <use href="#costWOld" x="530" y="635"/><text x="530" y="660">#costWOld</text>
+    <use href="#costTap" x="635" y="635"/><text x="635" y="660">#costTap</text>
+    <use href="#costTapOld1" x="740" y="635"/><text x="740" y="660">#costTapOld1</text>
+    <use href="#costTapOld2" x="845" y="635"/><text x="845" y="660">#costTapOld2</text>
+    <use href="#costUntap" x="950" y="635"/><text x="950" y="660">#costUntap</text>
+    <use href="#costX" x="5" y="740"/><text x="5" y="765">#costX</text>
+    <use href="#costY" x="110" y="740"/><text x="110" y="765">#costY</text>
+    <use href="#costZ" x="215" y="740"/><text x="215" y="765">#costZ</text>
+    <use href="#costWHalf" x="316.6" y="740"/><text x="316.6" y="765">#costWHalf</text>
+    <use href="#costRHalf" x="373.3" y="740"/><text x="373.3" y="765">#costRHalf</text>
+    <use href="#cost1Mil" x="425" y="740"/><text x="425" y="765">#cost1Mil</text>
     <use href="#cost" x="530" y="740"/>
     <use href="#cost" x="635" y="740"/>
     <use href="#cost" x="740" y="740"/>
     <use href="#cost" x="845" y="740"/>
     <use href="#cost" x="950" y="740"/>
+        </g>
 </svg>

@@ -24,7 +24,7 @@ Tutorial.addStep({
 });
 
 Tutorial.addStep({
-    getElement: () => document.querySelector('.CodeMirror'),
+    getElement: () => document.querySelector('#newDeckInput'),
     text: `Input your deck here. You can type or paste your deck list into this field. Each card should be on a new line and if no count is given, a single card is assumed.
 <br>
 <br>Your deck will be <b>automatically saved</b> and loaded again when you reload or revisit this site.
@@ -56,37 +56,26 @@ Tutorial.addStep({
 
 Tutorial.addStep({
     getElement: async () => {
-        let template = await fetch('assets/placeholder.txt');
-        document.querySelector('.CodeMirror').CodeMirror.doc.setValue(await template.text());
-
-        return document.querySelector('#loadDeck')
+        return document.querySelector('#newDeckInput')
     },
-    text: `You then continue with loading the deck. We try to recognize every card.
+    text: `We try to recognize every card.
 <br>Set and the number of the card will be prioritized over the name.
 <br>
-<br>Entries like "1 Vampire" will be treated as unspecified as long as you do not change the card. Be careful to select the correct card you want.
+<br>Entries like "1 Vampire" will be treated as unspecified as long as you do not change the card. So the search will return cards by name instead of the exact same card. Be careful to select the correct card you want.
 <br>
-<br>While loading, you can see the progress in the text field and the toaster in the bottom right corner.
+<br>By pressing enter you can add another entry.
+<br>The border will change from red to gray it a card could be read.
 <br>
-<br>You can load the deck once. If you want to load another deck, press F5.
+<br>You can switch to the next entry with tab or arrow down key.
 <br>
-<br>To continue, click "Load Deck" and wait until it has finished.`,
-    continueAfter: () => Tutorial.waitForEvent(Events.Type.DeckLoaded, () => isDeckLoaded = true),
-    canSkip: () => isDeckLoaded,
+<br>The card list shows the card you selected in the input field. Try this next.
+`
 });
 
 Tutorial.addStep({
-    getElement: () => document.querySelector('#cards'),
-    text: `In this view, all the cards are displayed on the left.
-<br>You can scroll through them and see which card you are hovering over in the input field.
-<br>
-<br>You can also scroll to a card by clicking on its entry in the input field.
-<br>Try this next.`,
-});
-
-Tutorial.addStep({
-    getElement: () => document.querySelector('.CodeMirror'),
+    getElement: () => document.querySelector('#newDeckInput'),
     text: 'Click on an entry for a card to scroll to its position',
+    //todo unselect
     continueAfter: () => Tutorial.waitForEvent(Events.Type.ScrollingToCard, c => selectedCard = c),
     canSkip: () => selectedCard != null,
 });
@@ -103,7 +92,7 @@ Tutorial.addStep({
 <br>Click on the card and change it afterward.
     `,
     continueAfter: async () => {
-        scrollTo(document.querySelector('#' + selectedCard.elem.id).card);
+        scrollToCard(document.querySelector('#' + selectedCard.elem.id).card,);
 
         await Tutorial.waitForEvent(Events.Type.CardChanged, () => {
             popup.location = window.location;
@@ -123,7 +112,7 @@ Tutorial.addStep({
 <br>Try changing the card this way.
     `,
     continueAfter: async () => {
-        scrollTo(document.querySelector('#' + selectedCard.elem.id).card);
+        scrollToCard(document.querySelector('#' + selectedCard.elem.id).card);
 
         async function closeScryfall(evt) {
             evt.data.location = window.location;
@@ -141,11 +130,11 @@ Tutorial.addStep({
 });
 
 Tutorial.addStep({
-    getElement: () => document.querySelector('#card4'),
-    getFrameElement: () => document.querySelector('#card4 .flipSvg'),
+    getElement: () => window.cards.find(c => c.twoFaced).elem,
+    getFrameElement: () => window.cards.find(c => c.twoFaced).elem.querySelector('.flipSvg'),
     text: `You can also flip two-sided cards by clicking on this arrow.`,
     continueAfter: async () => {
-        scrollTo(document.querySelector('#card3').card);
+        scrollToCard(document.querySelector('#card3').card);
 
         async function closeScryfall(evt) {
             evt.data.location = window.location;
@@ -163,8 +152,8 @@ Tutorial.addStep({
 });
 
 Tutorial.addStep({
-    getElement: () => document.querySelector('#card2'),
-    getFrameElement: () => document.querySelector('#card2 .printSettings'),
+    getElement: () => window.cards.find(c => c.twoFaced).elem,
+    getFrameElement: () => window.cards.find(c => c.twoFaced).elem.querySelector('.printSettings'),
     text: `You can also hide one side of double sided cards from printing.
 <br>
 <br>This is not as relevant for normal cards, but may some times be advantagious, like on this "Anointed Procession" from SLD.

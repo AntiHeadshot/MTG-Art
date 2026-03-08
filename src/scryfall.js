@@ -53,8 +53,8 @@ class Scryfall {
 
     static async search(name, set) {
 
-        let url = set ? `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" (set:${set} or set:t${set}) -is:art_series`)}&include_extras=true` :
-            `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" -is:art_series`)}&include_extras=true`;
+        let url = set ? `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" (set:${set} or set:t${set}) -is:art_series -layout:double_faced_token`)}&include_extras=true` :
+            `https://api.scryfall.com/cards/search?order=name&q=${encodeURIComponent(`!"${name}" -is:art_series -layout:double_faced_token`)}&include_extras=true`;
 
         const cacheSearchKey = set ? `card_${name}_${set}` : `card_${name}`;
         const cachedCard = localStorage.getItem(cacheSearchKey);

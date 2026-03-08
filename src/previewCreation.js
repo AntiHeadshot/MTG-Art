@@ -137,7 +137,7 @@ class ImageDocumentPreview {
                             card.card.printSettings.brightness -= 5;
                         }
 
-                        card.card.updated();
+                        card.card.changed();
                     });
 
                     img.addEventListener('contextmenu', (event) => {

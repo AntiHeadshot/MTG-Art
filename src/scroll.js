@@ -1,14 +1,16 @@
 import View from './view.js'
 
-function scrollTo(card, behavior) {
+function scrollTo(card, cards, behavior) {
     behavior ||= "smooth";
     if (card.elem) {
         var cardsContainer = document.getElementById("cards");
         if (View.mode == View.Mode.INPUT) {
             var adjustedHeight = getAdjustedHeight(card)
 
+            var hiddenBefore = cards.filter(c => c.order < card.order && c.isUnset).length;
+
             cardsContainer.scrollTo({
-                top: Math.max(0, card.order
+                top: Math.max(0, (card.order - hiddenBefore)
                     * (adjustedHeight + 10)
                     - cardsContainer.getBoundingClientRect().height / 2),
                 behavior: behavior,

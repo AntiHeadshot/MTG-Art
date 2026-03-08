@@ -1,8 +1,7 @@
 import Events from "./events.js";
 import Scryfall from "./scryfall.js";
 import Mana from "./mana.js";
-
-let cardCnt = 0;
+import Toaster from "./toaster.js";
 
 const Format = Object.freeze({
     DECKSTATS: 'deckstats',
@@ -29,21 +28,30 @@ Events.on(Events.Type.ScryfallClosed, () => {
     openedCard = null;
 });
 
+var template = document.getElementById("cardTemplate");
+var entryTemplate = document.getElementById("cardEntryTemplate");
+
 let neededTokens = [];
 
+let cardCnt = 0;
 let cards = [];
 
 class Card {
-    constructor(text, elem, entryElem) {
+    constructor() {
         cardCnt++;
-        this.elem = elem;
-        this.entryElem = entryElem;
+        this.resetCardData();
+
+        this.elem = template.cloneNode(true);
+        this.entryElem = entryTemplate.cloneNode(true);
+
+        this.elem.card = this;
+        this.entryElem.card = this;
 
         this.count = 0;
-        this.format = null;
         this.isToken = false;
         this.isUnset = true;
-        this.text = text;
+        this.text = "Failed";
+        this.preventTextChange = false;
 
         this.isBasicLand = false;
         this.imageUris = [];
@@ -56,6 +64,11 @@ class Card {
         this.identity = [];
 
         cards.push(this);
+    }
+
+    destruct() {
+        cardCnt--;
+        cards.splice(cards.indexOf(this), 1);
     }
 
     static async handleTokens() {
@@ -91,10 +104,11 @@ class Card {
 
     static getOpenedCard() { return openedCard; }
 
-    getDescription() {
-        switch (this.format) {
-            case null:
-                return this.text;
+    getDescription(format) {
+        if (this.isUnset) {
+            return this.text;
+        }
+        switch (format) {
             case Format.MTGPRINT:
                 if (this.isUndefined && (!this.nr))
                     return `${this.count} ${this.name}`;
@@ -123,92 +137,75 @@ class Card {
         }
     }
 
-    static parseCardText(cardText, elem, entryElem) {
-        var card = new Card(cardText, elem, entryElem);
-        var returnValue = { card: card };
+    async setCardText(cardText) {
+        this.resetCardData();
+        this.text = cardText;
 
-        returnValue.load = new Promise(async (resolve) => {
-            // Example cardText: "1 [CMR#656] Vampiric Tutor"
-            const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\](\s+(?<name>[^#]+))?(#(?<parameters>([^ ]+)( ([^ ]+))*))?$/;
+        cardText = cardText.trim();
+
+        if (cardText.startsWith("//") || cardText.trim() == "") {
+            return this.updateElem();
+        }
+
+        // Example cardText: "1 [CMR#656] Vampiric Tutor"
+        const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)#(?<nr>[\w-★]+)\](\s+(?<name>[^#]+))?(#(?<parameters>([^ ]+)( ([^ ]+))*))?$/;
+        let match = cardText.match(regexDeckstats);
+
+        if (!match) {
+            // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
+            const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-★]+)$/;
+            match = cardText.match(regexMtgPrint);
+        }
+        if (!match) {
+            // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
+            const regexScryfall = /^((?<count>\d+)\s+)?(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-★]+)\/[\w\-%()/]+)/;
+            match = cardText.match(regexScryfall);
+        }
+
+        //Search for card
+        if (!match) {
+            // Example cardText: "1 [CMR] Vampiric Tutor"
+            const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)\](\s+(?<name>.+))?$/;
             let match = cardText.match(regexDeckstats);
-            let format = Format.DECKSTATS;
 
             if (!match) {
-                // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC) 22"
-                const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+(?<nr>[\w-★]+)$/;
-                format = Format.MTGPRINT;
+                // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC)"
+                const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+$/;
                 match = cardText.match(regexMtgPrint);
             }
-            if (!match) {
-                // Example cardText: "1 https://scryfall.com/card/cmr/656/vampiric-tutor"
-                const regexScryfall = /^(?<count>\d+)\s+(https:\/\/scryfall\.com\/card\/(?<set>\w+)\/(?<nr>[\w\-★]+)\/[\w\-%()/]+)/;
-                format = Format.SCRYFALL;
-                match = cardText.match(regexScryfall);
-            }
-
-            //Search for card
-            if (!match) {
-                // Example cardText: "1 [CMR] Vampiric Tutor"
-                const regexDeckstats = /^(?<count>\d+)\s+\[(?<set>\w+)\](\s+(?<name>.+))?$/;
-                let match = cardText.match(regexDeckstats);
-                let format = Format.DECKSTATS;
-
-                if (!match) {
-                    // Example cardText: "1 Legion's Landing // Adanto, the First Fort (PXTC)"
-                    const regexMtgPrint = /^(?<count>\d+)\s+(?<name>.+)\s\((?<set>\w+)\)\s+$/;
-                    format = Format.MTGPRINT;
-                    match = cardText.match(regexMtgPrint);
-                }
-
-                if (!match) {
-                    // Example cardText: "1 Vampiric Tutor"
-                    const regexUndefined = /^(?<count>\d+)\s+(?<name>.+)$/;
-                    format = Format.DECKSTATS;
-                    match = cardText.match(regexUndefined);
-                }
-
-                if (!match) {
-                    card.count = 1;
-                    card.format = Format.DECKSTATS;
-                    await card.searchByName(cardText, null);
-                    resolve(card);
-                    return;
-                }
-
-                const { count, name, set } = match.groups;
-
-                card.count = parseInt(count, 10)
-                card.format = format;
-                await card.searchByName(name, set);
-                resolve(card);
-                return;
-            }
 
             if (!match) {
-                throw new Error("Invalid card text format");
+                // Example cardText: "1 Vampiric Tutor"
+                const regexUndefined = /^((?<count>\d+)\s+)?(?<name>.+)$/;
+                match = cardText.match(regexUndefined);
             }
 
-            const { count, set, nr, name, parameters } = match.groups;
+            const { count, name, set } = match.groups;
 
-            card.count = parseInt(count, 10)
-            card.format = format;
-            if (parameters) {
-                let params = parameters.split(" ").map(p => p.trim().toLowerCase());
-                if (params.includes("donotprintfront"))
-                    card.printOptions = card.printOptions.filter(p => p != Print.FRONT);
-                if (params.includes("donotprintback"))
-                    card.printOptions = card.printOptions.filter(p => p != Print.BACK);
-                const brightMatch = params.find(p => p.startsWith("brightness:"))?.match(/brightness:(\d+)/);
-                if (brightMatch)
-                    card.printSettings.brightness = Number(brightMatch[1]);
+            this.count = parseInt(count ?? "1", 10)
+            await this.searchByName(name, set);
+            return;
+        }
 
-            }
-            await card.update(false, null, set, nr, name);
-            if (card.isUndefined === undefined)
-                card.isUndefined = false;
-            resolve(card);
-        });
-        return returnValue;
+        const { count, set, nr, name, parameters } = match.groups;
+
+        this.count = parseInt(count ?? "1", 10)
+        if (parameters) {
+            let params = parameters.split(" ").map(p => p.trim().toLowerCase());
+            if (params.includes("donotprintfront"))
+                this.printOptions = this.printOptions.filter(p => p != Print.FRONT);
+            if (params.includes("donotprintback"))
+                this.printOptions = this.printOptions.filter(p => p != Print.BACK);
+            const brightMatch = params.find(p => p.startsWith("brightness:"))?.match(/brightness:(\d+)/);
+            if (brightMatch)
+                this.printSettings.brightness = Number(brightMatch[1]);
+
+        }
+        await this.update(false, null, set, nr, name);
+        if (this.isUndefined === undefined)
+            this.isUndefined = false;
+
+        this.updateElem();
     }
 
     async updateById(cardId) {
@@ -275,6 +272,8 @@ class Card {
         try {
             this.searchName = name;
 
+            this.startUpdate();
+
             let card = await Scryfall.search(name, set);
 
             if (card) {
@@ -288,7 +287,25 @@ class Card {
             }
         } catch (error) {
             console.error("Error updating card:", error);
+        } finally {
+            this.endUpdate();
         }
+    }
+
+    resetCardData() {
+        this.isUnset = true;
+        this.cardId = null;
+        this.oracleId = null;
+        this.twoFaced = false;
+        this.imageUris = [];
+        this.highResImageUris = [];
+        this.set = null;
+        this.nr = null;
+        this.name = "Fail";
+        this.cardTitle = "Fail";
+        this.mana = null;
+        this.identity = null;
+        this.scryfall_uri = null;
     }
 
     applyCardData(data) {
@@ -310,7 +327,7 @@ class Card {
         this.name = data.name;
         this.cardTitle = data.card_faces?.[0]?.name ?? data.name;
         this.mana = data.mana_cost ?? data.card_faces?.[0]?.mana_cost;
-        this.identity = data.color_identity;
+        this.identity = data.colors ?? data.card_faces?.[0]?.colors;
         this.scryfall_uri = data.scryfall_uri;
         this.isBasicLand = data.type_line?.startsWith("Basic Land ") ?? false;
         this.isToken = data.type_line?.startsWith("Token") ?? false;
@@ -327,15 +344,15 @@ class Card {
     }
 
     updateElem() {
-        this.elem.style.display = "block";
+        this.elem.style.display = this.isUnset ? "none" : "block";
         this.entryElem.style.display = "block";
 
-        this.elem.querySelector(".cardImg").src = this.imageUris[0];
+        this.elem.querySelector(".cardImg").src = this.imageUris[0] ?? "";
         this.elem.querySelector(".cardImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
 
         if (this.twoFaced) {
             this.elem.classList.add("twoFaced");
-            this.elem.querySelector(".cardFlipImg").src = this.imageUris[1];
+            this.elem.querySelector(".cardFlipImg").src = this.imageUris[1] ?? "";
             this.elem.querySelector(".cardFlipImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
         }
         else {
@@ -401,10 +418,19 @@ class Card {
 
         this.entryElem.classList.toggle("unset", this.isUnset);
 
-        if (this.identity)
-            this.entryElem.querySelector("#cardHeader").classList.add("identity" + this.identity.join(""));
+        this.entryElem.querySelector("#cardHeader").setAttribute("identity", this.identity?.join("") ?? "");
 
-        this.entryElem.querySelector("#input").value = this.getDescription();
+
+        if (this.printOptions.includes(Print.FRONT)) {
+            this.entryElem.querySelector("#cardHeader").classList.remove("grayed");
+
+        } else {
+            this.entryElem.querySelector("#cardHeader").classList.add("grayed");
+        }
+
+        if (!this.preventTextChange) {
+            this.entryElem.querySelector("#inputField").value = this.getDescription();
+        }
         this.entryElem.querySelector("#name").innerHTML = this.cardTitle;
         this.entryElem.querySelector("#count").innerHTML = this.count;
         const manacostElem = this.entryElem.querySelector("#manacost");
@@ -465,7 +491,34 @@ class Card {
         Scryfall.open(evt, searchOptions, position, this);
     }
 
-    updated() {
+    async textChanged() {
+        if (this.textChangeTimeout) clearTimeout(this.textChangeTimeout);
+        this.textChangeTimeout = setTimeout(async () => {
+            this.preventTextChange = true;
+
+            await this.setCardText(this.entryElem.querySelector("#inputField").value);
+
+            this.preventTextChange = false;
+            this.textChangeTimeout = null;
+        }, 500);
+    }
+
+    async editFinish() {
+        if (this.textChangeTimeout) {
+            await new Promise(resolve => {
+                const checkInterval = setInterval(() => {
+                    if (!this.textChangeTimeout) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 50);
+            });
+        }
+        this.entryElem.querySelector("#inputField").value = this.getDescription(Format.DECKSTATS);
+        this.changed();
+    }
+
+    changed() {
         this.updateElem();
         Events.dispatch(Events.Type.CardChanged, this);
     }

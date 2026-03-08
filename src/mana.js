@@ -28,7 +28,7 @@ cost["u"] = document.getElementById("costU");
 cost["b"] = document.getElementById("costB");
 cost["r"] = document.getElementById("costR");
 cost["g"] = document.getElementById("costG");
-cost["s"] = document.getElementById("costSnow");
+cost["s"] = document.getElementById("costS");
 cost["w/b"] = document.getElementById("costWU");
 cost["w/b"] = document.getElementById("costWB");
 cost["u/b"] = document.getElementById("costUB");
@@ -76,7 +76,7 @@ class Mana {
                     if (cost[part])
                         result.push(cost[part].cloneNode(true));
                     else
-                        console.log("missing Mana "+part);
+                        console.log("missing Mana " + part);
                 }
             }
         }
