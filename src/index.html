@@ -21,7 +21,7 @@
         <img id="tutorialButton" title="start tutorial" src="img/tutorial.svg" class="clickable gray border"
             onclick="localStorage.removeItem('finishedTutorial'); window.location.reload(); event.stopPropagation();">
         <img id="newButton" title="release info" src="img/whatsnew.svg" class="clickable gray border"
-            onclick="fetch('assets/news.html').then(d=>d.text().then(t=>Tutorial.showPopup(t))); event.stopPropagation();">
+            onclick="fetch('assets/news.html').then(d=>d.text().then(t=>Popup.showOk(t))); event.stopPropagation();">
     </div>
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
@@ -255,7 +255,7 @@
         <div id="popupOverlay" class="popup-overlay"></div>
         <div id="popupContentContainer" class="popup-content-container">
             <div id="popupContent" class="popup-content">
-                <p id="popupText"></p>
+                <p id="popupText" class="scrollbar"></p>
                 <button id="popupYesButton" onclick="Popup.onYes()">Yes</button>
                 <button id="popupOkButton" onclick="Popup.onOk()">Ok</button>
                 <button id="popupNoButton" onclick="Popup.onNo()">No</button>

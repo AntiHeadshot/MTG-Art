@@ -1,13 +1,8 @@
 - Refactor more!!!
 
-- add tutorial for PDF Creation
-
 - recognize wrong tokens
 
-- add cut marks to preview
 - improove cut marks for spacing
-
- - fix Tutorial!
 
 - fix deck stack ordering for firefox?
 

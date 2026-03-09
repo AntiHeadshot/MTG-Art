@@ -63,7 +63,8 @@ Tutorial.addStep({
 <br>
 <br>Entries like "1 Vampire" will be treated as unspecified as long as you do not change the card. So the search will return cards by name instead of the exact same card. Be careful to select the correct card you want.
 <br>
-<br>By pressing enter you can add another entry.
+<br>By pressing enter you can add another entry. (If you are inside an entry it will function like a line break.)
+<br>By pressing control + D you can duplicate the current entry.
 <br>The border will change from red to gray it a card could be read.
 <br>
 <br>You can switch to the next entry with tab or arrow down key.
@@ -95,9 +96,11 @@ Tutorial.addStep({
         scrollToCard(document.querySelector('#' + selectedCard.elem.id).card,);
 
         await Tutorial.waitForEvent(Events.Type.CardChanged, () => {
-            popup.location = window.location;
-            popup.close();
             changedCard = true;
+            if (popup) {
+                popup.location = window.location;
+                popup.close();
+            }
         })
     },
     canSkip: () => changedCard
@@ -180,10 +183,10 @@ Tutorial.addStep({
 <br>Close the popup when you are done trying.
     `,
     continueAfter: async (evt) => {
-        let cardElem = document.querySelector('#card1');
-        scrollTo(cardElem.card);
+        let card = window.cards.find(c=>!c.isUnset);
+        scrollToCard(card);
 
-        window.openScryfall(cardElem.card, evt);
+        window.openScryfall(card, evt);
         await Tutorial.waitForEvent(Events.Type.ScryfallClosed, () => triedFilters = true);
     },
     canSkip: () => triedFilters
@@ -207,21 +210,56 @@ Tutorial.addStep({
     getElement: () => document.querySelector('#tutorialContent'),
     text: `The ArtView funcions are exactly the same as the left side of the InputView.
 <br>
-<br>This way you can open this site on one sid of your monitor and move the Scryfall window to the other side.
+<br>This way you can open this site on one side of your monitor and move the Scryfall window to the other side.
+<br>As long as you do not close Scryfall, the same window will be reused.
 `,
 });
 
+Tutorial.addStep({
+    getElement: () => document.querySelector('#pdfButton'),
+    text: `At last there is the PdfView.
+<br>
+<br>Here you can create a printable PDF and modify the brightness of cards.
+<br>
+<br>Take a look at the PdfView now.
+`,
+    continueAfter: () => Tutorial.waitForEvent(Events.Type.ViewChanged, () => { if (View.mode != View.Mode.PDF) throw new Error("PdfView not opened"); }),
+});
 
 Tutorial.addStep({
-    getElement: () => document.querySelector('#cards'),
+    getElement: () => document.querySelector('#pdfInputs'),
+    text: `Here you can edit some print settings. The preview will apply all changes immediatly.
+<br>
+<br>By clicking create the preview below will be converted to a PDF-Document. 
+<br><b>This may take a while.</b>
+<br>(I would recoment finishing the tutorial first!)
+`,
+});
+
+Tutorial.addStep({
+    getElement: () => document.querySelector('#templateDisplay'),
+    text: `Here you can see a preview of the page layout.
+<br>This also is a svg path that can be used to cut the cards with appropriate machines.
+`,
+});
+
+Tutorial.addStep({
+    getElement: () => document.querySelector('#pdfPreview'),
+    text: `Here you can see a preview of the page.
+<br>You can edit the brightness of single cards. (Two sided cards are on single card!)
+<br>brighter - left click
+<br>darker - right click
+<br>reset - middle click
+`,
+});
+
+Tutorial.addStep({
+    getElement: () => document.querySelector('#pdfPreviewSettings'),
+    text: 'Here You can edit the brightness of all cards at once.',
+});
+
+Tutorial.addStep({
+    getElement: () => document.querySelector('#pdfContainer'),
     getFrameElement: () => document.querySelector('#tutorialContent'),
     text: 'Thank you!<br>Now have fun choosing artworks &#x1F604;',
 });
-
-// TODO create a tutorial for the PDF creation
-// Pdf Options
-//
-// Pdf creation
-//
-//
-//

@@ -356,30 +356,40 @@ window.input = async function input(event, card) {
 
         if (event.ctrlKey) {
             if (card)
+                //waits for update ... may be bad (same for esc and arrows)
                 card.entryElem.querySelector("#inputField").blur();
         } else {
+            //has to be read before new element is added
             var value = event.target.value;
+            var selectionStart = event.target.selectionStart;
+
             var newCard = addCardAfter(card);
 
-            if (event.target.selectionStart > 0 && event.target.selectionStart < value.length) {
-                newCard.setCardText(value.substring(event.target.selectionStart));
-                card.text = value.substring(0, event.target.selectionStart);
+            if (selectionStart > 0 && selectionStart < value.length) {
+                newCard.setCardText(value.substring(selectionStart));
+                card.text = value.substring(0, selectionStart);
+                card.entryElem.querySelector("#inputField").value = card.text;
             }
             else {
+
+                console.log("setting card to " + value)
                 card.text = value;
             }
-            card.setCardText(card.text);
+            await card.setCardText(card.text);
 
-            newCard.entryElem.querySelector("#inputField").focus();
+            let newInputField = newCard.entryElem.querySelector("#inputField");
+            newInputField.focus();
+            newInputField.selectionStart = 0;
+            newInputField.selectionEnd = 0;
         }
     } else if (event.key === "d" && event.ctrlKey) {
+        event.preventDefault();
+
         if (!card)
             card = cards[cards.length - 1];
         var newCard = addCardAfter(card);
         await newCard.setCardText(card.getDescription());
         newCard.entryElem.querySelector("#inputField").focus();
-
-        event.preventDefault();
     } else if (event.key === "ArrowUp") {
         cards.findLast(c => c.order < card.order)?.entryElem.querySelector("#inputField").focus();
     } else if (event.key === "ArrowDown") {
@@ -669,6 +679,7 @@ window.scrollToCard = async function scrollToCard(card) {
     if (cards?.length > 0) {
         if (card.isUnset)
             card = cards.find(c => !c.isUnset && c.order > card.order) ?? cards.findLast(c => !c.isUnset && c.order < card.order);
+
         if (card) {
             scrollTo(card, cards);
             Events.dispatch(Events.Type.ScrollingToCard, card);

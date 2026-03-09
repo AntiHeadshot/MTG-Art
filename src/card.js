@@ -42,6 +42,7 @@ class Card {
         this.resetCardData();
 
         this.elem = template.cloneNode(true);
+        this.cardImgElem = this.elem.querySelector(".cardImg");
         this.entryElem = entryTemplate.cloneNode(true);
 
         this.elem.card = this;
@@ -347,8 +348,9 @@ class Card {
         this.elem.style.display = this.isUnset ? "none" : "block";
         this.entryElem.style.display = "block";
 
-        this.elem.querySelector(".cardImg").src = this.imageUris[0] ?? "";
-        this.elem.querySelector(".cardImg").style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
+        if (this.imageUris[0] && this.imageUris[0] != this.cardImgElem.src)
+            this.cardImgElem.src = this.imageUris[0] ?? "";
+        this.cardImgElem.style.filter = `brightness(${this.printSettings?.brightness ?? 100}%)`;
 
         if (this.twoFaced) {
             this.elem.classList.add("twoFaced");
@@ -371,11 +373,11 @@ class Card {
 
         if (this.printOptions.includes(Print.FRONT)) {
             this.elem.querySelector(".printSettings .printFrontSvg").classList.add("selected");
-            this.elem.querySelector(".cardImg").classList.remove("grayed");
+            this.cardImgElem.classList.remove("grayed");
 
         } else {
             this.elem.querySelector(".printSettings .printFrontSvg").classList.remove("selected");
-            this.elem.querySelector(".cardImg").classList.add("grayed");
+            this.cardImgElem.classList.add("grayed");
         }
 
         if (this.printOptions.includes(Print.BACK)) {
@@ -515,7 +517,6 @@ class Card {
             });
         }
         this.entryElem.querySelector("#inputField").value = this.getDescription(Format.DECKSTATS);
-        this.changed();
     }
 
     changed() {

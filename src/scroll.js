@@ -5,10 +5,11 @@ function scrollTo(card, cards, behavior) {
     if (card.elem) {
         var cardsContainer = document.getElementById("cards");
         if (View.mode == View.Mode.INPUT) {
-            var adjustedHeight = getAdjustedHeight(card)
+            var heightCard = cards.find(c => (!c.isUnset) && c.cardImgElem.complete);
+            var adjustedHeight = getAdjustedHeight(heightCard ?? card)
 
             var hiddenBefore = cards.filter(c => c.order < card.order && c.isUnset).length;
-
+            
             cardsContainer.scrollTo({
                 top: Math.max(0, (card.order - hiddenBefore)
                     * (adjustedHeight + 10)
@@ -25,6 +26,7 @@ function scrollTo(card, cards, behavior) {
 }
 
 function getAdjustedHeight(card) {
+
     var cardRect = card.elem.getBoundingClientRect();
     var cardHeight = cardRect.height;
     var cardWidth = cardRect.width;

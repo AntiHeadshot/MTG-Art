@@ -200,6 +200,10 @@ svg {
             overflow: hidden;
         }
 
+        &.unset #inputField:focus {
+            outline: 2px solid maroon;
+        }
+
         &.unset #inputField {
             border-bottom: none;
         }
@@ -1006,6 +1010,11 @@ button {
     top: 0;
     right: 0;
     padding: 4px 8px;
+}
+
+#popupText {
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 textarea {

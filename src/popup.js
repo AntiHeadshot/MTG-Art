@@ -33,7 +33,7 @@ class Popup {
         okButton.style.display = "";
         cancleButton.style.display = "";
 
-        text.innerHTML = text;
+        textElem.innerHTML = text;
 
         popupOnOk = onOk;
         popupOnCancle = onCancle;
@@ -44,7 +44,7 @@ class Popup {
 
         okButton.style.display = "";
 
-        text.innerHTML = text;
+        textElem.innerHTML = text;
 
         popupOnOk = onOk;
     }
