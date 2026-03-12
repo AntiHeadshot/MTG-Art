@@ -494,27 +494,24 @@ class Card {
     }
 
     async textChanged() {
-        if (this.textChangeTimeout) clearTimeout(this.textChangeTimeout);
+        this.text = this.entryElem.querySelector("#inputField").value;
+        if (this.textChangeTimeout)
+            clearTimeout(this.textChangeTimeout);
         this.textChangeTimeout = setTimeout(async () => {
-            this.preventTextChange = true;
-
-            await this.setCardText(this.entryElem.querySelector("#inputField").value);
-
-            this.preventTextChange = false;
             this.textChangeTimeout = null;
+
+            this.preventTextChange = true;
+            await this.setCardText(this.text);
+            this.preventTextChange = false;
         }, 500);
     }
 
     async editFinish() {
         if (this.textChangeTimeout) {
-            await new Promise(resolve => {
-                const checkInterval = setInterval(() => {
-                    if (!this.textChangeTimeout) {
-                        clearInterval(checkInterval);
-                        resolve();
-                    }
-                }, 50);
-            });
+            clearTimeout(this.textChangeTimeout);
+            this.textChangeTimeout = null;
+
+            await this.setCardText(this.entryElem.querySelector("#inputField").value);
         }
         this.entryElem.querySelector("#inputField").value = this.getDescription(Format.DECKSTATS);
     }

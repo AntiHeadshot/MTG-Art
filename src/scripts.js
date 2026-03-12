@@ -366,12 +366,12 @@ window.input = async function input(event, card) {
             var newCard = addCardAfter(card);
 
             if (selectionStart > 0 && selectionStart < value.length) {
-                newCard.setCardText(value.substring(selectionStart));
+                newCard.text = value.substring(selectionStart);
+                newCard.entryElem.querySelector("#inputField").value = newCard.text;
                 card.text = value.substring(0, selectionStart);
                 card.entryElem.querySelector("#inputField").value = card.text;
             }
             else {
-
                 console.log("setting card to " + value)
                 card.text = value;
             }
