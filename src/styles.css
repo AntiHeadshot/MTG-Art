@@ -163,8 +163,8 @@ svg {
 
 #newDeckInput {
     overflow: hidden scroll;
-    font-size: 1.2em;
-    padding-block: 0.2em;
+    font-size: 1.2rem;
+    padding-block: 0.2rem;
 
     .cardEntry {
         position: relative;
@@ -176,10 +176,10 @@ svg {
             display: inline-flex;
             left: 0;
             right: 0;
-            top: 0.4em;
+            top: 0.4rem;
             perspective: 1000px;
             transform-style: preserve-3d;
-            transform-origin: 0 50% -1em;
+            transform-origin: 0 50% -1rem;
             transform: perspective(1000px) rotateX(90deg);
             backface-visibility: hidden;
             transition: transform var(--flip-speed);
@@ -187,15 +187,15 @@ svg {
 
         #inputField {
             position: relative;
-            width: calc(100% - 6em);
+            width: calc(100% - 8rem);
             height: 20px;
-            top: -0.25em;
-            margin-inline: 1em;
+            top: -0.25rem;
+            margin-inline: 1rem;
             background-color: var(--bg-secondary);
             color: var(--text-primary);
             border: 2px solid var(--border-dark);
             border-radius: 3px;
-            font-size: 1em;
+            font-size: 1rem;
             padding: 4px 4px 0 4px;
             overflow: hidden;
         }
@@ -211,8 +211,8 @@ svg {
         &.unset+.cardEntry.unset #inputField {
             border-top: none;
             border-bottom: none;
-            height: 28px;
-            top: calc(-0.25em - 4px);
+            height: 1.3rem;
+            top: -0.25rem;
         }
 
         #input:focus-within {
@@ -221,8 +221,8 @@ svg {
 
         #input #delete {
             position: absolute;
-            right: 3.5em;
-            top: -0.65em;
+            right: 3.5rem;
+            top: -0.65rem;
         }
 
         #input:focus-within,
@@ -240,7 +240,7 @@ svg {
             height: 30px;
             width: 100%;
             display: inline-block;
-            transform-origin: 0 50% -1em;
+            transform-origin: 0 50% -1rem;
             transform: perspective(100000px) rotateX(0deg);
             backface-visibility: hidden;
             transition: transform var(--flip-speed);
@@ -256,9 +256,9 @@ svg {
                 position: relative;
                 font-weight: bold;
                 display: inline-block;
-                width: 2em;
-                top: 0.4em;
-                margin-right: 0.5em;
+                width: 2rem;
+                top: 0.4rem;
+                margin-right: 0.5rem;
                 text-align: end;
                 vertical-align: super;
                 -webkit-user-select: none;
@@ -268,7 +268,7 @@ svg {
                     content: "x";
                     font-weight: normal;
                     position: absolute;
-                    right: -1em;
+                    right: -1rem;
                     display: inline-block;
                 }
             }
@@ -276,12 +276,12 @@ svg {
             #cardHeader {
                 position: relative;
                 display: inline-flex;
-                padding-block: 0.2em;
-                padding-left: 0.5em;
-                padding-right: 0.25em;
-                margin-inline: 1em;
-                width: 20em;
-                height: 1em;
+                padding-block: 0.2rem;
+                padding-left: 0.5rem;
+                padding-right: 0.25rem;
+                margin-inline: 1rem;
+                width: 24rem;
+                height: 1.3rem;
                 overflow: hidden;
                 align-items: flex-end;
 
@@ -292,10 +292,10 @@ svg {
                     position: absolute;
                     left: 0;
                     right: 0;
-                    top: -0.8em;
-                    height: 3em;
+                    top: -0.7rem;
+                    height: 3rem;
                     background-color: #dce1e5;
-                    border-radius: 50em;
+                    border-radius: 50rem;
                 }
 
                 --mana-w: #e5dfcb;
@@ -398,7 +398,7 @@ svg {
             position: relative;
             z-index: 1;
             top: 2px;
-            height: 1em;
+            height: 1.3rem;
             font-weight: bold;
             color: #020202;
             display: inline-block;
@@ -420,14 +420,13 @@ svg {
             svg {
                 display: inline-block;
                 transform-origin: top center;
-                height: 1.2em;
+                height: 1.3rem;
                 width: auto;
 
                 use {
                     display: inline-block;
                     transform-origin: top left;
-                    transform: scale(0.23);
-                    /*scale(calc(1.2em / 100px));*/
+                    transform: scale(0.2);
                 }
             }
         }

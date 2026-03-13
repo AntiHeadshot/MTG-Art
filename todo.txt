@@ -7,3 +7,5 @@
 - fix deck stack ordering for firefox?
 
 - add ability to undo and redo
+
+- enable copy from deck list

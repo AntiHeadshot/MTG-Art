@@ -510,10 +510,8 @@ class Card {
         if (this.textChangeTimeout) {
             clearTimeout(this.textChangeTimeout);
             this.textChangeTimeout = null;
-
-            await this.setCardText(this.entryElem.querySelector("#inputField").value);
         }
-        this.entryElem.querySelector("#inputField").value = this.getDescription(Format.DECKSTATS);
+        this.setCardText(this.entryElem.querySelector("#inputField").value);
     }
 
     changed() {

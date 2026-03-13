@@ -368,19 +368,16 @@ window.input = async function input(event, card) {
             if (selectionStart > 0 && selectionStart < value.length) {
                 newCard.text = value.substring(selectionStart);
                 newCard.entryElem.querySelector("#inputField").value = newCard.text;
-                card.text = value.substring(0, selectionStart);
-                card.entryElem.querySelector("#inputField").value = card.text;
+                card.entryElem.querySelector("#inputField").value = value.substring(0, selectionStart);
+                card.setCardText(card.entryElem.querySelector("#inputField").value);
             }
-            else {
-                console.log("setting card to " + value)
-                card.text = value;
-            }
-            await card.setCardText(card.text);
 
             let newInputField = newCard.entryElem.querySelector("#inputField");
             newInputField.focus();
             newInputField.selectionStart = 0;
             newInputField.selectionEnd = 0;
+            newCard.textChanged();
+            updateList();
         }
     } else if (event.key === "d" && event.ctrlKey) {
         event.preventDefault();
