@@ -58,8 +58,8 @@ if (isMobile) {
             }
         }
 
-        static async clearOldSessions() {
-        }
+        static async clearOldSessions() { }
+        static async clearAllSessions() { }
 
         static async getObjectStoreSize(session) {
             return session ? { totalSize: 0, sessionSize: 0 } : 0;

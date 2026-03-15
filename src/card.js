@@ -1,7 +1,6 @@
 import Events from "./events.js";
 import Scryfall from "./scryfall.js";
 import Mana from "./mana.js";
-import Toaster from "./toaster.js";
 
 const Format = Object.freeze({
     DECKSTATS: 'deckstats',
@@ -31,10 +30,7 @@ Events.on(Events.Type.ScryfallClosed, () => {
 var template = document.getElementById("cardTemplate");
 var entryTemplate = document.getElementById("cardEntryTemplate");
 
-let neededTokens = [];
-
 let cardCnt = 0;
-let cards = [];
 
 class Card {
     constructor() {
@@ -49,58 +45,22 @@ class Card {
         this.entryElem.card = this;
 
         this.count = 0;
-        this.isToken = false;
-        this.isUnset = true;
         this.text = "Failed";
         this.preventTextChange = false;
 
-        this.isBasicLand = false;
-        this.imageUris = [];
-        this.highResImageUris = [];
         this.imageElements = [];
         this.history = [];
         this.future = [];
         this.printOptions = [Print.FRONT, Print.BACK];
         this.printSettings = { brightness: 100 };
-        this.identity = [];
 
-        cards.push(this);
+        this.isTokenBefore = false;
+        this.tokensBefore = [];
     }
 
     destruct() {
-        cardCnt--;
-        cards.splice(cards.indexOf(this), 1);
-    }
-
-    static async handleTokens() {
-        let missing = [];
-
-        for (let tokenId of new Set(neededTokens.map(t => t.tokenId))) {
-            if (!cards.find(c => c.cardId == tokenId)) {
-                let card = await Scryfall.get(tokenId);
-                if (!cards.find(c => c.oracleId == card.oracle_id)) {
-                    let missingToken = missing.find(t => t.card.oracle_id == card.oracle_id)
-                    if (missingToken) {
-                        missingToken.requiredBy.push(...neededTokens.filter(t => t.tokenId == tokenId).map(t => t.card));
-                    } else
-                        missing.push({ card, requiredBy: neededTokens.filter(t => t.tokenId == tokenId).map(t => t.card) });
-                }
-            }
-        }
-
-        let undefs = cards.filter(c => c.isUndefined && c.isToken);
-
-        for (let token of missing) {
-            let card = undefs.find(c => c.name == token.card.name);
-            if (card) {
-                card.updateBySetNr(token.card.set, token.card.collector_number, false);
-                card.isUndefined = false;
-                undefs = undefs.filter(c => c != card);
-                missing = missing.filter(t => t != token);
-            }
-        }
-
-        return missing;
+        if (!this.isUnset)
+            cardCnt--;
     }
 
     static getOpenedCard() { return openedCard; }
@@ -206,6 +166,7 @@ class Card {
         if (this.isUndefined === undefined)
             this.isUndefined = false;
 
+        Events.dispatch(Events.Type.CardLoaded, this);
         this.updateElem();
     }
 
@@ -295,6 +256,7 @@ class Card {
 
     resetCardData() {
         this.isUnset = true;
+        cardCnt--;
         this.cardId = null;
         this.oracleId = null;
         this.twoFaced = false;
@@ -307,6 +269,9 @@ class Card {
         this.mana = null;
         this.identity = null;
         this.scryfall_uri = null;
+        this.tokens = null;
+        this.isBasicLand = false;
+        this.isToken = false;
     }
 
     applyCardData(data) {
@@ -331,17 +296,59 @@ class Card {
         this.identity = data.colors ?? data.card_faces?.[0]?.colors;
         this.scryfall_uri = data.scryfall_uri;
         this.isBasicLand = data.type_line?.startsWith("Basic Land ") ?? false;
+
         this.isToken = data.type_line?.startsWith("Token") ?? false;
-        if (!this.isToken && data.all_parts)
-            data.all_parts.filter(p => p.type_line.startsWith("Token")).forEach(t => neededTokens.push({ card: this, tokenId: t.id }));
+        if (this.isTokenBefore !== this.isToken)
+            Events.dispatch(this.isToken ? Events.Type.TokenAdded : Events.Type.TokenRemoved, this);
+        this.isTokenBefore = this.isToken;
+
+        this.tokens = data.all_parts?.filter(p => p.type_line.startsWith("Token"))
+            .map(t => t.id)
+            .filter(t => t != this.cardId)
+            .sort() ?? [];
+        if (this.tokens.toString() != this.tokensBefore.toString())
+            Events.dispatch(Events.Type.NeededTokensChanged, this);
+        this.tokensBefore = this.tokens;
+
 
         this.isUnset = false;
+        cardCnt++;
 
         this.updateElem();
     }
 
     addImageElem(elem) {
         this.imageElements.push(elem);
+    }
+
+    setOrder(value) {
+        if (this.order == value)
+            return;
+
+        this.order = value;
+
+        if (!this.elem.style.zIndex)
+            this.elem.style.zIndex = 9000 - this.order;
+
+        this.elem.style.top = `${this.order * 2 + 4}px`;
+        this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
+
+        if (this.observer)
+            this.observer.disconnect();
+        this.observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.zIndex = 9000 - entry.target.card.order;
+                } else {
+                    entry.target.style.zIndex = 1000;
+                }
+            });
+        }, {
+            root: document,
+            rootMargin: `-${this.order * 2 + 5}px 0px 0px 0px`,
+            threshold: 1
+        });
+        this.observer.observe(this.elem);
     }
 
     updateElem() {
@@ -369,7 +376,7 @@ class Card {
         this.elem.classList.toggle("revertable", this.history.length > 0);
         this.elem.classList.toggle("forwardable", this.future.length > 0);
 
-        this.elem.id = "card" + this.order;
+        this.elem.id = "card" + this.index;
 
         if (this.printOptions.includes(Print.FRONT)) {
             this.elem.querySelector(".printSettings .printFrontSvg").classList.add("selected");
@@ -400,6 +407,8 @@ class Card {
             this.elem.style.transform = `rotate(${this.rotation}deg)`;
         }
 
+        this.entryElem.setAttribute("title", this.isUndefined ? "This card is undefined and thus searched by name until you choose a specific card." : "");
+
         if (this.observer)
             this.observer.disconnect();
         this.observer = new IntersectionObserver(entries => {
@@ -419,6 +428,7 @@ class Card {
 
 
         this.entryElem.classList.toggle("unset", this.isUnset);
+        this.entryElem.classList.toggle("undefined", this.isUndefined);
 
         this.entryElem.querySelector("#cardHeader").setAttribute("identity", this.identity?.join("") ?? "");
 
@@ -512,6 +522,7 @@ class Card {
             this.textChangeTimeout = null;
         }
         this.setCardText(this.entryElem.querySelector("#inputField").value);
+        Events.dispatch(Events.Type.CardChanged, this);
     }
 
     changed() {

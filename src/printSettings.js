@@ -11,7 +11,7 @@ function getSettings(options, ptToUnit) {
     settings.pageFormat = options?.pageFormat || "A4";
     settings.cropMarkShape = options?.cropMarkShape || CropMark.LINES;
     settings.cropMarkColor = options?.cropMarkColor || 'white';
-    let cropMarkSize = options?.cropMarkSize || 5;
+    let cropMarkSize = options?.cropMarkSize || 3;
     let cropMarkWidth = options?.cropMarkWidth || .5;
 
     let doc = new PDFDocument({ size: settings.pageFormat });

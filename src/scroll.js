@@ -8,10 +8,8 @@ function scrollTo(card, cards, behavior) {
             var heightCard = cards.find(c => (!c.isUnset) && c.cardImgElem.complete);
             var adjustedHeight = getAdjustedHeight(heightCard ?? card)
 
-            var hiddenBefore = cards.filter(c => c.order < card.order && c.isUnset).length;
-            
             cardsContainer.scrollTo({
-                top: Math.max(0, (card.order - hiddenBefore)
+                top: Math.max(0, (card.order + 1)
                     * (adjustedHeight + 10)
                     - cardsContainer.getBoundingClientRect().height / 2),
                 behavior: behavior,

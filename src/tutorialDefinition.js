@@ -133,8 +133,8 @@ Tutorial.addStep({
 });
 
 Tutorial.addStep({
-    getElement: () => window.cards.find(c => c.twoFaced).elem,
-    getFrameElement: () => window.cards.find(c => c.twoFaced).elem.querySelector('.flipSvg'),
+    getElement: () => window.deck.find(c => c.twoFaced).elem,
+    getFrameElement: () => window.deck.find(c => c.twoFaced).elem.querySelector('.flipSvg'),
     text: `You can also flip two-sided cards by clicking on this arrow.`,
     continueAfter: async () => {
         scrollToCard(document.querySelector('#card3').card);
@@ -155,8 +155,8 @@ Tutorial.addStep({
 });
 
 Tutorial.addStep({
-    getElement: () => window.cards.find(c => c.twoFaced).elem,
-    getFrameElement: () => window.cards.find(c => c.twoFaced).elem.querySelector('.printSettings'),
+    getElement: () => window.deck.find(c => c.twoFaced).elem,
+    getFrameElement: () => window.deck.find(c => c.twoFaced).elem.querySelector('.printSettings'),
     text: `You can also hide one side of double sided cards from printing.
 <br>
 <br>This is not as relevant for normal cards, but may some times be advantagious, like on this "Anointed Procession" from SLD.
@@ -183,7 +183,7 @@ Tutorial.addStep({
 <br>Close the popup when you are done trying.
     `,
     continueAfter: async (evt) => {
-        let card = window.cards.find(c=>!c.isUnset);
+        let card = window.deck.find(c => !c.isUnset);
         scrollToCard(card);
 
         window.openScryfall(card, evt);

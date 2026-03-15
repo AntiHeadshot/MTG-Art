@@ -1,14 +1,21 @@
 import Events from "./events.js";
 
+var queue = [];
+var interval = null;
+
 async function delayScryfallCall() {
-    if (delayScryfallCall.lastCall) {
-        const now = Date.now();
-        const timeSinceLastCall = now - delayScryfallCall.lastCall;
-        if (timeSinceLastCall < 100) {
-            await new Promise(resolve => setTimeout(resolve, 100 - timeSinceLastCall));
-        }
+    if (interval) {
+        await new Promise(resolve => queue.push(resolve));
+    } else {
+        interval = setInterval(() => {
+            var nextResolve = queue.shift();
+            if (!nextResolve) {
+                interval = null;
+                clearInterval(interval);
+            } else
+                nextResolve();
+        }, 100)
     }
-    delayScryfallCall.lastCall = Date.now();
 }
 
 let popupWindow;

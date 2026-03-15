@@ -6,6 +6,7 @@ import { ImageDocumentTemplate } from './templateCreation.js';
 import { ImageDocumentPreview } from './previewCreation.js';
 import ImageCache from './imageCache.js';
 import { Card, Format, Frame, Print } from './card.js';
+import Deck from './deck.js';
 import Tutorial from './tutorial.js';
 import Popup from './popup.js';
 import './tutorialDefinition.js';
@@ -18,7 +19,7 @@ import isMobileBrowser from './browserdetection.js';
 
 let isMobile = isMobileBrowser(navigator.userAgent || navigator.vendor || window.opera);
 
-let cards = window.cards = [];
+let deck = window.deck = new Deck();
 
 let searchOptions = window.searchOptions = {
     frames: [],
@@ -83,21 +84,27 @@ function updateStorageSize(size) {
 updateStorageSize(ImageCache.getObjectStoreSize());
 Events.on(Events.Type.StorageChanged, v => updateStorageSize(v.data.totalSize));
 
-var deck;
+function updateList(c) {
+    deck.updateCardOrder();
 
-function updateList() {
-    deck = cards.map(c => c.getDescription()).join("\n");
+    if (Tutorial.isOpen)
+        return;
 
-    if (!Tutorial.isOpen) {
-        localStorage.setItem('deck', deck);
-        sessionStorage.setItem('deck', deck);
-    }
+    var deckText = deck.print();
+
+    localStorage.setItem('deck', deckText);
+    sessionStorage.setItem('deck', deckText);
 }
 
 window.Popup = Popup;
 
+Events.on(Events.Type.CardLoaded, c => { updateList(c.data); });
+
+Events.on(Events.Type.CardAdded, () => { updateList(); if (View.mode == View.Mode.PDF) updatePdfPreview(); });
+Events.on(Events.Type.CardRemoved, () => { updateList(); if (View.mode == View.Mode.PDF) updatePdfPreview(); });
+
 window.changeBrightness = function changeBrightness(value) {
-    var deckCards = cards.filter(c => !c.isUnset);
+    var deckCards = deck.filter(c => !c.isUnset);
 
     Events.remove(Events.Type.CardChanged, updateList);
     for (let card of deckCards) {
@@ -109,7 +116,7 @@ window.changeBrightness = function changeBrightness(value) {
 }
 
 window.setBrightness = function setBrightness(value) {
-    var deckCards = cards.filter(c => !c.isUnset);
+    var deckCards = deck.filter(c => !c.isUnset);
 
     Events.remove(Events.Type.CardChanged, updateList);
     for (let card of deckCards) {
@@ -164,8 +171,6 @@ window.parseDeck = async function parseDeck(deckText) {
         deckText = deckstats;
 
     let deckLines = deckText.split("\n");
-    let cardNr = 0;
-    let isMissingMissingTokensText = true;
 
     if (deckLines.length < 1)
         deckLines.push("");
@@ -174,83 +179,85 @@ window.parseDeck = async function parseDeck(deckText) {
         Toaster.show(`Parsing card ${i + 1} of ${deckLines.length}...`, (i / deckLines.length));
         const cardText = deckLines[i].trim('\r');
 
-        if (cardText == "// Missing Tokens")
-            isMissingMissingTokensText = false;
-
         var card = new Card();
-        cards.push(card);
 
-        card.order = ++cardNr;
+        card.index = deck.getNextIndex();
+        card.order = card.index;
+        card.setCardText(cardText);
 
-        await card.setCardText(cardText);
+        deck.push(card);
 
         insertCardInOrder(parent, card, card.elem);
         insertCardInOrder(entryParent, card, card.entryElem);
 
     }
 
-    let missingTokens = await Card.handleTokens();
-    if (missingTokens.length > 0) {
-        if (isMissingMissingTokensText) {
-            card = new Card()
-            card.order = ++cardNr;
-            card.setCardText("// Missing Tokens");
-            cards.push(card);
+    deck.updateCardOrder();
+
+    Toaster.hide();
+}
+
+var tokens = [];
+Events.on(Events.Type.TokenAdded, evt => {
+    tokens.push(evt.data);
+});
+Events.on(Events.Type.TokenRemoved, evt => {
+    var index = tokens.indexOf(evt.data);
+    tokens.splice(index, 1);
+});
+
+Events.on(Events.Type.NeededTokensChanged, async evt => {
+    if (!evt.data.tokens)
+        return;
+
+    let missingTokenIds = evt.data.tokens.filter(t => !deck.find(c => c.cardId == t));
+
+    let missing = [];
+    for (let tokenId of missingTokenIds) {
+        let card = await Scryfall.get(tokenId);
+        if (!deck.find(c => c.oracleId == card.oracle_id))
+            missing.push(card);
+    }
+
+    let undefs = deck.filter(c => c.isUndefined && c.isToken);
+
+    for (let token of missing) {
+        let undefCard = undefs.find(c => c.name == token.card.name);
+        if (undefCard) {
+            await undefCard.updateBySetNr(token.card.set, token.card.collector_number, false);
+            undefs = undefs.filter(c => c != undefCard);
+            missing = missing.filter(t => t != token);
+        }
+    }
+
+    for (let token of missing) {
+        let tokenText = `1 [${token.set.toUpperCase()}#${token.collector_number}] ${token.name} #donotprintfront`;
+        if (!deck.some(c => c.getDescription() === tokenText)) {
+            let card = new Card();
+            card.index = deck.getNextIndex();
+            card.order = card.index;
+            card.setCardText(tokenText);
+            deck.push(card);
             insertCardInOrder(parent, card, card.elem);
             insertCardInOrder(entryParent, card, card.entryElem);
         }
-
-        for (const token of missingTokens) {
-            let tokenText = `1 [${token.card.set.toUpperCase()}#${token.card.collector_number}] ${token.card.name} #donotprintfront`;
-            if (!cards.some(c => c.getDescription() === tokenText)) {
-                card = new Card();
-                card.order = ++cardNr;
-                card.setCardText(tokenText);
-                cards.push(card);
-                insertCardInOrder(parent, card, card.elem);
-                insertCardInOrder(entryParent, card, card.entryElem);
-            }
-        }
     }
-
-    updateCardOrder();
-
-    Toaster.hide();
-
-    updateList();
-    Events.on(Events.Type.CardChanged, updateList);
-}
+});
 
 window.addCardAfter = function addCardAfter(card) {
-    const index = cards.indexOf(card);
-
     var newCard = new Card();
-    newCard.order = index + 1;
-    cards.push(newCard);
+
+    deck.pushAfter(newCard, card)
 
     newCard.setCardText("");
 
-    if (index !== -1) {
-        cards.splice(index + 1, 0, cards.pop()); // Move newCard to after the given card
-    }
-
-    updateCardOrder();
+    deck.updateCardOrder();
 
     insertCardInOrder(parent, newCard, newCard.elem);
     insertCardInOrder(entryParent, newCard, newCard.entryElem);
 
-    updateList();
-
     return newCard;
 };
-
-function updateCardOrder() {
-    let cardNr = 0;
-    for (const c of cards) {
-        c.order = ++cardNr;
-        c.updateElem();
-    }
-}
 
 // Example deck URL: https://deckstats.net/decks/276918/3990370-rawr-from-the-dead
 const deckstatUrlRegex = /^https:\/\/deckstats\.net\/decks\/(?<userId>\d+)\/(?<deckId>\d+)-/;
@@ -312,7 +319,7 @@ function insertCardInOrder(parent, card, elem) {
     let inserted = false;
     for (let j = 0; j < parent.children.length; j++) {
         let child = parent.children[j];
-        if (child.card?.order > card.order) {
+        if (child.card?.index > card.index) {
             parent.insertBefore(elem, child);
             inserted = true;
             break;
@@ -324,30 +331,22 @@ function insertCardInOrder(parent, card, elem) {
 }
 
 window.deleteCard = function deleteCard(card) {
-    if (cards.length <= 1)
-        return;
+    deck.splice(card);
 
-    cards.splice(cards.indexOf(card), 1);
     card.elem.parentNode.removeChild(card.elem);
     card.entryElem.parentNode.removeChild(card.entryElem);
     card.destruct();
 
-    let cardNr = 0;
-    for (const card of cards) {
-        card.order = ++cardNr;
-        card.updateElem();
-    }
-
-    updateList()
+    deck.updateCardOrder();
 }
 
 window.input = async function input(event, card) {
     if (event.ctrlKey && event.key === 'Delete') {
         if (card) {
-            var id = cards.indexOf(card);
-            deleteCard(card);
             event.preventDefault();
-            card = cards[id];
+            var index = card.index;
+            deleteCard(card);
+            card = deck.find(c => c.index >= index);
             if (card)
                 card.entryElem.querySelector("#inputField").focus();
         }
@@ -380,17 +379,17 @@ window.input = async function input(event, card) {
             updateList();
         }
     } else if (event.key === "d" && event.ctrlKey) {
-        event.preventDefault();
-
         if (!card)
-            card = cards[cards.length - 1];
+            return;
+
+        event.preventDefault();
         var newCard = addCardAfter(card);
         await newCard.setCardText(card.getDescription());
         newCard.entryElem.querySelector("#inputField").focus();
     } else if (event.key === "ArrowUp") {
-        cards.findLast(c => c.order < card.order)?.entryElem.querySelector("#inputField").focus();
+        deck.findLast(c => c.index < card.index)?.entryElem.querySelector("#inputField").focus();
     } else if (event.key === "ArrowDown") {
-        cards.find(c => c.order > card.order)?.entryElem.querySelector("#inputField").focus();
+        deck.find(c => c.index > card.index)?.entryElem.querySelector("#inputField").focus();
     }
 }
 
@@ -412,14 +411,14 @@ window.cardTextChanged = async function cardTextChanged(card) {
     }
     card.entryElem.querySelector("#inputField").focus();
 
-    updateCardOrder();
+    deck.updateCardOrder();
 }
 
 window.copyAs = function copyAs(format) {
     let text = "";
 
-    for (const card of cards) {
-        if (!card.isUnset)
+    for (const card of deck.cards) {
+        if (!card.isUnset || format == Format.DECKSTATS)
             text += card.getDescription(format) + "\n";
     }
 
@@ -436,17 +435,14 @@ window.removeHighlightDeckInput = function removeHighlightDeckInput(card) {
 }
 
 window.swapTo = function swapTo(target) {
-    if (target == View.Mode.PDF && !cards.length)
-        return;
-
     let selectedCard;
     switch (View.mode) {
         case View.Mode.ARTVIEW:
-            selectedCard = cards.filter(c => !c.isUnset).find(c => c.elem.getBoundingClientRect().top > 0);
+            selectedCard = deck.filter(c => !c.isUnset).find(c => c.elem.getBoundingClientRect().top > 0);
             document.body.classList.remove('artView');
             break;
         case View.Mode.INPUT:
-            selectedCard = cards.filter(c => !c.isUnset).find(c => {
+            selectedCard = deck.filter(c => !c.isUnset).find(c => {
                 let rect = c.elem.getBoundingClientRect();
                 return rect.top <= (window.innerHeight / 2 + 10) && rect.bottom >= (window.innerHeight / 2 - 10);
             });
@@ -470,7 +466,7 @@ window.swapTo = function swapTo(target) {
     }
 
     if (selectedCard)
-        scrollTo(selectedCard, cards, "instant");
+        scrollTo(selectedCard, deck.cards, "instant");
 
     Events.dispatch(Events.Type.ViewChanged, target);
 };
@@ -478,7 +474,7 @@ window.swapTo = function swapTo(target) {
 window.updatePdfPreview = async function updatePdfPreview() {
     var imageDocument = new ImageDocumentPreview(printOptions);
 
-    for (const card of cards)
+    for (const card of deck.cards)
         if (!card.isUnset)
             if (!(card.isBasicLand && printOptions.skipBasicLands))
                 imageDocument.addCard(card.count, card);
@@ -506,7 +502,7 @@ window.generatePdf = async function generatePdf() {
 
     var imageDocument = new ImageDocument(printOptions);
 
-    for (const card of cards)
+    for (const card of deck.cards)
         if (!card.isUnset)
             if (!(card.isBasicLand && printOptions.skipBasicLands))
                 for (let img of card.printOptions.map(po => (po == Print.FRONT) ?
@@ -651,7 +647,7 @@ window.updatePdfCreation({});
 window.updatePdfCreation({});
 
 async function initDeck() {
-    deck = sessionStorage.getItem("deck") ?? localStorage.getItem("deck")
+    let deck = sessionStorage.getItem("deck") ?? localStorage.getItem("deck")
 
     if (!deck)
         deck = await (await fetch('assets/placeholder.txt')).text();
@@ -659,26 +655,23 @@ async function initDeck() {
 
     if (isMobile)
         document.getElementById("tutorialButton").style.display = 'none';
-    else {
-        if (localStorage.getItem('finishedTutorial') == null) {
-            Tutorial.start();
-            deck = await (await fetch('assets/placeholder.txt')).text();
-        }
+    else if (localStorage.getItem('finishedTutorial') == null) {
+        Tutorial.start();
+        deck = await (await fetch('assets/placeholder.txt')).text();
     }
 
-    if (deck)
-        parseDeck(deck);
+    parseDeck(deck);
 };
 
 initDeck();
 
 window.scrollToCard = async function scrollToCard(card) {
-    if (cards?.length > 0) {
+    if (deck.cards.length > 0) {
         if (card.isUnset)
-            card = cards.find(c => !c.isUnset && c.order > card.order) ?? cards.findLast(c => !c.isUnset && c.order < card.order);
+            card = deck.find(c => !c.isUnset && c.index > card.index) ?? deck.findLast(c => !c.isUnset && c.index < card.index);
 
         if (card) {
-            scrollTo(card, cards);
+            scrollTo(card, deck.cards);
             Events.dispatch(Events.Type.ScrollingToCard, card);
         }
     }

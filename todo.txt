@@ -9,3 +9,7 @@
 - add ability to undo and redo
 
 - enable copy from deck list
+
+- drag drop reorder?
+
+- highlight deck input on card hover

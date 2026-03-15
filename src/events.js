@@ -10,10 +10,16 @@ let EventsType = Object.freeze({
     ScryfallClosed: "scryfallClosed",
     CardFlipped: "cardFlipped",
     CardChanged: "cardChanged",
+    CardAdded: "cardAdded",
+    CardRemoved: "cardRemoved",
     ScrollingToCard: "scrollingToCard",
     FilterChanged: "filterChanged",
     TutorialStarted: "tutorialStarted",
     TutorialEnded: "tutorialEnded",
+    TokenAdded: "tokenAdded",
+    TokenRemoved: "tokenRemoved",
+    NeededTokensChanged: "neededTokensChanged",
+    CardLoaded: "cardLoaded",
 });
 
 class Events {
