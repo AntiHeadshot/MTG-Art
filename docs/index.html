@@ -10,20 +10,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<body droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
+<div droppeable="true" ondrop="onDrop(event)" ondragover="return false;">
     <div id="viewButtons">
         <img id="defaultViewButton" title="input" src="img/input.svg" class="clickable gray border"
             onclick="swapTo(View.Mode.INPUT); event.stopPropagation();">
         <img id="artViewButton" title="art view" src="img/artView.svg" class="clickable gray border"
-            onclick="swapTo(View.Mode.ARTVIEW); event.stopPropagation(); parseDeck();">
+            onclick="swapTo(View.Mode.ARTVIEW); event.stopPropagation();">
         <img id="pdfButton" title="pdf creation" src="img/pdf.svg" class="clickable gray border"
             onclick="swapTo(View.Mode.PDF); event.stopPropagation();">
         <img id="tutorialButton" title="start tutorial" src="img/tutorial.svg" class="clickable gray border"
             onclick="localStorage.removeItem('finishedTutorial'); window.location.reload(); event.stopPropagation();">
         <img id="newButton" title="release info" src="img/whatsnew.svg" class="clickable gray border"
-            onclick="fetch('assets/news.html').then(d=>d.text().then(t=>Tutorial.showPopup(t))); event.stopPropagation();">
+            onclick="fetch('assets/news.html').then(d=>d.text().then(t=>Popup.showOk(t))); event.stopPropagation();">
     </div>
-
     <div id="cards" class="scrollbar">
         <div id="cardContainer">
             <div class="card" id="cardTemplate" style="display: none;" onclick="openScryfall(this.card, event)"
@@ -69,20 +68,42 @@
                 <img src="img/futureFrame.svg" width="24" class="border transparent">
             </div>
         </div>
-        <button id="loadDeck" onclick="parseDeck()">Load Deck</button>
-        <div style="align-self: center;">Convert to:</div>
+        <div style="align-self: center;">copy as:</div>
         <div id="convertButtons">
-            <button id="convertToScryfallBtn" disabled onclick="convertToFormat(Format.SCRYFALL)">
+            <button id="convertToScryfallBtn" onclick="copyAs(Format.SCRYFALL)">
                 Scryfall Links
             </button>
-            <button id="convertToDeckstatsBtn" disabled onclick="convertToFormat(Format.DECKSTATS)">
+            <button id="convertToDeckstatsBtn" onclick="copyAs(Format.DECKSTATS)">
                 deckstats.net
             </button>
-            <button id="convertToMtgPrintBtn" disabled onclick="convertToFormat(Format.MTGPRINT)">
+            <button id="convertToMtgPrintBtn" onclick="copyAs(Format.MTGPRINT)">
                 MTG Print
             </button>
         </div>
-        <textarea id="deckInput"></textarea>
+        <div id="newDeckInput" class="scrollbar">
+            <div id="cardEntryTemplate" class="cardEntry unset" style="display: none;">
+                <label>
+                    <div id="input">
+                        <textarea id="inputField" oninput="cardTextChanged(this.closest('.cardEntry').card)"
+                            onblur="this.closest('.cardEntry').card.editFinish()"
+                            onfocus="scrollToCard(this.closest('.cardEntry').card);"
+                            onkeydown="input(event, this.closest('.cardEntry').card)">
+                        </textarea>
+                        <button title="delete" id="delete" tabindex="-1"
+                            onclick="deleteCard(this.closest('.cardEntry').card)">X</button>
+                    </div>
+                    <div id="display">
+                        <div id="count">666</div>
+                        <div id="cardHeader">
+                            <div id="name">Fail</div>
+                            <div id="manacost"></div>
+                        </div>
+                        <button title="delete" id="delete" tabindex="-1"
+                            onclick="deleteCard(this.closest('.cardEntry').card)">X</button>
+                    </div>
+                </label>
+            </div>
+        </div>
     </div>
     <div id="searchButtons" class="searchButtons">
         <div class="searchButtons">
@@ -168,7 +189,7 @@
                 <button id="editPdf" disabled onclick="hideGeneratedPdf(); event.stopPropagation()">edit</button>
                 <button id="createPdf" onclick="generatePdf(); event.stopPropagation()">create</button>
                 <button id="downloadPdf" disabled
-                    onclick="saveFile(document.getElementById('pdfView').src, cards.filter(c => c instanceof Card)[0].name + '.pdf'); event.stopPropagation()">save</button>
+                    onclick="saveFile(document.getElementById('pdfView').src, deck.find(c => !c.isUnset).name + '.pdf'); event.stopPropagation()">save</button>
             </div>
         </div>
         <div class="update">
@@ -233,7 +254,7 @@
         <div id="popupOverlay" class="popup-overlay"></div>
         <div id="popupContentContainer" class="popup-content-container">
             <div id="popupContent" class="popup-content">
-                <p id="popupText"></p>
+                <p id="popupText" class="scrollbar"></p>
                 <button id="popupYesButton" onclick="Popup.onYes()">Yes</button>
                 <button id="popupOkButton" onclick="Popup.onOk()">Ok</button>
                 <button id="popupNoButton" onclick="Popup.onNo()">No</button>
@@ -242,6 +263,215 @@
             </div>
         </div>
     </div>
-</body>
+    <div style="display:none">
+        <svg id="cost0" width="100" height="100">
+            <use href="img/mana.svg#cost0"></use>
+        </svg>
+        <svg id="cost1" width="100" height="100">
+            <use href="img/mana.svg#cost1"></use>
+        </svg>
+        <svg id="cost2" width="100" height="100">
+            <use href="img/mana.svg#cost2"></use>
+        </svg>
+        <svg id="cost3" width="100" height="100">
+            <use href="img/mana.svg#cost3"></use>
+        </svg>
+        <svg id="cost4" width="100" height="100">
+            <use href="img/mana.svg#cost4"></use>
+        </svg>
+        <svg id="cost5" width="100" height="100">
+            <use href="img/mana.svg#cost5"></use>
+        </svg>
+        <svg id="cost6" width="100" height="100">
+            <use href="img/mana.svg#cost6"></use>
+        </svg>
+        <svg id="cost7" width="100" height="100">
+            <use href="img/mana.svg#cost7"></use>
+        </svg>
+        <svg id="cost8" width="100" height="100">
+            <use href="img/mana.svg#cost8"></use>
+        </svg>
+        <svg id="cost9" width="100" height="100">
+            <use href="img/mana.svg#cost9"></use>
+        </svg>
+        <svg id="cost10" width="100" height="100">
+            <use href="img/mana.svg#cost10"></use>
+        </svg>
+        <svg id="cost11" width="100" height="100">
+            <use href="img/mana.svg#cost11"></use>
+        </svg>
+        <svg id="cost12" width="100" height="100">
+            <use href="img/mana.svg#cost12"></use>
+        </svg>
+        <svg id="cost13" width="100" height="100">
+            <use href="img/mana.svg#cost13"></use>
+        </svg>
+        <svg id="cost14" width="100" height="100">
+            <use href="img/mana.svg#cost14"></use>
+        </svg>
+        <svg id="cost15" width="100" height="100">
+            <use href="img/mana.svg#cost15"></use>
+        </svg>
+        <svg id="cost16" width="100" height="100">
+            <use href="img/mana.svg#cost16"></use>
+        </svg>
+        <svg id="cost17" width="100" height="100">
+            <use href="img/mana.svg#cost17"></use>
+        </svg>
+        <svg id="cost18" width="100" height="100">
+            <use href="img/mana.svg#cost18"></use>
+        </svg>
+        <svg id="cost19" width="100" height="100">
+            <use href="img/mana.svg#cost19"></use>
+        </svg>
+        <svg id="cost20" width="100" height="100">
+            <use href="img/mana.svg#cost20"></use>
+        </svg>
+        <svg id="costX" width="100" height="100">
+            <use href="img/mana.svg#costX"></use>
+        </svg>
+        <svg id="costY" width="100" height="100">
+            <use href="img/mana.svg#costY"></use>
+        </svg>
+        <svg id="costZ" width="100" height="100">
+            <use href="img/mana.svg#costZ"></use>
+        </svg>
+        <svg id="costW" width="100" height="100">
+            <use href="img/mana.svg#costW"></use>
+        </svg>
+        <svg id="costU" width="100" height="100">
+            <use href="img/mana.svg#costU"></use>
+        </svg>
+        <svg id="costB" width="100" height="100">
+            <use href="img/mana.svg#costB"></use>
+        </svg>
+        <svg id="costR" width="100" height="100">
+            <use href="img/mana.svg#costR"></use>
+        </svg>
+        <svg id="costG" width="100" height="100">
+            <use href="img/mana.svg#costG"></use>
+        </svg>
+        <svg id="costS" width="100" height="100">
+            <use href="img/mana.svg#costS"></use>
+        </svg>
+        <svg id="costWU" width="100" height="100">
+            <use href="img/mana.svg#costWU"></use>
+        </svg>
+        <svg id="costWB" width="100" height="100">
+            <use href="img/mana.svg#costWB"></use>
+        </svg>
+        <svg id="costUB" width="100" height="100">
+            <use href="img/mana.svg#costUB"></use>
+        </svg>
+        <svg id="costUR" width="100" height="100">
+            <use href="img/mana.svg#costUR"></use>
+        </svg>
+        <svg id="costBR" width="100" height="100">
+            <use href="img/mana.svg#costBR"></use>
+        </svg>
+        <svg id="costBG" width="100" height="100">
+            <use href="img/mana.svg#costBG"></use>
+        </svg>
+        <svg id="costRW" width="100" height="100">
+            <use href="img/mana.svg#costRW"></use>
+        </svg>
+        <svg id="costRG" width="100" height="100">
+            <use href="img/mana.svg#costRG"></use>
+        </svg>
+        <svg id="costGW" width="100" height="100">
+            <use href="img/mana.svg#costGW"></use>
+        </svg>
+        <svg id="costGU" width="100" height="100">
+            <use href="img/mana.svg#costGU"></use>
+        </svg>
+        <svg id="cost2W" width="100" height="100">
+            <use href="img/mana.svg#cost2W"></use>
+        </svg>
+        <svg id="cost2U" width="100" height="100">
+            <use href="img/mana.svg#cost2U"></use>
+        </svg>
+        <svg id="cost2B" width="100" height="100">
+            <use href="img/mana.svg#cost2B"></use>
+        </svg>
+        <svg id="cost2R" width="100" height="100">
+            <use href="img/mana.svg#cost2R"></use>
+        </svg>
+        <svg id="cost2G" width="100" height="100">
+            <use href="img/mana.svg#cost2G"></use>
+        </svg>
+        <svg id="costPC" width="100" height="100">
+            <use href="img/mana.svg#costPC"></use>
+        </svg>
+        <svg id="costPW" width="100" height="100">
+            <use href="img/mana.svg#costPW"></use>
+        </svg>
+        <svg id="costPU" width="100" height="100">
+            <use href="img/mana.svg#costPU"></use>
+        </svg>
+        <svg id="costPB" width="100" height="100">
+            <use href="img/mana.svg#costPB"></use>
+        </svg>
+        <svg id="costPR" width="100" height="100">
+            <use href="img/mana.svg#costPR"></use>
+        </svg>
+        <svg id="costPG" width="100" height="100">
+            <use href="img/mana.svg#costPG"></use>
+        </svg>
+        <svg id="costTap" width="100" height="100">
+            <use href="img/mana.svg#costTap"></use>
+        </svg>
+        <svg id="costUntap" width="100" height="100">
+            <use href="img/mana.svg#costUntap"></use>
+        </svg>
+        <svg id="costInf" width="100" height="100">
+            <use href="img/mana.svg#costInf"></use>
+        </svg>
+        <svg id="costHalf" width="100" height="100">
+            <use href="img/mana.svg#costHalf"></use>
+        </svg>
+        <svg id="costTapOld1" width="100" height="100">
+            <use href="img/mana.svg#costTapOld1"></use>
+        </svg>
+        <svg id="costTapOld2" width="100" height="100">
+            <use href="img/mana.svg#costTapOld2"></use>
+        </svg>
+        <svg id="costWOld" width="100" height="100">
+            <use href="img/mana.svg#costWOld"></use>
+        </svg>
+        <svg id="costC" width="100" height="100">
+            <use href="img/mana.svg#costC"></use>
+        </svg>
+        <svg id="costWOld" width="100" height="100">
+            <use href="img/mana.svg#costWOld"></use>
+        </svg>
+        <svg id="costWOld" width="100" height="100">
+            <use href="img/mana.svg#costWOld"></use>
+        </svg>
+        <svg id="cost1Mil" width="508" height="100">
+            <use href="img/mana.svg#cost1Mil"></use>
+        </svg>
+        <svg id="cost100" width="187" height="100">
+            <use href="img/mana.svg#cost100"></use>
+        </svg>
+        <svg id="costChaos" width="118" height="100">
+            <use href="img/mana.svg#costChaos"></use>
+        </svg>
+        <svg id="costRHalf" width="48" height="100">
+            <use href="img/mana.svg#costRHalf"></use>
+        </svg>
+        <svg id="costWHalf" width="48" height="100">
+            <use href="img/mana.svg#costWHalf"></use>
+        </svg>
+        <svg id="slash" width="36" height="100">
+            <use href="img/mana.svg#slash"></use>
+        </svg>
+        <svg id="pyraxian" width="58" height="100">
+            <use href="img/mana.svg#pyraxian"></use>
+        </svg>
+        <svg id="costWOld" width="100" height="100">
+            <use href="img/mana.svg#costWOld"></use>
+        </svg>
+    </div>
+    </body>
 
 </html>
