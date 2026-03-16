@@ -190,7 +190,8 @@ svg {
 }
 
 #newDeckInput {
-    overflow: hidden scroll;
+    overflow: hidden auto;
+    scrollbar-gutter: stable;
     font-size: 1.2rem;
     padding-block: 0.2rem;
 
@@ -204,7 +205,7 @@ svg {
             display: inline-flex;
             left: 0;
             right: 0;
-            top: 0.4rem;
+            top: 0.1rem;
             perspective: 1000px;
             transform-style: preserve-3d;
             transform-origin: 0 50% -1rem;
@@ -215,16 +216,17 @@ svg {
 
         #inputField {
             position: relative;
-            width: calc(100% - 8rem);
-            height: 20px;
-            top: -0.25rem;
+            width: calc(100% - 5.6rem);
+            height: 1.3rem;
+            top: -0.1rem;
             margin-inline: 1rem;
             background-color: var(--bg-secondary);
             color: var(--text-primary);
-            border: 2px solid var(--border-dark);
+            border-inline: 2px solid var(--border-dark);
+            border-block: 2px solid var(--bg-secondary);
             border-radius: 3px;
             font-size: 1rem;
-            padding: 4px 4px 0 4px;
+            padding: -4px 4px 0 4px;
             overflow: hidden;
         }
 
@@ -237,25 +239,16 @@ svg {
             outline: 2px solid maroon;
         }
 
-        &.unset #inputField {
-            border-bottom: none;
+        &:not(.unset)+.cardEntry.unset #inputField {
+            border-top: 2px solid var(--border-dark);
         }
 
-        &.unset+.cardEntry.unset #inputField {
-            border-top: none;
-            border-bottom: none;
-            height: 1.3rem;
-            top: -0.25rem;
+        &.unset:has(+.cardEntry:not(.unset)) #inputField {
+            border-bottom: 2px solid var(--border-dark);
         }
 
         #input:focus-within {
             z-index: 100;
-        }
-
-        #input #delete {
-            position: absolute;
-            right: 3.5rem;
-            top: -0.65rem;
         }
 
         #input:focus-within,
@@ -272,7 +265,9 @@ svg {
         #display {
             height: 30px;
             width: 100%;
-            display: inline-block;
+            display: inline-grid;
+            grid-template-columns: 2.5rem auto 4rem;
+            margin-left: 1.3rem;
             transform-origin: 0 50% -1rem;
             transform: perspective(100000px) rotateX(0deg);
             backface-visibility: hidden;
@@ -286,12 +281,10 @@ svg {
             }
 
             #count {
-                position: relative;
+                grid-column: 1;
                 font-weight: bold;
-                display: inline-block;
-                width: 2rem;
                 top: 0.4rem;
-                margin-right: 0.5rem;
+                right: 0;
                 text-align: end;
                 vertical-align: super;
                 -webkit-user-select: none;
@@ -300,20 +293,23 @@ svg {
                 &:after {
                     content: "x";
                     font-weight: normal;
-                    position: absolute;
-                    right: -1rem;
-                    display: inline-block;
+                    position: relative;
+                    left: 0.5rem;
+                    -webkit-user-select: none;
+                    user-select: none;
                 }
             }
 
             #cardHeader {
+                grid-column: 2;
                 position: relative;
                 display: inline-flex;
                 padding-block: 0.2rem;
                 padding-left: 0.5rem;
                 padding-right: 0.25rem;
                 margin-inline: 1rem;
-                width: 24rem;
+                max-width: 24rem;
+                min-width: 1fr;
                 height: 1.3rem;
                 overflow: hidden;
                 align-items: flex-end;
@@ -410,8 +406,7 @@ svg {
         #name {
             position: relative;
             z-index: 1;
-            top: 2px;
-            height: 1.3rem;
+            height: 1.5rem;
             font-weight: bold;
             color: var(--text-secondary);
             display: inline-block;
@@ -446,7 +441,9 @@ svg {
     }
 
     #delete {
-        position: relative;
+        position: absolute;
+        right: 1.5rem;
+        top: -0.3rem;
         font-weight: bold;
         background-color: transparent;
         color: var(--text-primary);
@@ -702,28 +699,6 @@ button {
     opacity: 0;
 }
 
-.scrollbar::-webkit-scrollbar-track,
-.CodeMirror-vscrollbar::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
-    background-color: transparent;
-}
-
-.scrollbar::-webkit-scrollbar,
-.CodeMirror-vscrollbar::-webkit-scrollbar {
-    width: 12px;
-    background-color: transparent;
-    position: absolute;
-    z-index: 1000;
-}
-
-.scrollbar::-webkit-scrollbar-thumb,
-.CodeMirror-vscrollbar::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    -webkit-box-shadow: inset 2px 0 6px purple;
-    background-color: black;
-}
-
 #toaster {
     position: fixed;
     bottom: 20px;
@@ -806,6 +781,8 @@ button {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    overflow: hidden auto;
+    scrollbar-gutter: stable;
 }
 
 #pdfContainer {

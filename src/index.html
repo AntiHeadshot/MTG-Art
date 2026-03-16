@@ -23,7 +23,7 @@
         <img id="newButton" title="release info" src="img/whatsnew.svg" class="clickable gray border"
             onclick="fetch('assets/news.html').then(d=>d.text().then(t=>Popup.showOk(t))); event.stopPropagation();">
     </div>
-    <div id="cards" class="scrollbar">
+    <div id="cards">
         <div id="cardContainer">
             <div class="card" id="cardTemplate" style="display: none;" onclick="openScryfall(this.card, event)"
                 draggable="false" focusable="false" onmouseover="highlightDeckInput(this.card)"
@@ -80,7 +80,7 @@
                 MTG Print
             </button>
         </div>
-        <div id="newDeckInput" class="scrollbar">
+        <div id="newDeckInput">
             <div id="cardEntryTemplate" class="cardEntry unset" style="display: none;">
                 <label>
                     <div id="input">
@@ -89,8 +89,6 @@
                             onfocus="scrollToCard(this.closest('.cardEntry').card);"
                             onkeydown="input(event, this.closest('.cardEntry').card)">
                         </textarea>
-                        <button title="delete" id="delete" tabindex="-1"
-                            onclick="deleteCard(this.closest('.cardEntry').card)">X</button>
                     </div>
                     <div id="display">
                         <div id="count">666</div>
@@ -98,9 +96,9 @@
                             <div id="name">Fail</div>
                             <div id="manacost"></div>
                         </div>
-                        <button title="delete" id="delete" tabindex="-1"
-                            onclick="deleteCard(this.closest('.cardEntry').card)">X</button>
                     </div>
+                    <button title="delete" id="delete" tabindex="-1"
+                        onclick="deleteCard(this.closest('.cardEntry').card)">X</button>
                 </label>
             </div>
         </div>
@@ -254,7 +252,7 @@
         <div id="popupOverlay" class="popup-overlay"></div>
         <div id="popupContentContainer" class="popup-content-container">
             <div id="popupContent" class="popup-content">
-                <p id="popupText" class="scrollbar"></p>
+                <p id="popupText"></p>
                 <button id="popupYesButton" onclick="Popup.onYes()">Yes</button>
                 <button id="popupOkButton" onclick="Popup.onOk()">Ok</button>
                 <button id="popupNoButton" onclick="Popup.onNo()">No</button>
