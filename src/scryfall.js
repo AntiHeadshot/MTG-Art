@@ -68,9 +68,14 @@ class Scryfall {
 
         if (cachedCard) {
             const cachedData = JSON.parse(cachedCard);
-            let card = await Scryfall.get(null, cachedData.set, cachedData.nr);
-            card.isUndefined = cachedData.isUndefined;
-            return card;
+            if(!cachedData.is404)
+            {
+                let card = await Scryfall.get(null, cachedData.set, cachedData.nr);
+                card.isUndefined = cachedData.isUndefined;
+                return card;
+            }
+            if((Date.now() - cachedData.timestamp) < (1000 * 60 * 24))
+                return;
         }
 
         await delayScryfallCall();
@@ -81,6 +86,7 @@ class Scryfall {
             const data = await response.json();
             if (data.total_cards < 1) {
                 console.log(data);
+                localStorage.setItem(cacheSearchKey, JSON.stringify({ timestamp: Date.now(), is404: true }));
                 return;
             }
 
@@ -93,7 +99,9 @@ class Scryfall {
 
             return card;
         }
-        return null;
+
+        localStorage.setItem(cacheSearchKey, JSON.stringify({ timestamp: Date.now(), is404: true }));
+        return;
     }
 
     static open(evt, searchOptions, position, card) {
