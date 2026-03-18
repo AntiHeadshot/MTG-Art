@@ -182,7 +182,7 @@ window.parseDeck = async function parseDeck(deckText) {
         var card = new Card();
 
         card.index = deck.getNextIndex();
-        card.order = card.index;
+        card.setOrder(card.index);
         card.setCardText(cardText);
 
         deck.push(card);
@@ -237,7 +237,7 @@ Events.on(Events.Type.NeededTokensChanged, async evt => {
         if (!deck.some(c => c.getDescription() === tokenText)) {
             let card = new Card();
             card.index = deck.getNextIndex();
-            card.order = card.index;
+            card.setOrder(card.index);
             card.setCardText(tokenText);
             deck.push(card);
             insertCardInOrder(parent, card, card.elem);

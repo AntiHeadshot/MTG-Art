@@ -482,6 +482,10 @@ svg {
 
 .card {
 
+    &.isAtTop{
+        z-index: 1000 !important;
+    }
+
     .face {
         width: 100%;
         border-radius: 5%;

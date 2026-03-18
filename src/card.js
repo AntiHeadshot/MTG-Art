@@ -327,8 +327,7 @@ class Card {
 
         this.order = value;
 
-        if (!this.elem.style.zIndex)
-            this.elem.style.zIndex = 9000 - this.order;
+        this.elem.style.zIndex = 9000 - this.order;
 
         this.elem.style.top = `${this.order * 2 + 4}px`;
         this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
@@ -336,17 +335,11 @@ class Card {
         if (this.observer)
             this.observer.disconnect();
         this.observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.zIndex = 9000 - entry.target.card.order;
-                } else {
-                    entry.target.style.zIndex = 1000;
-                }
-            });
+            entries.forEach(entry => { entry.target.classList.toggle("isAtTop", !entry.isIntersecting); });
         }, {
-            root: document,
-            rootMargin: `-${this.order * 2 + 5}px 0px 0px 0px`,
-            threshold: 1
+            root: document.getElementById("cards"),
+            rootMargin: `-${this.order * 2 + 6}px 100px 100px 100px`,
+            threshold: 0.999
         });
         this.observer.observe(this.elem);
     }
@@ -394,38 +387,13 @@ class Card {
             this.elem.querySelector(".printSettings .printBackSvg").classList.remove("selected");
             this.elem.querySelector(".cardFlipImg").classList.add("grayed");
         }
-
-        if (!this.elem.style.zIndex)
-            this.elem.style.zIndex = 9000 - this.order;
-
-        this.elem.style.top = `${this.order * 2 + 4}px`;
-        this.elem.style.bottom = `${Math.max(0, cardCnt - this.order) * 2 + 4}px`;
-        this.elem.style.transition = `bottom 1s ease-in-out`;
-
-        if (!this.elem.style.transform) {
-            this.rotation = (Math.random() - 0.5) * 2 * 2;
-            this.elem.style.transform = `rotate(${this.rotation}deg)`;
-        }
-
-        this.entryElem.setAttribute("title", this.isUndefined ? "This card is undefined and thus searched by name until you choose a specific card." : "");
-
-        if (this.observer)
-            this.observer.disconnect();
-        this.observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.zIndex = 9000 - entry.target.card.order;
-                } else {
-                    entry.target.style.zIndex = 1000;
+        
+                if (!this.elem.style.transform) {
+                    this.rotation = (Math.random() - 0.5) * 2 * 2;
+                    this.elem.style.transform = `rotate(${this.rotation}deg)`;
                 }
-            });
-        }, {
-            root: document,
-            rootMargin: `-${this.order * 2 + 5}px 0px 0px 0px`,
-            threshold: 1
-        });
-        this.observer.observe(this.elem);
-
+        
+                this.entryElem.setAttribute("title", this.isUndefined ? "This card is undefined and thus searched by name until you choose a specific card." : "");
 
         this.entryElem.classList.toggle("unset", this.isUnset);
         this.entryElem.classList.toggle("undefined", this.isUndefined);
