@@ -194,6 +194,8 @@ window.parseDeck = async function parseDeck(deckText) {
 
     deck.updateCardOrder();
 
+    Events.on(Events.Type.CardChanged, updateList);
+
     Toaster.hide();
 }
 
@@ -355,7 +357,6 @@ window.input = async function input(event, card) {
 
         if (event.ctrlKey) {
             if (card)
-                //waits for update ... may be bad (same for esc and arrows)
                 card.entryElem.querySelector("#inputField").blur();
         } else {
             //has to be read before new element is added
