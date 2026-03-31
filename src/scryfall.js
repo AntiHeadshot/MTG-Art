@@ -68,13 +68,12 @@ class Scryfall {
 
         if (cachedCard) {
             const cachedData = JSON.parse(cachedCard);
-            if(!cachedData.is404)
-            {
+            if (!cachedData.is404) {
                 let card = await Scryfall.get(null, cachedData.set, cachedData.nr);
                 card.isUndefined = cachedData.isUndefined;
                 return card;
             }
-            if((Date.now() - cachedData.timestamp) < (1000 * 60 * 24))
+            if ((Date.now() - cachedData.timestamp) < (1000 * 60 * 60 * 24))
                 return;
         }
 
