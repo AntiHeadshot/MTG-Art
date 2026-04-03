@@ -17,6 +17,8 @@ import Toaster from './toaster.js';
 import Scryfall from './scryfall.js';
 import isMobileBrowser from './browserdetection.js';
 
+let DEBUG = false;
+
 let isMobile = isMobileBrowser(navigator.userAgent || navigator.vendor || window.opera);
 
 let deck = window.deck = new Deck();
@@ -63,6 +65,11 @@ window.Frame = Frame;
 window.Print = Print;
 window.CropMark = CropMark;
 window.Card = Card;
+window.cacheClearAll = ImageCache.clearAllSessions();
+window.cacheClearOld = ImageCache.clearOldSessions();
+
+let history = [];
+var future = [];
 
 window.addEventListener("error", function (event) {
     Toaster.showError(`\nError: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
@@ -100,8 +107,11 @@ window.Popup = Popup;
 
 Events.on(Events.Type.CardLoaded, c => { updateList(c.data); });
 
-Events.on(Events.Type.CardAdded, () => { updateList(); if (View.mode == View.Mode.PDF) updatePdfPreview(); });
-Events.on(Events.Type.CardRemoved, () => { updateList(); if (View.mode == View.Mode.PDF) updatePdfPreview(); });
+var States = Object.freeze({
+    Added: "Added",
+    Removed: "Removed",
+    Changed: "Changed",
+});
 
 window.changeBrightness = function changeBrightness(value) {
     var deckCards = deck.filter(c => !c.isUnset);
@@ -109,6 +119,7 @@ window.changeBrightness = function changeBrightness(value) {
     Events.remove(Events.Type.CardChanged, updateList);
     for (let card of deckCards) {
         card.printSettings.brightness += value;
+        card.updateElem();
         card.changed();
     }
     Events.on(Events.Type.CardChanged, updateList);
@@ -121,6 +132,7 @@ window.setBrightness = function setBrightness(value) {
     Events.remove(Events.Type.CardChanged, updateList);
     for (let card of deckCards) {
         card.printSettings.brightness = value;
+        card.updateElem();
         card.changed();
     }
     Events.on(Events.Type.CardChanged, updateList);
@@ -143,6 +155,7 @@ window.onDrop = async function onDrop(e) {
 
                 await openedCard.updateBySetNr(urlParts[4], urlParts[5]);
                 openedCard.isUndefined = false;
+                Events.dispatch(Events.Type.ChangeFinished, openedCard);
                 updateList();
 
             } else if (/^https:\/\/cards\.scryfall\.io\/\w+\/\w+\/\w+\/[\w-]+\/[\w-]+\.jpg\?\d+$/.test(text)) {
@@ -150,6 +163,7 @@ window.onDrop = async function onDrop(e) {
 
                 await openedCard.updateById(id);
                 openedCard.isUndefined = false;
+                Events.dispatch(Events.Type.ChangeFinished, openedCard);
                 updateList();
             }
         }
@@ -194,9 +208,165 @@ window.parseDeck = async function parseDeck(deckText) {
 
     deck.updateCardOrder();
 
+    Events.on(Events.Type.CardAdded, () => { updateList(); if (View.mode == View.Mode.PDF) updatePdfPreview(); });
+    Events.on(Events.Type.CardRemoved, () => { updateList(); if (View.mode == View.Mode.PDF) updatePdfPreview(); });
     Events.on(Events.Type.CardChanged, updateList);
 
     Toaster.hide();
+
+    function updateHistory() {
+        if (!DEBUG) return;
+
+        var template = document.getElementById("historyDebugTemplate");
+        var debugParent = document.getElementById("historyDebug");
+        var child;
+        while ((child = debugParent.firstChild) != null)
+            debugParent.removeChild(child);
+
+        for (const entry of history) {
+            var clone = document.importNode(template.content, true);
+            if (entry.previous !== undefined)
+                clone.getElementById("content").innerHTML = `${entry.state} ${entry.position}: ${entry.previous} -> ${entry.card}`;
+            else
+                clone.getElementById("content").innerHTML = `${entry.state} ${entry.position}: ${entry.card}`;
+            debugParent.appendChild(clone);
+        }
+
+        debugParent = document.getElementById("futureDebug");
+
+        while ((child = debugParent.firstChild) != null)
+            debugParent.removeChild(child);
+
+        for (const entry of future) {
+            var clone = document.importNode(template.content, true);
+            if (entry.previous !== undefined)
+                clone.getElementById("content").innerHTML = `${entry.state} ${entry.position}: ${entry.previous} -> ${entry.card}`;
+            else
+                clone.getElementById("content").innerHTML = `${entry.state} ${entry.position}: ${entry.card}`;
+            debugParent.appendChild(clone);
+        }
+    }
+
+    function onCardAdded(e) {
+        future.splice(0, future.length);
+        let index = deck.indexOf(e.data);
+
+        e.data.previousDescription = e.data.getDescription();
+
+        history.push({ state: States.Added, position: index, card: e.data.getDescription() });
+
+        updateHistory();
+    }
+
+    function onCardRemoved(e) {
+        future.splice(0, future.length);
+        let index = deck.indexOf(e.data);
+
+        onCardChanged(e);
+
+        history.push({ state: States.Removed, position: index, card: e.data.getDescription() });
+
+        updateHistory();
+    }
+
+    function onCardChanged(e) {
+        let index = deck.indexOf(e.data);
+        if (index < 0)
+            return;
+
+        future.splice(0, future.length);
+
+        var previous = e.data.previousDescription;
+        var desc = e.data.getDescription();
+        if (previous != desc) {
+            e.data.previousDescription = desc;
+            let entry = { state: States.Changed, position: index, card: desc, previous: previous };
+            history.push(entry);
+        }
+        updateHistory();
+    }
+
+    for (let card of deck.cards)
+        card.previousDescription = card.getDescription();
+
+    Events.on(Events.Type.CardAdded, onCardAdded);
+    Events.on(Events.Type.CardRemoved, onCardRemoved);
+    Events.on(Events.Type.ChangeFinished, onCardChanged);
+
+    document.addEventListener('keydown', async function (event) {
+        if (event.ctrlKey && event.key === 'z') {
+            event.preventDefault();
+            if (history.length) {
+                var hist = history.pop();
+
+                future.push(hist);
+
+                updateHistory();
+
+                Events.remove(Events.Type.CardAdded, onCardAdded);
+                Events.remove(Events.Type.CardRemoved, onCardRemoved);
+                Events.remove(Events.Type.ChangeFinished, onCardChanged);
+
+                switch (hist.state) {
+                    case States.Added:
+                        deleteCard(deck.cards[hist.position]);
+                        break;
+                    case States.Changed: {
+                        let card = deck.cards[hist.position];
+                        await card.setCardText(hist.previous);
+                        card.previousDescription = hist.previous;
+                        break;
+                    }
+                    case States.Removed: {
+                        let card = await addCardAfter(deck.cards[hist.position - 1], hist.card);
+                        card.previousDescription = hist.card;
+                        break;
+                    }
+                }
+                updateList();
+
+                Events.on(Events.Type.CardAdded, onCardAdded);
+                Events.on(Events.Type.CardRemoved, onCardRemoved);
+                Events.on(Events.Type.ChangeFinished, onCardChanged);
+            }
+        }
+        else if (event.ctrlKey && event.key === 'y') {
+            event.preventDefault();
+            if (future.length) {
+                var hist = future.pop();
+
+                history.push(hist);
+
+                updateHistory();
+
+                Events.remove(Events.Type.CardAdded, onCardAdded);
+                Events.remove(Events.Type.CardRemoved, onCardRemoved);
+                Events.remove(Events.Type.ChangeFinished, onCardChanged);
+
+                switch (hist.state) {
+                    case States.Added: {
+                        let card = await addCardAfter(deck.cards[hist.position - 1], hist.card);
+                        card.previousDescription = hist.card;
+                        break;
+                    }
+                    case States.Changed: {
+                        let card = deck.cards[hist.position];
+                        await card.setCardText(hist.card);
+                        card.previousDescription = hist.card;
+                        break;
+                    }
+                    case States.Removed:
+                        deleteCard(deck.cards[hist.position]);
+                        break;
+                }
+                updateList();
+
+                Events.on(Events.Type.CardAdded, onCardAdded);
+                Events.on(Events.Type.CardRemoved, onCardRemoved);
+                Events.on(Events.Type.ChangeFinished, onCardChanged);
+            }
+        }
+    });
 }
 
 var tokens = [];
@@ -246,12 +416,15 @@ Events.on(Events.Type.NeededTokensChanged, async evt => {
     }
 });
 
-window.addCardAfter = function addCardAfter(card) {
-    var newCard = new Card();
+window.addCardAfter = async function addCardAfter(card, text) {
+    if (text === undefined)
+        text = "";
+
+    var newCard = new Card(text);
 
     deck.pushAfter(newCard, card)
 
-    newCard.setCardText("");
+    await newCard.setCardText(text);
 
     deck.updateCardOrder();
 
@@ -363,7 +536,7 @@ window.input = async function input(event, card) {
             var value = event.target.value;
             var selectionStart = event.target.selectionStart;
 
-            var newCard = addCardAfter(card);
+            var newCard = await addCardAfter(card);
 
             if (selectionStart > 0 && selectionStart < value.length) {
                 newCard.text = value.substring(selectionStart);
@@ -384,8 +557,7 @@ window.input = async function input(event, card) {
             return;
 
         event.preventDefault();
-        var newCard = addCardAfter(card);
-        await newCard.setCardText(card.getDescription());
+        var newCard = await addCardAfter(card, card.getDescription());
         newCard.entryElem.querySelector("#inputField").focus();
     } else if (event.key === "ArrowUp") {
         deck.findLast(c => c.index < card.index)?.entryElem.querySelector("#inputField").focus();
@@ -407,8 +579,7 @@ window.cardTextChanged = async function cardTextChanged(card) {
     await card.setCardText(texts[0]);
 
     for (let i = 1; i < texts.length; i++) {
-        card = addCardAfter(card);
-        card.setCardText(texts[i].trim());
+        card = addCardAfter(card, texts[i].trim());
     }
     card.entryElem.querySelector("#inputField").focus();
 
@@ -694,6 +865,3 @@ document.addEventListener('click', function () {
     customContextMenu.style.opacity = 0;
     customContextMenu.style.pointerEvents = "none";
 });
-
-window.cacheClearAll = ImageCache.clearAllSessions();
-window.cacheClearOld = ImageCache.clearOldSessions();

@@ -69,6 +69,8 @@ Tutorial.addStep({
 <br>
 <br>You can switch to the next entry with tab or arrow down key.
 <br>
+<br>If you made any mistakes you should be able to undo them with crtl+z.
+<br>
 <br>The card list shows the card you selected in the input field. Try this next.
 `
 });

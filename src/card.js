@@ -33,11 +33,14 @@ var entryTemplate = document.getElementById("cardEntryTemplate");
 let cardCnt = 0;
 
 class Card {
-    constructor() {
+    constructor(text) {
+        if (text === undefined)
+            text = "Failed";
+
         cardCnt++;
         this.resetCardData();
 
-        this.elem = template.cloneNode(true);
+        this.elem = document.importNode(template.content, true).firstElementChild;
         this.cardImgElem = this.elem.querySelector(".cardImg");
         this.entryElem = entryTemplate.cloneNode(true);
 
@@ -45,7 +48,7 @@ class Card {
         this.entryElem.card = this;
 
         this.count = 0;
-        this.text = "Failed";
+        this.text = text;
         this.preventTextChange = false;
 
         this.imageElements = [];
@@ -213,7 +216,7 @@ class Card {
                 this.updateElem();
             }
 
-            Events.dispatch(Events.Type.CardChanged, this);
+            this.changed();
         }
         finally {
             this.endUpdate();
@@ -326,7 +329,6 @@ class Card {
             return;
 
         this.order = value;
-
         this.elem.style.zIndex = 9000 - this.order;
 
         this.elem.style.top = `${this.order * 2 + 4}px`;
@@ -387,13 +389,13 @@ class Card {
             this.elem.querySelector(".printSettings .printBackSvg").classList.remove("selected");
             this.elem.querySelector(".cardFlipImg").classList.add("grayed");
         }
-        
-                if (!this.elem.style.transform) {
-                    this.rotation = (Math.random() - 0.5) * 2 * 2;
-                    this.elem.style.transform = `rotate(${this.rotation}deg)`;
-                }
-        
-                this.entryElem.setAttribute("title", this.isUndefined ? "This card is undefined and thus searched by name until you choose a specific card." : "");
+
+        if (!this.elem.style.transform) {
+            this.rotation = (Math.random() - 0.5) * 2 * 2;
+            this.elem.style.transform = `rotate(${this.rotation}deg)`;
+        }
+
+        this.entryElem.setAttribute("title", this.isUndefined ? "This card is undefined and thus searched by name until you choose a specific card." : "");
 
         this.entryElem.classList.toggle("unset", this.isUnset);
         this.entryElem.classList.toggle("undefined", this.isUndefined);
@@ -433,7 +435,7 @@ class Card {
         this.elem.classList.toggle("revertable", this.history.length > 0);
         this.elem.classList.add("forwardable");
 
-        Events.dispatch(Events.Type.CardChanged, this);
+        this.changed();
     }
 
     forward() {
@@ -448,7 +450,7 @@ class Card {
         this.elem.classList.add("revertable");
         this.elem.classList.toggle("forwardable", this.future.length > 0);
 
-        Events.dispatch(Events.Type.CardChanged, this);
+        this.changed();
     }
 
     selectPrint(printType) {
@@ -458,7 +460,7 @@ class Card {
             this.printOptions.push(printType);
 
         this.updateElem();
-        Events.dispatch(Events.Type.CardChanged, this);
+        this.changed();
     }
 
     openScryfall(evt, searchOptions, position) {
@@ -489,12 +491,12 @@ class Card {
             clearTimeout(this.textChangeTimeout);
             this.textChangeTimeout = null;
         }
-        this.setCardText(this.entryElem.querySelector("#inputField").value);
-        Events.dispatch(Events.Type.CardChanged, this);
+        await this.setCardText(this.entryElem.querySelector("#inputField").value);
+        this.changed();
+        Events.dispatch(Events.Type.ChangeFinished, this);
     }
 
     changed() {
-        this.updateElem();
         Events.dispatch(Events.Type.CardChanged, this);
     }
 }

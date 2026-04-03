@@ -1,15 +1,11 @@
-- Refactor more!!!
+- Refactor more!!! especially un/redo!!!!
 
 - recognize wrong tokens
 
 - improove cut marks for spacing
-
-- add ability to undo and redo
 
 - enable copy from deck list
 
 - drag drop reorder?
 
 - highlight deck input on card hover
-
-- fix deck stack ordering !!! (also for firefox?)

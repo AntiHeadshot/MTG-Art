@@ -16,16 +16,17 @@ class Deck {
         card.index = index + 1;
         card.order = after.order++;
 
-        this.push(card);
+        this.cards.push(card);
 
         if (index !== -1) {
             this.cards.splice(index + 1, 0, this.cards.pop()); // Move newCard to after the given card
         }
+        Events.dispatch(Events.Type.CardAdded, card);
     }
 
     splice(card) {
-        this.cards.splice(this.cards.indexOf(card), 1);
         Events.dispatch(Events.Type.CardRemoved, card);
+        this.cards.splice(this.cards.indexOf(card), 1);
     }
 
     updateCardOrder() {
@@ -44,6 +45,7 @@ class Deck {
 
     print() { return this.cards.map(c => c.getDescription()).join("\n"); }
 
+    indexOf(c) { return this.cards.indexOf(c); }
     filter(fn) { return this.cards.filter(fn); }
     find(fn) { return this.cards.find(fn); }
     findLast(fn) { return this.cards.findLast(fn); }

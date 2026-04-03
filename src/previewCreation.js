@@ -137,6 +137,7 @@ class ImageDocumentPreview {
                             card.card.printSettings.brightness -= 5;
                         }
 
+                        card.card.updateElem();
                         card.card.changed();
                     });
 
