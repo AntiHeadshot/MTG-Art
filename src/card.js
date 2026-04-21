@@ -305,7 +305,7 @@ class Card {
             Events.dispatch(this.isToken ? Events.Type.TokenAdded : Events.Type.TokenRemoved, this);
         this.isTokenBefore = this.isToken;
 
-        this.tokens = data.all_parts?.filter(p => p.type_line.startsWith("Token"))
+        this.tokens = data.all_parts?.filter(p => p.type_line.startsWith("Token") && new RegExp(`\\W${p.name}\\W`,"g").test(data.oracle_text))
             .map(t => t.id)
             .filter(t => t != this.cardId)
             .sort() ?? [];

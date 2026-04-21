@@ -394,7 +394,7 @@ Events.on(Events.Type.NeededTokensChanged, async evt => {
     let undefs = deck.filter(c => c.isUndefined && c.isToken);
 
     for (let token of missing) {
-        let undefCard = undefs.find(c => c.name == token.card.name);
+        let undefCard = undefs.find(c => c.name == token.name);
         if (undefCard) {
             await undefCard.updateBySetNr(token.card.set, token.card.collector_number, false);
             undefs = undefs.filter(c => c != undefCard);
