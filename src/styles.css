@@ -52,6 +52,12 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
+body{
+    background: url(img/bg.svg);
+    background-blend-mode: luminosity;
+    background-size: 256px;
+}
+
 img,
 svg {
     user-select: none;
