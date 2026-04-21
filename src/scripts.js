@@ -91,7 +91,7 @@ function updateStorageSize(size) {
 updateStorageSize(ImageCache.getObjectStoreSize());
 Events.on(Events.Type.StorageChanged, v => updateStorageSize(v.data.totalSize));
 
-function updateList(c) {
+function updateList() {
     deck.updateCardOrder();
 
     if (Tutorial.isOpen)
@@ -224,7 +224,7 @@ window.parseDeck = async function parseDeck(deckText) {
             debugParent.removeChild(child);
 
         for (const entry of history) {
-            var clone = document.importNode(template.content, true);
+            let clone = document.importNode(template.content, true);
             if (entry.previous !== undefined)
                 clone.getElementById("content").innerHTML = `${entry.state} ${entry.position}: ${entry.previous} -> ${entry.card}`;
             else
@@ -238,7 +238,7 @@ window.parseDeck = async function parseDeck(deckText) {
             debugParent.removeChild(child);
 
         for (const entry of future) {
-            var clone = document.importNode(template.content, true);
+            let clone = document.importNode(template.content, true);
             if (entry.previous !== undefined)
                 clone.getElementById("content").innerHTML = `${entry.state} ${entry.position}: ${entry.previous} -> ${entry.card}`;
             else
@@ -297,7 +297,7 @@ window.parseDeck = async function parseDeck(deckText) {
         if (event.ctrlKey && event.key === 'z') {
             event.preventDefault();
             if (history.length) {
-                var hist = history.pop();
+                let hist = history.pop();
 
                 future.push(hist);
 
@@ -333,7 +333,7 @@ window.parseDeck = async function parseDeck(deckText) {
         else if (event.ctrlKey && event.key === 'y') {
             event.preventDefault();
             if (future.length) {
-                var hist = future.pop();
+                let hist = future.pop();
 
                 history.push(hist);
 
@@ -513,6 +513,16 @@ window.deleteCard = function deleteCard(card) {
     card.destruct();
 
     deck.updateCardOrder();
+
+    if (deck.cards.length == 0) {
+        card = new Card();
+        card.index = deck.getNextIndex();
+        card.setCardText("");
+        card.setOrder(card.index);
+        deck.push(card);
+        insertCardInOrder(parent, card, card.elem);
+        insertCardInOrder(entryParent, card, card.entryElem);
+    }
 }
 
 window.input = async function input(event, card) {
@@ -536,7 +546,7 @@ window.input = async function input(event, card) {
             var value = event.target.value;
             var selectionStart = event.target.selectionStart;
 
-            var newCard = await addCardAfter(card);
+            let newCard = await addCardAfter(card);
 
             if (selectionStart > 0 && selectionStart < value.length) {
                 newCard.text = value.substring(selectionStart);
@@ -557,7 +567,7 @@ window.input = async function input(event, card) {
             return;
 
         event.preventDefault();
-        var newCard = await addCardAfter(card, card.getDescription());
+        let newCard = await addCardAfter(card, card.getDescription());
         newCard.entryElem.querySelector("#inputField").focus();
     } else if (event.key === "ArrowUp") {
         deck.findLast(c => c.index < card.index)?.entryElem.querySelector("#inputField").focus();
@@ -846,6 +856,15 @@ window.scrollToCard = async function scrollToCard(card) {
             scrollTo(card, deck.cards);
             Events.dispatch(Events.Type.ScrollingToCard, card);
         }
+    }
+}
+
+window.clearDeck = function clearDeck() {
+    let card;
+    while ((card = deck.cards.find(() => true)) != undefined) {
+        if (card.text == "" && deck.cards.length == 1)
+            break;
+        window.deleteCard(card);
     }
 }
 

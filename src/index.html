@@ -73,6 +73,9 @@
                     <img src="img/futureFrame.svg" width="24" class="border transparent">
                 </div>
             </div>
+            <button id="clearDeckBtn" onclick="Popup.showYesNo('Do you really want to clear the deck?', clearDeck); event.stopPropagation();">
+                    Clear Deck
+                </button>
             <div style="align-self: center;">copy as:</div>
             <div id="convertButtons">
                 <button id="convertToScryfallBtn" onclick="copyAs(Format.SCRYFALL)">

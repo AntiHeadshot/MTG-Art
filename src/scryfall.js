@@ -89,9 +89,23 @@ class Scryfall {
                 return;
             }
 
-            let card = data.data[0];
+            let card;
+            if (data.total_cards == 1) {
+                card = data.data[0];
+                card.isUndefined = false;
+            }
+            else {
+                var match = data.data.filter(c => c.name.toLowerCase() === name.toLowerCase());
+                if (match.length == 1) {
+                    card = match[0];
+                    card.isUndefined = false;
+                }
+            }
 
-            card.isUndefined = data.total_cards > 1;
+            if (!card) {
+                card = data.data[0];
+                card.isUndefined = true;
+            }
 
             localStorage.setItem(cacheSearchKey, JSON.stringify({ timestamp: Date.now(), set: card.set, nr: card.collector_number, isUndefined: card.isUndefined }));
             localStorage.setItem(`card_${card.set.toUpperCase()}_${card.collector_number}`, JSON.stringify({ timestamp: Date.now(), data: data.data[0] }));
